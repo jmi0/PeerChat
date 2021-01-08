@@ -1,7 +1,5 @@
-import React from 'react';
 import Peer from 'peerjs'
 import Chat from './components/Chat';
-
 
 const localPeer = new Peer({
   host: window.location.hostname,
