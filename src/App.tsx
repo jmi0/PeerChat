@@ -1,5 +1,7 @@
 import Peer from 'peerjs'
 import Chat from './components/Chat';
+import "./style/App.css";
+
 
 const localPeer = new Peer({
   host: window.location.hostname,

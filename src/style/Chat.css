@@ -1,0 +1,18 @@
+#text-send-container {
+  position: absolute;
+  bottom: 0;
+}
+
+#text-send-container > div {
+  display: inline-block;
+  padding-right: 20px;
+  width: 40%;
+  bottom: 0;
+}
+
+#chat-window-container {
+  overflow-y: scroll;
+  height: 500px;
+  max-height:100%;
+  box-sizing: border-box;
+}
