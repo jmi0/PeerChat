@@ -17,7 +17,6 @@ const PORT = process.env.PORT || 9000;
 let peers = {};
 
 
-
 /***********************************************************************
  * Setup express app/server 
  */
@@ -51,7 +50,6 @@ const peerServer = ExpressPeerServer(server, {});
 peerServer.on('connection', (peer) => {
   // add peer to available peers object
   peers[peer.id] = peer.id;
-  console.log(`CONNECTED : ${peer.id}`);
 });
 
 
@@ -59,7 +57,6 @@ peerServer.on('connection', (peer) => {
 peerServer.on('disconnect', (peer) => {
   // remove peer from available peers object
   delete peers[peer.id];
-  console.log(`DISCONNECTED : ${peer.id}`);
 });
 
 app.use('/peerserver', peerServer);

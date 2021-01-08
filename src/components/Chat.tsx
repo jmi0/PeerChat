@@ -1,7 +1,7 @@
 import { Component } from 'react'
 import Peer from 'peerjs' 
 import moment from 'moment';
-import { Box, Container, Button, Select, TextareaAutosize } from '@material-ui/core';
+import { Box, Container, Button, TextareaAutosize, List, ListItem, Badge } from '@material-ui/core';
 import Grid from '@material-ui/core/Grid';
 
 type ChatProps = {
@@ -124,9 +124,9 @@ class Chat extends Component<ChatProps, ChatState> {
   }
 
   
-  handleRemotePeerChange = (event: React.ChangeEvent<{ value: unknown }>) => {
-    this.setState({selectedRemotePeerID: (event.target as HTMLInputElement).value});
-    this.connectToPeer((event.target as HTMLInputElement).value);
+  handleRemotePeerChange = (event: React.MouseEvent, peerID: string) => {
+    this.setState({selectedRemotePeerID: peerID});
+    this.connectToPeer(peerID);
   }
 
   updateRemotePeerConnections(remotePeerID: string, conn: Object) {
@@ -199,7 +199,7 @@ class Chat extends Component<ChatProps, ChatState> {
             <Grid item xs={12} sm={8}>
               <Box mx="auto">
                 {this.exists(connections[selectedRemotePeerID]) ? 
-                  <p style={{color: 'green'}}>Connection opened with {selectedRemotePeerID}</p>
+                  <p style={{color: 'green'}}><small>Connection opened with {selectedRemotePeerID}</small></p>
                 : ''}
                 {this.exists(messages[selectedRemotePeerID]) ?
                   <>
@@ -212,16 +212,25 @@ class Chat extends Component<ChatProps, ChatState> {
             </Grid>
             <Grid item xs={12} sm={4}>
               <Box mx="auto">
-              {(Object.keys(remotePeers).length < 2) ? 
-                <div>No Peers Available</div>
-              :
-                <Select multiple native onChange={this.handleRemotePeerChange}>
-                  {Object.keys(remotePeers).map((peerID) => {
-                    if (peerID !== localPeerID) return <option key={`peerOption-${peerID}`} value={peerID}>{peerID}</option>  
-                    else return '';
-                  })}
-                </Select>
-              }
+                
+                
+                {(Object.keys(remotePeers).length < 2) ? 
+                  <div>No Peers Available</div>
+                :
+                <List>
+                {Object.keys(remotePeers).map((peerID: string) => {
+                  if (peerID === localPeerID) return '';
+                  else return (
+                    <ListItem dense button selected={selectedRemotePeerID === peerID} onClick={(event) => this.handleRemotePeerChange(event, peerID)}>
+                      {this.exists(connections[peerID]) ? 
+                        <Badge color="primary" variant="dot">{peerID}</Badge> : 
+                        <>{peerID}</>
+                      }
+                    </ListItem>
+                  )
+                })}
+              </List>
+                }
               </Box>
             </Grid>
           </Grid>
