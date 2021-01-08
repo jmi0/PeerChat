@@ -1,19 +1,27 @@
 import { Component } from 'react'
 import Peer from 'peerjs' 
 import moment from 'moment';
-import { Button, Select, TextareaAutosize  } from '@material-ui/core';
+import { Box, Container, Button, Select, TextareaAutosize } from '@material-ui/core';
+import Grid from '@material-ui/core/Grid';
 
 type ChatProps = {
   localPeer: Peer
 }
+
+interface Connections {
+  [key: string]: any
+}
+
 interface Message {
   message: string,
   fromPeerID: string,
   toPeerID: string,
-  timestamp: moment.Moment
+  timestamp: moment.Moment,
+  seen: Boolean
 }
-interface remotePeerConnections {
-  [key: string]: {connection: any, messages: Message[]}
+
+interface Messages {
+  [key: string]: Message[]
 }
 
 type ChatState = {
@@ -22,12 +30,18 @@ type ChatState = {
   localPeerID: string,
   selectedRemotePeerID: string,
   textMessage: string,
-  remotePeerConnections: remotePeerConnections
+  connections: Connections,
+  messages: Messages
+
 }
 
+/************************************************************************
+ * This component handles remote peer discovdery, connections, and 
+ * messages between peers
+ */
 class Chat extends Component<ChatProps, ChatState> {
 
-
+  // variable to hold interval for remote peer discovery
   private updateRemotePeersInterval : number = 0;
 
   
@@ -41,7 +55,8 @@ class Chat extends Component<ChatProps, ChatState> {
       localPeerID: '',
       selectedRemotePeerID: '',
       textMessage: '',
-      remotePeerConnections: {}
+      connections: {},
+      messages: {}
     };
 
     this.handleRemotePeerChange = this.handleRemotePeerChange.bind(this);
@@ -52,40 +67,47 @@ class Chat extends Component<ChatProps, ChatState> {
 
   componentDidMount() {
     
- 
+    // get local peer id from peer server
     this.state.localPeer.on('open', (peerid) => {
-      console.log(`My Peer ID is ${peerid}`);
       this.setState({localPeerID: peerid});
+      // retrieve remote peers
+      this.getRemotePeers();
     });
 
+    // listen for connections
     this.state.localPeer.on('connection', (conn) => {
-      // listen for connections
-      
+
+      // message receiver
       conn.on('data', (data) => {
+        // received
         this.updateRemotePeerMessages(conn.peer, this.state.localPeerID, data);
-        console.log(conn.peer, this.state.remotePeerConnections[conn.peer].messages);
+      });
+      
+      // connection receiver
+      conn.on('open', () => {
+        // connected
+        //if (!this.exists(this.state.connections[conn.peer])) conn.send(`Connection opened with ${this.state.localPeerID}`);
+        this.updateRemotePeerConnections(conn.peer, conn);
       });
 
-      conn.on('open', () => {
-        this.updateRemotePeerConnections(conn.peer, conn);
-        console.log(`Connection opened with ${conn.peer}`);
-      });
     });
 
-    
-    
-    
-
-    this.getRemotePeers();
+    // update remote peers list every second
     this.updateRemotePeersInterval = window.setInterval(() => {
       this.getRemotePeers();
     }, 1000);
+
+
   }
 
   componentWillUnmount() {
+    // clear this interval before unmounting
     clearInterval(this.updateRemotePeersInterval);
   }
 
+  /**
+   * Peer discovery method
+   */
   getRemotePeers() {
     fetch("/peers")
       .then(res => res.json())
@@ -101,111 +123,125 @@ class Chat extends Component<ChatProps, ChatState> {
       )
   }
 
+  
   handleRemotePeerChange = (event: React.ChangeEvent<{ value: unknown }>) => {
     this.setState({selectedRemotePeerID: (event.target as HTMLInputElement).value});
     this.connectToPeer((event.target as HTMLInputElement).value);
   }
 
   updateRemotePeerConnections(remotePeerID: string, conn: Object) {
-
-    let remotePeerConnections = this.state.remotePeerConnections;
-
-    let peerMessages : Message[] = [];
-    if (typeof remotePeerConnections[remotePeerID] !== 'undefined' && typeof remotePeerConnections[remotePeerID].messages !== 'undefined') 
-      peerMessages = remotePeerConnections[remotePeerID].messages;
     
-    let peerConnection = {connection: conn, messages: peerMessages};
+    let connections: Connections = this.state.connections;
+    connections[remotePeerID] = conn;
+    this.setState({connections: connections});
     
-    remotePeerConnections[remotePeerID] = peerConnection;
-    this.setState({remotePeerConnections: remotePeerConnections});
   }
 
   updateRemotePeerMessages(fromPeerID: string, toPeerID: string, textMessage: string) {
     
-    let remotePeerConnections = this.state.remotePeerConnections;
-    let remotePeerID = '';
+    let remotePeerID: string = fromPeerID;
+
     if (this.state.localPeerID === fromPeerID) remotePeerID = toPeerID;
-    else remotePeerID = fromPeerID;
-
-    if (typeof this.state.remotePeerConnections[remotePeerID] === 'undefined') return;
-
-    let peerMessages: Message[] = [];
-    if (typeof remotePeerConnections[remotePeerID].messages !== 'undefined') 
-      peerMessages = remotePeerConnections[remotePeerID].messages;
     
-    peerMessages.push({message: textMessage, timestamp: moment(), fromPeerID: fromPeerID, toPeerID: toPeerID});
-    let peerConnection = {connection: remotePeerConnections[remotePeerID].connection, messages: peerMessages};
-    remotePeerConnections[remotePeerID] = peerConnection;
-    this.setState({remotePeerConnections: remotePeerConnections});
+    let messages: Messages = this.state.messages;
+
+    if (!this.exists(messages[remotePeerID])) messages[remotePeerID] = [];
+
+    messages[remotePeerID].push({message: textMessage, timestamp: moment(), fromPeerID: fromPeerID, toPeerID: toPeerID, seen: false});
+    
+    this.setState({messages: messages});
   }
 
   connectToPeer(remotePeerID: string) {
     
     var conn = this.props.localPeer.connect(remotePeerID);
+ 
     conn.on('open', () => {
+      //if (!this.exists(this.state.connections[remotePeerID])) conn.send(`<b>Connection opened with ${this.state.localPeerID}</b>`);
       this.updateRemotePeerConnections(remotePeerID, conn);
-      console.log(`Connection opened with ${remotePeerID}`);
     });
-    conn.on('error', function(err) { console.log(err); });
+
+    conn.on('data', (data) => {
+      this.updateRemotePeerMessages(conn.peer, this.state.localPeerID, data);
+      console.log(conn.peer, this.state.messages[conn.peer]);
+    });
     
   }
 
   sendMessage = (event: React.MouseEvent) => {
-    this.state.remotePeerConnections[this.state.selectedRemotePeerID].connection.send(this.state.textMessage);
+    this.state.connections[this.state.selectedRemotePeerID].send(this.state.textMessage);
     this.updateRemotePeerMessages(this.state.localPeerID, this.state.selectedRemotePeerID, this.state.textMessage);
     this.setState({textMessage: ''});
-    console.log(this.state.selectedRemotePeerID, this.state.remotePeerConnections[this.state.selectedRemotePeerID].messages);
   }
+
 
   handleMessageChange = (event: React.ChangeEvent) => {
     this.setState({textMessage: (event.target as HTMLInputElement).value});
   }
 
   
+  exists(v: any) {
+    if (typeof v !== 'undefined') return true;
+    else return false;
+  }
 
 
 
-
-  /*****************************************************************************
-  *****************************************************************************/
   render() {
-    const { remotePeers, localPeerID, remotePeerConnections, textMessage, selectedRemotePeerID } = this.state;
+
+    const { remotePeers, localPeerID, connections, textMessage, selectedRemotePeerID, messages } = this.state;
     
     return (
       <div>
-        
-        <Select multiple native onChange={this.handleRemotePeerChange}>
-          {Object.keys(remotePeers).map((peerID) => {
-            if (peerID !== localPeerID) return <option key={`peerOption-${peerID}`} value={peerID}>{peerID}</option>  
-            else return '';
-          })}
-        </Select>
-        <div>
-        {typeof(remotePeerConnections[selectedRemotePeerID]) !== 'undefined' && typeof(remotePeerConnections[selectedRemotePeerID].messages) !== 'undefined' ?
-          <>
-          {remotePeerConnections[selectedRemotePeerID].messages.map((message) => {
-            
-            return <div key={JSON.stringify(message)}><b>{message.fromPeerID} ({message.timestamp.format('M/D/YY h:mm a')})</b>: {message.message}</div>
-          })}
-          </> : ''
-        }
-        </div>
-        {typeof(remotePeerConnections[selectedRemotePeerID]) !== 'undefined' ?
-        <div>
-          <TextareaAutosize rowsMin={3} value={textMessage} onChange={this.handleMessageChange} />
-          <Button variant="contained" color='primary' onClick={this.sendMessage}>Send</Button>
-        </div> : ''
-        }
-       
+        <Container>
+          <h4>My Peer ID: {localPeerID}</h4>
+          <Grid container spacing={3}>
+            <Grid item xs={12} sm={8}>
+              <Box mx="auto">
+                {this.exists(connections[selectedRemotePeerID]) ? 
+                  <p style={{color: 'green'}}>Connection opened with {selectedRemotePeerID}</p>
+                : ''}
+                {this.exists(messages[selectedRemotePeerID]) ?
+                  <>
+                  {messages[selectedRemotePeerID].map((message) => {
+                    return <div key={JSON.stringify(message)}><b>{message.fromPeerID} ({message.timestamp.format('M/D/YY h:mm a')})</b>: {message.message}</div>
+                  })}
+                  </> : ''
+                }
+              </Box>
+            </Grid>
+            <Grid item xs={12} sm={4}>
+              <Box mx="auto">
+              {(Object.keys(remotePeers).length < 2) ? 
+                <div>No Peers Available</div>
+              :
+                <Select multiple native onChange={this.handleRemotePeerChange}>
+                  {Object.keys(remotePeers).map((peerID) => {
+                    if (peerID !== localPeerID) return <option key={`peerOption-${peerID}`} value={peerID}>{peerID}</option>  
+                    else return '';
+                  })}
+                </Select>
+              }
+              </Box>
+            </Grid>
+          </Grid>
+          <Grid item xs={12}>
+            <Box pt={4} mx="auto">
+            {this.exists(connections[selectedRemotePeerID]) ?
+            <div>
+              <TextareaAutosize style={{width: '100%'}} rowsMin={3} value={textMessage} onChange={this.handleMessageChange} />
+              <Button variant="contained" color='primary' onClick={this.sendMessage}>Send</Button>
+            </div> : ''
+            }
+            </Box>
+          </Grid>
+        </Container>
       </div>
     );
   }
 
 }
 
-
-/*******************************************************************************
-*******************************************************************************/
 
 
 export default Chat;

@@ -38,7 +38,7 @@
     "build": "GENERATE_SOURCEMAP=false react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject",
-    "dev-serve": "nodemon --ignore 'tmp/*.json' server.js"
+    "dev-serve": "nodemon server.js"
   },
   "eslintConfig": {
     "extends": [
