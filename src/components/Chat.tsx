@@ -24,6 +24,12 @@ interface Message {
   seen: Boolean
 }
 
+interface User {
+  PeerID: string,
+  username: string,
+  userkey: string,
+}
+
 interface Messages {
   [key: string]: Message[]
 }
@@ -70,6 +76,9 @@ class Chat extends Component<ChatProps, ChatState> {
   }
 
   componentDidMount() {
+
+    let messages: string|null = localStorage.getItem('messages');
+    if (messages !== null) this.setState({messages: JSON.parse(messages)});
     
     // get local peer id from peer server
     this.state.localPeer.on('open', (peerid) => {
@@ -134,6 +143,7 @@ class Chat extends Component<ChatProps, ChatState> {
       let peerMessages = messages[peerID];
       messages[peerID].forEach((message, index) => { messages[peerID][index].seen = true; } )
       this.setState({messages: messages});
+      //localStorage.setItem('messages', JSON.stringify(messages));
     }
   }
 
@@ -166,6 +176,7 @@ class Chat extends Component<ChatProps, ChatState> {
     });
     
     this.setState({messages: messages});
+    //localStorage.setItem('messages', JSON.stringify(messages));
   }
 
   connectToPeer(remotePeerID: string) {
