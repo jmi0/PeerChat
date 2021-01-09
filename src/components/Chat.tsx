@@ -1,12 +1,13 @@
 import { Component } from 'react'
 import Peer from 'peerjs' 
 import moment from 'moment';
-import { Box, Container, Button, TextareaAutosize, List, ListItem, ListItemText, ListItemIcon } from '@material-ui/core';
+import { Box, Container, Button, TextField, List, ListItem, ListItemText, ListItemIcon } from '@material-ui/core';
 import CommentIcon from '@material-ui/icons/Comment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import Grid from '@material-ui/core/Grid';
 import '../style/Chat.css';
+
 
 
 type ChatProps = {
@@ -195,44 +196,42 @@ class Chat extends Component<ChatProps, ChatState> {
     const { remotePeers, localPeerID, connections, textMessage, selectedRemotePeerID, messages } = this.state;
     
     return (
-      <div>
       
-          <h4>My Peer ID: {localPeerID}</h4>
-          <Grid container spacing={3}>
-            <Grid item xs={12} sm={8}>
-              <Box mx="auto" id='chat-window-container' >
-                <List>
-                  {this.exists(connections[selectedRemotePeerID]) ? 
-                    <ListItem dense style={{color: 'green'}}>Connection opened with {selectedRemotePeerID}</ListItem> : 
-                    <></>
-                  }
-                  {this.exists(messages[selectedRemotePeerID]) ?
-                    <>
-                    {messages[selectedRemotePeerID].map((message) => {
-                      return (<ListItem dense key={JSON.stringify(message)}>
-                        <AccountCircleIcon  color='secondary' />
-                        <b>{message.fromPeerID} ({message.timestamp.format('M/D/YY h:mm a')})</b>: {message.message}
-                        </ListItem>
-                      );
-                    })}
-                    </> : ''
-                  }
-                </List>
-                <Grid item xs={12}>
-                  <Box pt={4} mx="auto">
-                  {this.exists(connections[selectedRemotePeerID]) ?
-                  <div id='text-send-container'>
-                    <div><TextareaAutosize style={{width: '100%'}} rowsMin={3} value={textMessage} onChange={this.handleMessageChange} /></div>
-                    <div><Button variant="contained" color='primary' onClick={this.sendMessage}>Send</Button></div>
-                  </div> : ''
-                  }
-                  </Box>
+        <Grid container spacing={0}>
+          <Grid item xs={12} sm={8}>
+            <Box id='chat-window-container' >
+              <List>
+              {this.exists(connections[selectedRemotePeerID]) ? 
+                <ListItem dense style={{color: 'green'}}>Connection opened with {selectedRemotePeerID}</ListItem> : 
+                <></>
+              }
+              {this.exists(messages[selectedRemotePeerID]) ?
+              <>
+              {messages[selectedRemotePeerID].map((message) => {
+                return (
+                  <ListItem dense key={JSON.stringify(message)}>
+                    <AccountCircleIcon  color='secondary' />
+                    <b>{message.fromPeerID} ({message.timestamp.format('M/D/YY h:mm a')})</b>: {message.message}
+                  </ListItem>
+                );
+              })}
+              </> : ''
+              }
+              </List>
+              <Box boxShadow={1}>
+                <Grid container spacing={0} id={'text-send-container'}>
+                {this.exists(connections[selectedRemotePeerID]) ?
+                  <>
+                  <Grid item xs={6}><TextField style={{width: '100%'}} value={textMessage} onChange={this.handleMessageChange} /></Grid>
+                  <Grid item xs={3}><Button variant="contained" color='primary' onClick={this.sendMessage}>Send</Button></Grid>
+                  </> : ''
+                }
                 </Grid>
               </Box>
-            </Grid>
-            <Grid item xs={12} sm={4}>
-              <Box mx="auto">
-                <List>
+            </Box>
+          </Grid>
+          <Grid item xs={12} sm={4} style={{borderLeft: '1px gray solid'}} >
+              <List>
                   {(Object.keys(remotePeers).length < 2) ? 
                     <ListItem disabled>No Peers Available</ListItem>
                   :
@@ -257,12 +256,10 @@ class Chat extends Component<ChatProps, ChatState> {
                   </>
                   }
                 </List>
-              </Box>
+             
             </Grid>
-          </Grid>
-          
-        
-      </div>
+        </Grid>
+      
     );
   }
 
