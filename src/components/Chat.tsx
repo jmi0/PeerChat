@@ -1,13 +1,12 @@
 import { Component } from 'react'
 import Peer from 'peerjs' 
 import moment from 'moment';
-import { Box, Container, Button, TextField, List, ListItem, ListItemText, ListItemIcon } from '@material-ui/core';
+import { Box, Badge, Button, List, ListItem, ListItemText, ListItemIcon, SwipeableDrawer } from '@material-ui/core';
 import CommentIcon from '@material-ui/icons/Comment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import Grid from '@material-ui/core/Grid';
 import '../style/Chat.css';
-
 
 
 type ChatProps = {
@@ -21,7 +20,6 @@ interface Connections {
 interface Message {
   message: string,
   fromPeerID: string,
-  toPeerID: string,
   timestamp: moment.Moment,
   seen: Boolean
 }
@@ -31,7 +29,7 @@ interface Messages {
 }
 
 type ChatState = {
-  remotePeers: Object,
+  remotePeers: string[],
   localPeer: Peer,
   localPeerID: string,
   selectedRemotePeerID: string,
@@ -55,7 +53,7 @@ class Chat extends Component<ChatProps, ChatState> {
     super(props);
 
     this.state = {
-      remotePeers: {},
+      remotePeers: [],
       localPeer: this.props.localPeer,
       localPeerID: '',
       selectedRemotePeerID: '',
@@ -68,6 +66,7 @@ class Chat extends Component<ChatProps, ChatState> {
     this.connectToPeer = this.connectToPeer.bind(this);
     this.sendMessage = this.sendMessage.bind(this);
     this.handleMessageChange = this.handleMessageChange.bind(this);
+    this.updateSeenStateOnPeerMessages = this.updateSeenStateOnPeerMessages.bind(this);
   }
 
   componentDidMount() {
@@ -85,7 +84,7 @@ class Chat extends Component<ChatProps, ChatState> {
       // message receiver
       conn.on('data', (data) => {
         // received
-        this.updateRemotePeerMessages(conn.peer, this.state.localPeerID, data);
+        this.updateRemotePeerMessages(conn.peer, data, conn.peer);
       });
       
       // connection receiver
@@ -114,7 +113,7 @@ class Chat extends Component<ChatProps, ChatState> {
    * Peer discovery method
    */
   getRemotePeers() {
-    fetch("/peers")
+    fetch("/peerserver/peerjs/peers")
       .then(res => res.json())
       .then(
         (result) => {
@@ -128,9 +127,20 @@ class Chat extends Component<ChatProps, ChatState> {
       )
   }
 
+  updateSeenStateOnPeerMessages(peerID: string) {
+    if (this.exists(this.state.messages[peerID])) {
+      var messages = this.state.messages;
+      // update seen state of messages from this peer
+      let peerMessages = messages[peerID];
+      messages[peerID].forEach((message, index) => { messages[peerID][index].seen = true; } )
+      this.setState({messages: messages});
+    }
+  }
+
   
   handleRemotePeerChange = (event: React.MouseEvent, peerID: string) => {
     this.setState({selectedRemotePeerID: peerID});
+    this.updateSeenStateOnPeerMessages(peerID);
     this.connectToPeer(peerID);
   }
 
@@ -142,17 +152,18 @@ class Chat extends Component<ChatProps, ChatState> {
     
   }
 
-  updateRemotePeerMessages(fromPeerID: string, toPeerID: string, textMessage: string) {
-    
-    let remotePeerID: string = fromPeerID;
-
-    if (this.state.localPeerID === fromPeerID) remotePeerID = toPeerID;
+  updateRemotePeerMessages(fromPeerID: string, textMessage: string, remotePeerIndex: string) {
     
     let messages: Messages = this.state.messages;
 
-    if (!this.exists(messages[remotePeerID])) messages[remotePeerID] = [];
+    if (!this.exists(messages[remotePeerIndex])) messages[remotePeerIndex] = [];
 
-    messages[remotePeerID].push({message: textMessage, timestamp: moment(), fromPeerID: fromPeerID, toPeerID: toPeerID, seen: false});
+    messages[remotePeerIndex].push({
+      message: textMessage, 
+      timestamp: moment(), 
+      fromPeerID: fromPeerID, 
+      seen: (this.state.selectedRemotePeerID === fromPeerID)
+    });
     
     this.setState({messages: messages});
   }
@@ -167,7 +178,7 @@ class Chat extends Component<ChatProps, ChatState> {
     });
 
     conn.on('data', (data) => {
-      this.updateRemotePeerMessages(conn.peer, this.state.localPeerID, data);
+      this.updateRemotePeerMessages(conn.peer, data, conn.peer);
       console.log(conn.peer, this.state.messages[conn.peer]);
     });
     
@@ -175,7 +186,7 @@ class Chat extends Component<ChatProps, ChatState> {
 
   sendMessage = (event: React.MouseEvent) => {
     this.state.connections[this.state.selectedRemotePeerID].send(this.state.textMessage);
-    this.updateRemotePeerMessages(this.state.localPeerID, this.state.selectedRemotePeerID, this.state.textMessage);
+    this.updateRemotePeerMessages(this.state.localPeerID, this.state.textMessage, this.state.selectedRemotePeerID);
     this.setState({textMessage: ''});
   }
 
@@ -196,13 +207,14 @@ class Chat extends Component<ChatProps, ChatState> {
     const { remotePeers, localPeerID, connections, textMessage, selectedRemotePeerID, messages } = this.state;
     
     return (
-      
-        <Grid container spacing={0}>
-          <Grid item xs={12} sm={8}>
-            <Box id='chat-window-container' >
+      <Grid container spacing={0}>
+
+        <Grid item xs={12} sm={8}>
+          <Box id='chat-window-container' >
+            <Box id='chat-window'>
               <List>
               {this.exists(connections[selectedRemotePeerID]) ? 
-                <ListItem dense style={{color: 'green'}}>Connection opened with {selectedRemotePeerID}</ListItem> : 
+                <ListItem dense style={{color: 'green'}}>Connection opened with <b>&nbsp;{selectedRemotePeerID}</b></ListItem> : 
                 <></>
               }
               {this.exists(messages[selectedRemotePeerID]) ?
@@ -210,56 +222,75 @@ class Chat extends Component<ChatProps, ChatState> {
               {messages[selectedRemotePeerID].map((message) => {
                 return (
                   <ListItem dense key={JSON.stringify(message)}>
-                    <AccountCircleIcon  color='secondary' />
-                    <b>{message.fromPeerID} ({message.timestamp.format('M/D/YY h:mm a')})</b>: {message.message}
+                    <Grid container justify="flex-start" direction="row">
+                      <Grid item xs={1}><AccountCircleIcon style={{float: 'left'}} color={message.fromPeerID === localPeerID ? 'primary':'secondary'} fontSize={'large'} /></Grid>
+                      <Grid item xs={11} className={'messageDisplaycontainer'}>
+                        <div>
+                          <span className='messageDisplayName'>{message.fromPeerID}</span>
+                          <span className='messageDisplayTS'>{message.timestamp.format('M/D/YY h:mm a')}</span>
+                        </div>
+                        <div className='messageDisplayMSG'>{message.message}</div>  
+                      </Grid>
+                    </Grid>
+                    
+
+                   
                   </ListItem>
                 );
               })}
               </> : ''
               }
               </List>
-              <Box boxShadow={1}>
-                <Grid container spacing={0} id={'text-send-container'}>
-                {this.exists(connections[selectedRemotePeerID]) ?
-                  <>
-                  <Grid item xs={6}><TextField style={{width: '100%'}} value={textMessage} onChange={this.handleMessageChange} /></Grid>
-                  <Grid item xs={3}><Button variant="contained" color='primary' onClick={this.sendMessage}>Send</Button></Grid>
-                  </> : ''
-                }
-                </Grid>
-              </Box>
             </Box>
-          </Grid>
-          <Grid item xs={12} sm={4} style={{borderLeft: '1px gray solid'}} >
-              <List>
-                  {(Object.keys(remotePeers).length < 2) ? 
-                    <ListItem disabled>No Peers Available</ListItem>
-                  :
-                  <>
-                  {Object.keys(remotePeers).map((peerID: string) => {
-                    if (peerID === localPeerID) return '';
-                    else return (
-                      <ListItem dense button selected={selectedRemotePeerID === peerID} onClick={(event) => this.handleRemotePeerChange(event, peerID)}>
-                        {this.exists(connections[peerID]) ? 
-                          <>
-                            <ListItemIcon>
-                              <FiberManualRecordIcon fontSize='small' style={{color: 'green'}} />
-                            </ListItemIcon>
-                            <ListItemText primary={peerID} />
-                            <CommentIcon fontSize='small' color='secondary' />
-                          </>: 
-                          <ListItemText primary={peerID} />
-                        }
-                      </ListItem>
-                    )
-                  })}
-                  </>
-                  }
-                </List>
-             
-            </Grid>
+            {this.exists(connections[selectedRemotePeerID]) ?
+            <Box boxShadow={1} id={'text-send-region-container'}>
+              <Grid container spacing={0} id={'text-send-container'}>
+                <Grid item xs={8}><textarea style={{width: '100%', resize: 'none'}} value={textMessage} onChange={this.handleMessageChange} rows={2}></textarea></Grid>
+                <Grid item xs={2}><Button disableElevation variant="contained" color='primary' onClick={this.sendMessage}>Send</Button></Grid>
+              </Grid>
+            </Box> : ''
+            }            
+          </Box>
         </Grid>
-      
+        <Grid item xs={12} sm={4} style={{borderLeft: '1px #d3d3d3 solid'}} >
+          
+            
+          <List disablePadding>
+          {(remotePeers.length < 2) ? 
+            <ListItem disabled>No Peers Available</ListItem> :
+            <>
+            {remotePeers.map((peerID: string) => {
+              if (peerID === localPeerID) return '';
+              
+              var unreadCount = 0;
+              var hasMessages = false;
+              if (this.exists(messages[peerID])) {
+                hasMessages = true;
+                unreadCount = messages[peerID].filter((message) => peerID === message.fromPeerID ? message.seen === false : false).length;
+              }
+
+              return (
+                <ListItem dense button selected={selectedRemotePeerID === peerID} onClick={(event) => this.handleRemotePeerChange(event, peerID)}>
+                {this.exists(connections[peerID]) ? 
+                  <>
+                  <ListItemIcon>
+                    <FiberManualRecordIcon fontSize='small' style={{color: 'green'}} />
+                  </ListItemIcon>
+                  <ListItemText primary={peerID} />
+                  {hasMessages ? <Badge badgeContent={unreadCount} color="secondary"><CommentIcon fontSize='small' color='primary' /></Badge> : ''} 
+                  </>: 
+                  <ListItemText primary={peerID} />
+                }
+                </ListItem>
+              )
+            })}
+            </>
+          }
+          </List>
+        </Grid>
+        
+
+      </Grid>
     );
   }
 

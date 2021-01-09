@@ -2,7 +2,7 @@
  * @Author: joe.iannone 
  * @Date: 2021-01-06 13:04:28 
  * @Last Modified by: joe.iannone
- * @Last Modified time: 2021-01-07 09:35:58
+ * @Last Modified time: 2021-01-09 11:10:49
  */
 
 
@@ -12,9 +12,6 @@ const path = require('path');
 
 
 const PORT = process.env.PORT || 9000;
-
-// object to hold available peers
-let peers = {};
 
 
 /***********************************************************************
@@ -29,11 +26,6 @@ app.get('/', (req, res) => {
   res.sendFile(path.join(`${__dirname}/build/index.html`));
 });
 
-// endpoint to access available peers
-app.get('/peers', (req, res) => {
-  res.json(peers);
-});
-
 // listen on PORT
 const server = app.listen(PORT, () => {
   console.log(`Listening on ${PORT}`);
@@ -44,20 +36,11 @@ const server = app.listen(PORT, () => {
 /***********************************************************************
  * Setup peer server
  */
-const peerServer = ExpressPeerServer(server, {});
-
-// when a peer connects
-peerServer.on('connection', (peer) => {
-  // add peer to available peers object
-  peers[peer.id] = peer.id;
+const peerServer = ExpressPeerServer(server, {
+  allow_discovery: true,
+  proxied: true
 });
 
-
-// peer disconnects
-peerServer.on('disconnect', (peer) => {
-  // remove peer from available peers object
-  delete peers[peer.id];
-});
 
 app.use('/peerserver', peerServer);
 
