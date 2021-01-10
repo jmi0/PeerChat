@@ -148,17 +148,12 @@ class Chat extends Component<ChatProps, ChatState> {
    */
   getRemotePeers() {
     fetch("/peers")
-      .then(res => res.json())
-      .then(
-        (result) => {
-          this.setState({
-            remotePeers: result
-          });
-        },
-        (error) => {
-          console.log(error);
-        }
-      )
+    .then(res => res.json())
+    .then((result) => {
+      this.setState({remotePeers: result});
+    }, (error) => {
+      console.log(error);
+    });
   }
 
   setUserPeerID(peerid: string) {
