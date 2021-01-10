@@ -65,6 +65,7 @@
     ]
   },
   "devDependencies": {
+    "@types/crypto-js": "^4.0.1",
     "@types/react-router-dom": "^5.1.7",
     "nodemon": "^2.0.6"
   },
