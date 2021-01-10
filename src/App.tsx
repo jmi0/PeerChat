@@ -1,6 +1,8 @@
 import Peer from 'peerjs'
 import Chat from './components/Chat';
+import LoginForm from './components/LoginForm'
 import "./style/App.css";
+import { BrowserRouter as Router, Switch, Route } from 'react-router-dom' 
 
 
 const localPeer = new Peer({
@@ -13,7 +15,16 @@ const localPeer = new Peer({
 function App() {
   return (
     <div className="App">
-      <Chat localPeer={localPeer} />
+      <Router>
+        <Switch>
+          <Route path="/login">
+            <LoginForm />
+          </Route>
+          <Route path="/chat">
+            <Chat localPeer={localPeer} />
+          </Route>
+        </Switch>
+      </Router>
     </div>
   );
 }

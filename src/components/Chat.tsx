@@ -1,7 +1,7 @@
 import { Component } from 'react'
 import Peer from 'peerjs' 
 import moment from 'moment';
-import { Box, Badge, Button, List, ListItem, ListItemText, ListItemIcon, SwipeableDrawer } from '@material-ui/core';
+import { Icon, Box, Badge, Button, List, ListItem, ListItemText, ListItemIcon, SwipeableDrawer } from '@material-ui/core';
 import CommentIcon from '@material-ui/icons/Comment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
@@ -17,17 +17,17 @@ interface Connections {
   [key: string]: any
 }
 
-interface Message {
-  message: string,
-  fromPeerID: string,
-  timestamp: moment.Moment,
-  seen: Boolean
+interface User {
+  username: string,
+  peerID: string,
+  _id: string
 }
 
-interface User {
-  PeerID: string,
-  username: string,
-  userkey: string,
+interface Message {
+  message: { username: string, message: string},
+  from: string,
+  timestamp: moment.Moment,
+  seen: Boolean
 }
 
 interface Messages {
@@ -35,13 +35,15 @@ interface Messages {
 }
 
 type ChatState = {
-  remotePeers: string[],
+  remotePeers: User[],
   localPeer: Peer,
   localPeerID: string,
-  selectedRemotePeerID: string,
+  selectedRemotePeer: User,
   textMessage: string,
   connections: Connections,
-  messages: Messages
+  messages: Messages,
+  isLoggedIn: Boolean,
+  username: string
 
 }
 
@@ -62,10 +64,12 @@ class Chat extends Component<ChatProps, ChatState> {
       remotePeers: [],
       localPeer: this.props.localPeer,
       localPeerID: '',
-      selectedRemotePeerID: '',
+      selectedRemotePeer: {username: '', peerID: '', _id: ''},
       textMessage: '',
       connections: {},
-      messages: {}
+      messages: {},
+      isLoggedIn: false,
+      username: ''
     };
 
     this.handleRemotePeerChange = this.handleRemotePeerChange.bind(this);
@@ -77,12 +81,30 @@ class Chat extends Component<ChatProps, ChatState> {
 
   componentDidMount() {
 
+
+    /**
+     * Check if logged in
+     */
+    fetch("/check")
+    .then(res => res.json())
+    .then((result) => {
+      if (this.exists(result.username)) {
+        this.setState({ isLoggedIn: true, username: result.username });
+      } else {
+        window.location.href = "/login";
+      }
+    }, (error) => {
+      window.location.href = "/login";
+    })
+
     let messages: string|null = localStorage.getItem('messages');
     if (messages !== null) this.setState({messages: JSON.parse(messages)});
     
     // get local peer id from peer server
     this.state.localPeer.on('open', (peerid) => {
       this.setState({localPeerID: peerid});
+      //assocciate peer id to username on server side
+      this.setUserPeerID(peerid);
       // retrieve remote peers
       this.getRemotePeers();
     });
@@ -93,14 +115,17 @@ class Chat extends Component<ChatProps, ChatState> {
       // message receiver
       conn.on('data', (data) => {
         // received
-        this.updateRemotePeerMessages(conn.peer, data, conn.peer);
+        this.updateRemotePeerMessages(data.username, data.message, data.username);
       });
       
       // connection receiver
       conn.on('open', () => {
         // connected
         //if (!this.exists(this.state.connections[conn.peer])) conn.send(`Connection opened with ${this.state.localPeerID}`);
-        this.updateRemotePeerConnections(conn.peer, conn);
+        this.state.remotePeers.find((peer, index) => {
+          if (peer.peerID === conn.peer) this.updateRemotePeerConnections(peer.username, conn);
+        });
+        
       });
 
     });
@@ -122,7 +147,7 @@ class Chat extends Component<ChatProps, ChatState> {
    * Peer discovery method
    */
   getRemotePeers() {
-    fetch("/peerserver/peerjs/peers")
+    fetch("/peers")
       .then(res => res.json())
       .then(
         (result) => {
@@ -136,68 +161,88 @@ class Chat extends Component<ChatProps, ChatState> {
       )
   }
 
-  updateSeenStateOnPeerMessages(peerID: string) {
-    if (this.exists(this.state.messages[peerID])) {
+  setUserPeerID(peerid: string) {
+    fetch('/updatepeerid', {
+      method: 'POST', 
+      body: JSON.stringify({ 
+        username: this.state.username,
+        peerid: peerid
+      }), 
+      headers: {'Content-Type': 'application/json'}
+    })
+    .then(response => response.json())
+    .then(result => {
+      console.log('Success:', result);
+    })
+    .catch(error => {
+      console.error('Error:', error);
+    });
+  }
+
+  updateSeenStateOnPeerMessages(peer: User) {
+    if (this.exists(this.state.messages[peer.username])) {
       var messages = this.state.messages;
       // update seen state of messages from this peer
-      let peerMessages = messages[peerID];
-      messages[peerID].forEach((message, index) => { messages[peerID][index].seen = true; } )
+      let peerMessages = messages[peer.username];
+      messages[peer.username].forEach((message, index) => { messages[peer.username][index].seen = true; } )
       this.setState({messages: messages});
       //localStorage.setItem('messages', JSON.stringify(messages));
     }
   }
 
   
-  handleRemotePeerChange = (event: React.MouseEvent, peerID: string) => {
-    this.setState({selectedRemotePeerID: peerID});
-    this.updateSeenStateOnPeerMessages(peerID);
-    this.connectToPeer(peerID);
+  handleRemotePeerChange = (event: React.MouseEvent, peer: User) => {
+    this.setState({selectedRemotePeer: peer});
+    this.updateSeenStateOnPeerMessages(peer);
+    this.connectToPeer(peer);
   }
 
-  updateRemotePeerConnections(remotePeerID: string, conn: Object) {
+  updateRemotePeerConnections(username: string, conn: Object) {
     
     let connections: Connections = this.state.connections;
-    connections[remotePeerID] = conn;
+    connections[username] = conn;
     this.setState({connections: connections});
+
+    console.log(this.state.connections);
     
   }
 
-  updateRemotePeerMessages(fromPeerID: string, textMessage: string, remotePeerIndex: string) {
+  updateRemotePeerMessages(username: string, textMessage: string, remotePeerIndex: string) {
     
     let messages: Messages = this.state.messages;
 
     if (!this.exists(messages[remotePeerIndex])) messages[remotePeerIndex] = [];
 
     messages[remotePeerIndex].push({
-      message: textMessage, 
+      message: {message: textMessage, username: username}, 
       timestamp: moment(), 
-      fromPeerID: fromPeerID, 
-      seen: (this.state.selectedRemotePeerID === fromPeerID)
+      from: username, 
+      seen: (this.state.selectedRemotePeer.username === username)
     });
     
     this.setState({messages: messages});
     //localStorage.setItem('messages', JSON.stringify(messages));
   }
 
-  connectToPeer(remotePeerID: string) {
+  connectToPeer(user: User) {
     
-    var conn = this.props.localPeer.connect(remotePeerID);
+    var conn = this.props.localPeer.connect(user.peerID);
  
     conn.on('open', () => {
       //if (!this.exists(this.state.connections[remotePeerID])) conn.send(`<b>Connection opened with ${this.state.localPeerID}</b>`);
-      this.updateRemotePeerConnections(remotePeerID, conn);
+      this.updateRemotePeerConnections(user.username, conn);
     });
 
     conn.on('data', (data) => {
-      this.updateRemotePeerMessages(conn.peer, data, conn.peer);
+      this.updateRemotePeerMessages(data.username, data.message, data.username);
       console.log(conn.peer, this.state.messages[conn.peer]);
     });
     
   }
 
   sendMessage = (event: React.MouseEvent) => {
-    this.state.connections[this.state.selectedRemotePeerID].send(this.state.textMessage);
-    this.updateRemotePeerMessages(this.state.localPeerID, this.state.textMessage, this.state.selectedRemotePeerID);
+    this.state.connections[this.state.selectedRemotePeer.username].send({username: this.state.username, message: this.state.textMessage});
+    this.updateRemotePeerMessages(this.state.username, this.state.textMessage, this.state.selectedRemotePeer.username);
     this.setState({textMessage: ''});
   }
 
@@ -215,7 +260,7 @@ class Chat extends Component<ChatProps, ChatState> {
 
   render() {
 
-    const { remotePeers, localPeerID, connections, textMessage, selectedRemotePeerID, messages } = this.state;
+    const { username, remotePeers, localPeerID, connections, textMessage, selectedRemotePeer, messages } = this.state;
     
     return (
       <Grid container spacing={0}>
@@ -224,23 +269,23 @@ class Chat extends Component<ChatProps, ChatState> {
           <Box id='chat-window-container' >
             <Box id='chat-window'>
               <List>
-              {this.exists(connections[selectedRemotePeerID]) ? 
-                <ListItem dense style={{color: 'green'}}>Connection opened with <b>&nbsp;{selectedRemotePeerID}</b></ListItem> : 
+              {this.exists(connections[selectedRemotePeer.username]) ? 
+                <ListItem dense style={{color: 'green'}}>Connection opened with <b>&nbsp;{selectedRemotePeer.username}</b></ListItem> : 
                 <></>
               }
-              {this.exists(messages[selectedRemotePeerID]) ?
+              {this.exists(messages[selectedRemotePeer.username]) ?
               <>
-              {messages[selectedRemotePeerID].map((message) => {
+              {messages[selectedRemotePeer.username].map((message) => {
                 return (
                   <ListItem dense key={JSON.stringify(message)}>
                     <Grid container justify="flex-start" direction="row">
-                      <Grid item xs={1}><AccountCircleIcon style={{float: 'left'}} color={message.fromPeerID === localPeerID ? 'primary':'secondary'} fontSize={'large'} /></Grid>
+                      <Grid item xs={1}><AccountCircleIcon style={{float: 'left'}} color={message.from === username ? 'primary':'secondary'} fontSize={'large'} /></Grid>
                       <Grid item xs={11} className={'messageDisplaycontainer'}>
                         <div>
-                          <span className='messageDisplayName'>{message.fromPeerID}</span>
+                          <span className='messageDisplayName'>{message.from}</span>
                           <span className='messageDisplayTS'>{message.timestamp.format('M/D/YY h:mm a')}</span>
                         </div>
-                        <div className='messageDisplayMSG'>{message.message}</div>  
+                        <div className='messageDisplayMSG'>{message.message.message}</div>  
                       </Grid>
                     </Grid>
                     
@@ -253,11 +298,11 @@ class Chat extends Component<ChatProps, ChatState> {
               }
               </List>
             </Box>
-            {this.exists(connections[selectedRemotePeerID]) ?
+            {this.exists(connections[selectedRemotePeer.username]) ?
             <Box boxShadow={1} id={'text-send-region-container'}>
               <Grid container spacing={0} id={'text-send-container'}>
                 <Grid item xs={8}><textarea style={{width: '100%', resize: 'none'}} value={textMessage} onChange={this.handleMessageChange} rows={2}></textarea></Grid>
-                <Grid item xs={2}><Button disableElevation variant="contained" color='primary' onClick={this.sendMessage}>Send</Button></Grid>
+                <Grid item xs={2}><Button disableElevation variant="contained" color='primary' onClick={this.sendMessage} >Send</Button></Grid>
               </Grid>
             </Box> : ''
             }            
@@ -270,27 +315,27 @@ class Chat extends Component<ChatProps, ChatState> {
           {(remotePeers.length < 2) ? 
             <ListItem disabled>No Peers Available</ListItem> :
             <>
-            {remotePeers.map((peerID: string) => {
-              if (peerID === localPeerID) return '';
+            {remotePeers.map((peer: User) => {
+              if (peer.username === username) return '';
               
               var unreadCount = 0;
               var hasMessages = false;
-              if (this.exists(messages[peerID])) {
+              if (this.exists(messages[peer.username])) {
                 hasMessages = true;
-                unreadCount = messages[peerID].filter((message) => peerID === message.fromPeerID ? message.seen === false : false).length;
+                unreadCount = messages[peer.username].filter((message) => peer.username === message.from ? message.seen === false : false).length;
               }
 
               return (
-                <ListItem dense button selected={selectedRemotePeerID === peerID} onClick={(event) => this.handleRemotePeerChange(event, peerID)}>
-                {this.exists(connections[peerID]) ? 
+                <ListItem key={JSON.stringify(peer)} dense button selected={selectedRemotePeer.username === peer.username} onClick={(event) => this.handleRemotePeerChange(event, peer)}>
+                {this.exists(connections[peer.username]) ? 
                   <>
                   <ListItemIcon>
                     <FiberManualRecordIcon fontSize='small' style={{color: 'green'}} />
                   </ListItemIcon>
-                  <ListItemText primary={peerID} />
+                  <ListItemText primary={peer.username} />
                   {hasMessages ? <Badge badgeContent={unreadCount} color="secondary"><CommentIcon fontSize='small' color='primary' /></Badge> : ''} 
                   </>: 
-                  <ListItemText primary={peerID} />
+                  <ListItemText primary={peer.username} />
                 }
                 </ListItem>
               )
