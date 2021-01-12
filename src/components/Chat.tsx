@@ -6,33 +6,14 @@ import { Box, Badge, Button, List, ListItem, ListItemText, ListItemIcon } from '
 import CommentIcon from '@material-ui/icons/Comment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import Grid from '@material-ui/core/Grid';
+
+import { User, Connections, Messages, Message } from '../Interfaces'
 import MessagesDisplay from './Messages';
 import '../style/Chat.css';
 
 
 type ChatProps = {
   localPeer: Peer
-}
-
-interface Connections {
-  [key: string]: any
-}
-
-interface User {
-  username: string,
-  peerID: string,
-  _id: string
-}
-
-interface Message {
-  message: { username: string, message: string},
-  from: string,
-  timestamp: string,
-  seen: Boolean
-}
-
-interface Messages {
-  [key: string]: Message[]
 }
 
 type ChatState = {
@@ -86,7 +67,6 @@ class Chat extends Component<ChatProps, ChatState> {
 
   componentDidMount() {
     
-
     /**
      * Check if logged in
      */
@@ -95,14 +75,28 @@ class Chat extends Component<ChatProps, ChatState> {
     .then((result) => {
       if (this.exists(result.username)) {
         this.setState({ isLoggedIn: true, username: result.username });
-        let messages: string|null = localStorage.getItem(CryptoJS.SHA256(`${result.username}-messages`).toString(CryptoJS.enc.Base64));
-        if (messages !== null) this.setState({messages: JSON.parse(CryptoJS.AES.decrypt(messages, `${this.CLIENT_KEY}${result.username}`).toString(CryptoJS.enc.Utf8))});
-        
+        localStorage.setItem(
+          CryptoJS.SHA256(`lastUser`).toString(CryptoJS.enc.Base64), 
+          CryptoJS.AES.encrypt(JSON.stringify({peerID: this.state.localPeerID, username: result.username, _id: ''}), `${this.CLIENT_KEY}lastUser`).toString()
+        );
       } else {
         window.location.href = "/login";
       }
     }, (error) => {
-      //window.location.href = "/login";
+      let lastUser: string|null = localStorage.getItem(CryptoJS.SHA256(`lastUser`).toString(CryptoJS.enc.Base64));
+      if (lastUser !== null) {
+         var user = JSON.parse(CryptoJS.AES.decrypt(lastUser, `${this.CLIENT_KEY}lastUser`).toString(CryptoJS.enc.Utf8));
+        this.setState({ 
+          username: user.username, 
+          localPeerID: user.peerID, 
+          localPeer: new Peer(user.peerID, {
+            host: window.location.hostname, port: 9000, path: '/peerserver'
+          })
+        });
+      } else {
+        window.location.href = "/login";
+      }
+      
     })
 
     
@@ -175,6 +169,7 @@ class Chat extends Component<ChatProps, ChatState> {
     });
   }
 
+  
   setUserPeerID(peerid: string) {
     fetch('/updatepeerid', {
       method: 'POST', 
@@ -193,12 +188,13 @@ class Chat extends Component<ChatProps, ChatState> {
     });
   }
 
+
   updateSeenStateOnPeerMessages(peer: User) {
     if (this.exists(this.state.messages[peer.username])) {
       this.state.messages[peer.username].forEach((message, index) => { this.state.messages[peer.username][index].seen = true; } )
       localStorage.setItem(
-        CryptoJS.SHA256(`${this.state.username}-messages`).toString(CryptoJS.enc.Base64), 
-        CryptoJS.AES.encrypt(JSON.stringify(this.state.messages), `${this.CLIENT_KEY}${this.state.username}`).toString()
+        CryptoJS.SHA256(`${this.state.username}${peer.username}-messages`).toString(CryptoJS.enc.Base64), 
+        CryptoJS.AES.encrypt(JSON.stringify(this.state.messages[peer.username]), `${this.CLIENT_KEY}${this.state.username}${peer.username}`).toString()
       );
       this.setState({messages: this.state.messages}, () => {
         this.scrollToBottom();
@@ -207,7 +203,18 @@ class Chat extends Component<ChatProps, ChatState> {
     }
   }
   
+
   handleRemotePeerChange = (event: React.MouseEvent, peer: User) => {
+    // get stored messages on connection for this user
+    let peerMessages: string|null = localStorage.getItem(CryptoJS.SHA256(`${this.state.username}${peer.username}-messages`).toString(CryptoJS.enc.Base64));
+    if (peerMessages !== null) {
+      this.state.messages[peer.username] = JSON.parse(CryptoJS.AES.decrypt(peerMessages, `${this.CLIENT_KEY}${this.state.username}${peer.username}`).toString(CryptoJS.enc.Utf8));
+      this.setState({ messages: this.state.messages });
+    } else {
+      this.state.messages[peer.username] = [];
+      this.setState({ messages: this.state.messages });
+    }
+
     this.setState({selectedRemotePeer: peer});
     this.updateSeenStateOnPeerMessages(peer);
     this.connectToPeer(peer);
@@ -233,8 +240,8 @@ class Chat extends Component<ChatProps, ChatState> {
     this.state.messages[remotePeerIndex].push(message);
   
     localStorage.setItem(
-      CryptoJS.SHA256(`${this.state.username}-messages`).toString(CryptoJS.enc.Base64), 
-      CryptoJS.AES.encrypt(JSON.stringify(this.state.messages), `${this.CLIENT_KEY}${this.state.username}`).toString()
+      CryptoJS.SHA256(`${this.state.username}${remotePeerIndex}-messages`).toString(CryptoJS.enc.Base64), 
+      CryptoJS.AES.encrypt(JSON.stringify(this.state.messages[remotePeerIndex]), `${this.CLIENT_KEY}${this.state.username}${remotePeerIndex}`).toString()
     );
     this.setState({messages: this.state.messages, lastMessage: message}, () => {
       this.scrollToBottom();
@@ -243,11 +250,12 @@ class Chat extends Component<ChatProps, ChatState> {
   }
 
   connectToPeer(user: User) {
-    
+
     var conn = this.props.localPeer.connect(user.peerID);
  
     conn.on('open', () => {
       this.updateRemotePeerConnections(user.username, conn);
+      
     });
 
     conn.on('data', (data) => {
@@ -294,6 +302,7 @@ class Chat extends Component<ChatProps, ChatState> {
                   <MessagesDisplay
                     messages={messages[selectedRemotePeer.username]}
                     localUsername={username}
+                    remoteUsername={selectedRemotePeer.username}
                     lastMessage={lastMessage}
                   />
                 </>

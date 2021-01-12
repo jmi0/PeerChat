@@ -2,17 +2,13 @@ import { Component } from 'react'
 import moment from 'moment'
 import { ListItem, Grid } from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
+import { Message } from '../Interfaces'
 
-interface Message {
-  message: { username: string, message: string},
-  from: string,
-  timestamp: string,
-  seen: Boolean
-}
 
 type MessagesProps = {
   messages: Message[],
   localUsername: string,
+  remoteUsername: string,
   lastMessage: Message|Object
 }
 
@@ -32,7 +28,10 @@ class MessagesDisplay extends Component<MessagesProps> {
 
   shouldComponentUpdate (nextProps: MessagesProps) {
     // optimization so we only rerender if a message is added
-    return (this.props.lastMessage !== nextProps.lastMessage);
+    return (
+      (this.props.lastMessage !== nextProps.lastMessage) || 
+      (this.props.remoteUsername !== nextProps.remoteUsername)
+    );
   }
 
 

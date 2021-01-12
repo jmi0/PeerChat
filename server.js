@@ -32,6 +32,9 @@ users.insert({username: 'gideon', passwordHash: crypto.SHA256('test2').toString(
 users.insert({username: 'joe', passwordHash: crypto.SHA256('test').toString(crypto.enc.Base64), peerID: '', lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
   if (err) console.log(err);
 });
+users.insert({username: 'rossi', passwordHash: crypto.SHA256('test').toString(crypto.enc.Base64), peerID: '', lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
+  if (err) console.log(err);
+});
 */
 
 
