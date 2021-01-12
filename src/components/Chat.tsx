@@ -1,12 +1,12 @@
-import React, { useEffect, Component, useState } from 'react'
+import React, { Component } from 'react'
 import Peer from 'peerjs' 
 import moment from 'moment';
 import CryptoJS from 'crypto-js';
-import { Icon, Box, Badge, Button, List, ListItem, ListItemText, ListItemIcon, SwipeableDrawer } from '@material-ui/core';
+import { Box, Badge, Button, List, ListItem, ListItemText, ListItemIcon } from '@material-ui/core';
 import CommentIcon from '@material-ui/icons/Comment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
-import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import Grid from '@material-ui/core/Grid';
+import MessagesDisplay from './Messages';
 import '../style/Chat.css';
 
 
@@ -44,7 +44,8 @@ type ChatState = {
   connections: Connections,
   messages: Messages,
   isLoggedIn: Boolean,
-  username: string
+  username: string,
+  lastMessage: Message|{}
 }
 
 /************************************************************************
@@ -72,6 +73,7 @@ class Chat extends Component<ChatProps, ChatState> {
       messages: {},//
       isLoggedIn: false,
       username: '',
+      lastMessage: {}
     };
 
     
@@ -126,7 +128,6 @@ class Chat extends Component<ChatProps, ChatState> {
       // connection receiver
       conn.on('open', () => {
         // connected
-        //if (!this.exists(this.state.connections[conn.peer])) conn.send(`Connection opened with ${this.state.localPeerID}`);
         this.state.remotePeers.find((peer, index) => {
           if (peer.peerID === conn.peer) this.updateRemotePeerConnections(peer.username, conn);
         });
@@ -194,17 +195,14 @@ class Chat extends Component<ChatProps, ChatState> {
 
   updateSeenStateOnPeerMessages(peer: User) {
     if (this.exists(this.state.messages[peer.username])) {
-      var messages = this.state.messages;
-      // update seen state of messages from this peer
-      let peerMessages = messages[peer.username];
-      messages[peer.username].forEach((message, index) => { messages[peer.username][index].seen = true; } )
-      this.setState({messages: messages}, () => {
-        this.scrollToBottom();
-      });
+      this.state.messages[peer.username].forEach((message, index) => { this.state.messages[peer.username][index].seen = true; } )
       localStorage.setItem(
         CryptoJS.SHA256(`${this.state.username}-messages`).toString(CryptoJS.enc.Base64), 
-        CryptoJS.AES.encrypt(JSON.stringify(messages), `${this.CLIENT_KEY}${this.state.username}`).toString()
+        CryptoJS.AES.encrypt(JSON.stringify(this.state.messages), `${this.CLIENT_KEY}${this.state.username}`).toString()
       );
+      this.setState({messages: this.state.messages}, () => {
+        this.scrollToBottom();
+      });
      
     }
   }
@@ -216,38 +214,31 @@ class Chat extends Component<ChatProps, ChatState> {
   }
 
   updateRemotePeerConnections(username: string, conn: Object) {
-    
-    let connections: Connections = this.state.connections;
-    connections[username] = conn;
-    this.setState({connections: connections}, () => {
+    this.state.connections[username] = conn;
+    this.setState({connections: this.state.connections}, () => {
       this.scrollToBottom();
-    });
-
-    
-    
+    }); 
   }
 
   updateRemotePeerMessages(username: string, textMessage: string, remotePeerIndex: string) {
-    
-    let messages: Messages = this.state.messages;
 
-    if (!this.exists(messages[remotePeerIndex])) messages[remotePeerIndex] = [];
+    if (!this.exists(this.state.messages[remotePeerIndex])) this.state.messages[remotePeerIndex] = [];
 
-    messages[remotePeerIndex].push({
+    let message = {
       message: {message: textMessage, username: username}, 
       timestamp: moment().format('YYYY-MM-DD HH:mm:ss'), 
       from: username, 
       seen: (this.state.selectedRemotePeer.username === username)
-    });
-    
-    this.setState({messages: messages}, () => {
-      this.scrollToBottom();
-    });
-
+    };
+    this.state.messages[remotePeerIndex].push(message);
+  
     localStorage.setItem(
       CryptoJS.SHA256(`${this.state.username}-messages`).toString(CryptoJS.enc.Base64), 
-      CryptoJS.AES.encrypt(JSON.stringify(messages), `${this.CLIENT_KEY}${this.state.username}`).toString()
+      CryptoJS.AES.encrypt(JSON.stringify(this.state.messages), `${this.CLIENT_KEY}${this.state.username}`).toString()
     );
+    this.setState({messages: this.state.messages, lastMessage: message}, () => {
+      this.scrollToBottom();
+    });
     
   }
 
@@ -261,7 +252,6 @@ class Chat extends Component<ChatProps, ChatState> {
 
     conn.on('data', (data) => {
       this.updateRemotePeerMessages(data.username, data.message, data.username);
-      //console.log(conn.peer, this.state.messages[conn.peer]);
     });
     
   }
@@ -286,7 +276,7 @@ class Chat extends Component<ChatProps, ChatState> {
 
   render() {
     
-    const { username, remotePeers, connections, textMessage, selectedRemotePeer, messages } = this.state;
+    const { username, remotePeers, connections, textMessage, selectedRemotePeer, messages, localPeerID, lastMessage } = this.state;
     
     return (
       <Grid container spacing={0}>
@@ -300,30 +290,14 @@ class Chat extends Component<ChatProps, ChatState> {
                 <></>
               }
               {this.exists(messages[selectedRemotePeer.username]) ?
-              <>
-              {messages[selectedRemotePeer.username].map((message, index) => {
-                return (
-                  <ListItem dense key={`${JSON.stringify(message)}-${index}`}>
-                    <Grid container justify="flex-start" direction="row">
-                      <Grid item xs={1}><AccountCircleIcon style={{float: 'left'}} color={message.from === username ? 'primary':'secondary'} fontSize={'large'} /></Grid>
-                      <Grid item xs={11} className={'messageDisplaycontainer'}>
-                        <div>
-                          <span className='messageDisplayName'>{message.from}</span>
-                          <span className='messageDisplayTS'>{moment(message.timestamp).format('M/D/YY h:mm a')}</span>
-                        </div>
-                        <div className='messageDisplayMSG'>{message.message.message}</div>  
-                      </Grid>
-                    </Grid>
-                    
-
-                   
-                  </ListItem>
-                );
-
-                
-                
-              })}
-              </> : ''
+                <>
+                  <MessagesDisplay
+                    messages={messages[selectedRemotePeer.username]}
+                    localUsername={username}
+                    lastMessage={lastMessage}
+                  />
+                </>
+              : ''
               }
               </List>
               <div ref={this.chatWindowRef}></div>
@@ -356,7 +330,7 @@ class Chat extends Component<ChatProps, ChatState> {
               }
 
               return (
-                <ListItem key={JSON.stringify(peer)} dense button selected={selectedRemotePeer.username === peer.username} onClick={(event) => this.handleRemotePeerChange(event, peer)}>
+                <ListItem key={JSON.stringify(peer)} button selected={selectedRemotePeer.username === peer.username} onClick={(event) => this.handleRemotePeerChange(event, peer)}>
                 {this.exists(connections[peer.username]) ? 
                   <>
                   <ListItemIcon>
