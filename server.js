@@ -24,7 +24,7 @@ const PORT = process.env.PORT || 9000;
  */
 const users = new Datastore({ filename: './.app_data/users.db', autoload: true });
 // create unique index on username
-users.ensureIndex({ fieldName: 'username', unique: true, sparse: true});
+users.ensureIndex({ fieldName: 'username', unique: true, sparse: true });
 /*
 users.insert({username: 'gideon', passwordHash: crypto.SHA256('test2').toString(crypto.enc.Base64), peerID: '', lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
   if (err) console.log(err);

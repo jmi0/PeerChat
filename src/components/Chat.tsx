@@ -13,20 +13,19 @@ import '../style/Chat.css';
 
 
 type ChatProps = {
-  localPeer: Peer
+  localPeer: Peer,
+  user: User
 }
 
 type ChatState = {
-  remotePeers: User[],
   localPeer: Peer,
-  localPeerID: string,
+  user: User,
+  remotePeers: User[],
   selectedRemotePeer: User,
   textMessage: string,
   connections: Connections,
   messages: Messages,
-  isLoggedIn: Boolean,
-  username: string,
-  lastMessage: Message|{}
+  lastMessage: Message|Object
 }
 
 /************************************************************************
@@ -45,15 +44,13 @@ class Chat extends Component<ChatProps, ChatState> {
     super(props);
 
     this.state = {
+      localPeer: this.props.localPeer,
+      user: this.props.user,
       remotePeers: [],
-      localPeer: this.props.localPeer,//
-      localPeerID: '',
-      selectedRemotePeer: {username: '', peerID: '', _id: ''},//
-      textMessage: '',//
+      selectedRemotePeer: {username: '', peerID: '', _id: ''},
+      textMessage: '',
       connections: {},
-      messages: {},//
-      isLoggedIn: false,
-      username: '',
+      messages: {},
       lastMessage: {}
     };
 
@@ -70,11 +67,12 @@ class Chat extends Component<ChatProps, ChatState> {
     /**
      * Check if logged in
      */
+    /*
     fetch("/check")
     .then(res => res.json())
     .then((result) => {
       if (this.exists(result.username)) {
-        this.setState({ isLoggedIn: true, username: result.username });
+        this.setState({ username: result.username });
         localStorage.setItem(
           CryptoJS.SHA256(`lastUser`).toString(CryptoJS.enc.Base64), 
           CryptoJS.AES.encrypt(JSON.stringify({peerID: this.state.localPeerID, username: result.username, _id: ''}), `${this.CLIENT_KEY}lastUser`).toString()
@@ -98,14 +96,16 @@ class Chat extends Component<ChatProps, ChatState> {
       }
       
     })
-
+    */
     
     
     // get local peer id from peer server
     this.state.localPeer.on('open', (peerid) => {
-      this.setState({localPeerID: peerid});
-      //assocciate peer id to username on server side
-      this.setUserPeerID(peerid);
+      let user: User = this.state.user;
+      user.peerID = peerid;
+      this.setState({user: user});
+      //associate peer id to username on server side
+      this.updateUserPeerID(user);
       // retrieve remote peers
       this.getRemotePeers();
     });
@@ -122,7 +122,7 @@ class Chat extends Component<ChatProps, ChatState> {
       // connection receiver
       conn.on('open', () => {
         // connected
-        this.state.remotePeers.find((peer, index) => {
+        this.state.remotePeers.forEach((peer, index) => {
           if (peer.peerID === conn.peer) this.updateRemotePeerConnections(peer.username, conn);
         });
         
@@ -158,7 +158,7 @@ class Chat extends Component<ChatProps, ChatState> {
     .then(res => res.json())
     .then((result) => {
       // establish new connection if there is a change in peerid of existing connection
-      result.map((peer: any) => {
+      result.forEach((peer: any) => {
         if (this.exists(this.state.connections[peer.username])) {
           if (peer.peerID !== this.state.connections[peer.username].peer) this.connectToPeer(peer);
         }
@@ -170,12 +170,12 @@ class Chat extends Component<ChatProps, ChatState> {
   }
 
   
-  setUserPeerID(peerid: string) {
+  updateUserPeerID(user: User) {
     fetch('/updatepeerid', {
       method: 'POST', 
       body: JSON.stringify({ 
-        username: this.state.username,
-        peerid: peerid
+        username: user.username,
+        peerid: user.peerID
       }), 
       headers: {'Content-Type': 'application/json'}
     })
@@ -191,45 +191,50 @@ class Chat extends Component<ChatProps, ChatState> {
 
   updateSeenStateOnPeerMessages(peer: User) {
     if (this.exists(this.state.messages[peer.username])) {
-      this.state.messages[peer.username].forEach((message, index) => { this.state.messages[peer.username][index].seen = true; } )
-      localStorage.setItem(
-        CryptoJS.SHA256(`${this.state.username}${peer.username}-messages`).toString(CryptoJS.enc.Base64), 
-        CryptoJS.AES.encrypt(JSON.stringify(this.state.messages[peer.username]), `${this.CLIENT_KEY}${this.state.username}${peer.username}`).toString()
-      );
-      this.setState({messages: this.state.messages}, () => {
-        this.scrollToBottom();
+      let peerMessages: Messages = this.state.messages;
+      peerMessages[peer.username].forEach((message, index) => {
+        peerMessages[peer.username][index].seen = true;
+      }, () => {
+        this.setState({messages: this.state.messages}, () => {
+          this.scrollToBottom();
+          localStorage.setItem(
+            CryptoJS.SHA256(`${this.state.user.username}${peer.username}-messages`).toString(CryptoJS.enc.Base64), 
+            CryptoJS.AES.encrypt(JSON.stringify(this.state.messages[peer.username]), `${this.CLIENT_KEY}${this.state.user.username}${peer.username}`).toString()
+          );
+        });
       });
-     
+      
     }
   }
   
 
   handleRemotePeerChange = (event: React.MouseEvent, peer: User) => {
     // get stored messages on connection for this user
-    let peerMessages: string|null = localStorage.getItem(CryptoJS.SHA256(`${this.state.username}${peer.username}-messages`).toString(CryptoJS.enc.Base64));
-    if (peerMessages !== null) {
-      this.state.messages[peer.username] = JSON.parse(CryptoJS.AES.decrypt(peerMessages, `${this.CLIENT_KEY}${this.state.username}${peer.username}`).toString(CryptoJS.enc.Utf8));
-      this.setState({ messages: this.state.messages });
-    } else {
-      this.state.messages[peer.username] = [];
-      this.setState({ messages: this.state.messages });
-    }
-
-    this.setState({selectedRemotePeer: peer});
-    this.updateSeenStateOnPeerMessages(peer);
-    this.connectToPeer(peer);
+    let peerMessages: string|null = localStorage.getItem(CryptoJS.SHA256(`${this.state.user.username}${peer.username}-messages`).toString(CryptoJS.enc.Base64));
+    let messages: Messages = this.state.messages;
+    if (peerMessages !== null)
+      messages[peer.username] = JSON.parse(CryptoJS.AES.decrypt(peerMessages, `${this.CLIENT_KEY}${this.state.user.username}${peer.username}`).toString(CryptoJS.enc.Utf8));
+    else messages[peer.username] = [];
+    
+    this.setState({selectedRemotePeer: peer, messages: messages}, () => {
+      this.updateSeenStateOnPeerMessages(peer);
+      this.connectToPeer(peer);
+    });
+    
   }
 
   updateRemotePeerConnections(username: string, conn: Object) {
-    this.state.connections[username] = conn;
-    this.setState({connections: this.state.connections}, () => {
+    let connections: Connections = this.state.connections;
+    connections[username] = conn;
+    this.setState({connections: connections}, () => {
       this.scrollToBottom();
     }); 
   }
 
   updateRemotePeerMessages(username: string, textMessage: string, remotePeerIndex: string) {
 
-    if (!this.exists(this.state.messages[remotePeerIndex])) this.state.messages[remotePeerIndex] = [];
+    var messages: Messages = this.state.messages;
+    if (!this.exists(messages[remotePeerIndex])) messages[remotePeerIndex] = [];
 
     let message = {
       message: {message: textMessage, username: username}, 
@@ -237,13 +242,14 @@ class Chat extends Component<ChatProps, ChatState> {
       from: username, 
       seen: (this.state.selectedRemotePeer.username === username)
     };
-    this.state.messages[remotePeerIndex].push(message);
+
+    messages[remotePeerIndex].push(message);
   
     localStorage.setItem(
-      CryptoJS.SHA256(`${this.state.username}${remotePeerIndex}-messages`).toString(CryptoJS.enc.Base64), 
-      CryptoJS.AES.encrypt(JSON.stringify(this.state.messages[remotePeerIndex]), `${this.CLIENT_KEY}${this.state.username}${remotePeerIndex}`).toString()
+      CryptoJS.SHA256(`${this.state.user.username}${remotePeerIndex}-messages`).toString(CryptoJS.enc.Base64), 
+      CryptoJS.AES.encrypt(JSON.stringify(messages[remotePeerIndex]), `${this.CLIENT_KEY}${this.state.user.username}${remotePeerIndex}`).toString()
     );
-    this.setState({messages: this.state.messages, lastMessage: message}, () => {
+    this.setState({messages: messages, lastMessage: message}, () => {
       this.scrollToBottom();
     });
     
@@ -265,8 +271,8 @@ class Chat extends Component<ChatProps, ChatState> {
   }
 
   sendMessage = (event: React.MouseEvent) => {
-    this.state.connections[this.state.selectedRemotePeer.username].send({username: this.state.username, message: this.state.textMessage});
-    this.updateRemotePeerMessages(this.state.username, this.state.textMessage, this.state.selectedRemotePeer.username);
+    this.state.connections[this.state.selectedRemotePeer.username].send({username: this.state.user.username, message: this.state.textMessage});
+    this.updateRemotePeerMessages(this.state.user.username, this.state.textMessage, this.state.selectedRemotePeer.username);
     this.setState({textMessage: ''});
   }
 
@@ -284,7 +290,7 @@ class Chat extends Component<ChatProps, ChatState> {
 
   render() {
     
-    const { username, remotePeers, connections, textMessage, selectedRemotePeer, messages, localPeerID, lastMessage } = this.state;
+    const { user, remotePeers, connections, textMessage, selectedRemotePeer, messages, lastMessage } = this.state;
     
     return (
       <Grid container spacing={0}>
@@ -301,7 +307,7 @@ class Chat extends Component<ChatProps, ChatState> {
                 <>
                   <MessagesDisplay
                     messages={messages[selectedRemotePeer.username]}
-                    localUsername={username}
+                    localUsername={user.username}
                     remoteUsername={selectedRemotePeer.username}
                     lastMessage={lastMessage}
                   />
@@ -329,7 +335,8 @@ class Chat extends Component<ChatProps, ChatState> {
             <ListItem disabled>No Peers Available</ListItem> :
             <>
             {remotePeers.map((peer: User) => {
-              if (peer.username === username) return '';
+
+              if (peer.username === user.username) return '';
               
               var unreadCount = 0;
               var hasMessages = false;

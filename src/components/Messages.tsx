@@ -20,12 +20,6 @@ type MessagesProps = {
 class MessagesDisplay extends Component<MessagesProps> {
 
 
-  constructor(props: MessagesProps | Readonly<MessagesProps>) {
-
-    super(props);
-
-  }
-
   shouldComponentUpdate (nextProps: MessagesProps) {
     // optimization so we only rerender if a message is added
     return (
@@ -33,7 +27,6 @@ class MessagesDisplay extends Component<MessagesProps> {
       (this.props.remoteUsername !== nextProps.remoteUsername)
     );
   }
-
 
 
   render() {
