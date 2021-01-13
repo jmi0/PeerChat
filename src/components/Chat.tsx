@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import Peer from 'peerjs' 
 import moment from 'moment';
 import CryptoJS from 'crypto-js';
 import { Box, Badge, Button, List, ListItem, ListItemText, ListItemIcon } from '@material-ui/core';
@@ -7,26 +6,11 @@ import CommentIcon from '@material-ui/icons/Comment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import Grid from '@material-ui/core/Grid';
 
-import { User, Connections, Messages, Message } from '../Interfaces'
+import CLIENT_KEY, { ChatProps, ChatState, User, Connections, Messages } from '../App.config'
 import MessagesDisplay from './Messages';
 import '../style/Chat.css';
 
 
-type ChatProps = {
-  localPeer: Peer,
-  user: User
-}
-
-type ChatState = {
-  localPeer: Peer,
-  user: User,
-  remotePeers: User[],
-  selectedRemotePeer: User,
-  textMessage: string,
-  connections: Connections,
-  messages: Messages,
-  lastMessage: Message|Object
-}
 
 /************************************************************************
  * This component handles remote peer discovdery, connections, and 
@@ -36,7 +20,6 @@ class Chat extends Component<ChatProps, ChatState> {
 
   // variable to hold interval for remote peer discovery
   private updateRemotePeersInterval : number = 0;
-  private CLIENT_KEY : string = 'AfxKcLYZTn9SWcDZL';
   private chatWindowRef : React.RefObject<HTMLDivElement>|null  = React.createRef();
 
   constructor(props: ChatProps | Readonly<ChatProps>) {
@@ -199,7 +182,7 @@ class Chat extends Component<ChatProps, ChatState> {
           this.scrollToBottom();
           localStorage.setItem(
             CryptoJS.SHA256(`${this.state.user.username}${peer.username}-messages`).toString(CryptoJS.enc.Base64), 
-            CryptoJS.AES.encrypt(JSON.stringify(this.state.messages[peer.username]), `${this.CLIENT_KEY}${this.state.user.username}${peer.username}`).toString()
+            CryptoJS.AES.encrypt(JSON.stringify(this.state.messages[peer.username]), `${CLIENT_KEY}${this.state.user.username}${peer.username}`).toString()
           );
         });
       });
@@ -213,7 +196,7 @@ class Chat extends Component<ChatProps, ChatState> {
     let peerMessages: string|null = localStorage.getItem(CryptoJS.SHA256(`${this.state.user.username}${peer.username}-messages`).toString(CryptoJS.enc.Base64));
     let messages: Messages = this.state.messages;
     if (peerMessages !== null)
-      messages[peer.username] = JSON.parse(CryptoJS.AES.decrypt(peerMessages, `${this.CLIENT_KEY}${this.state.user.username}${peer.username}`).toString(CryptoJS.enc.Utf8));
+      messages[peer.username] = JSON.parse(CryptoJS.AES.decrypt(peerMessages, `${CLIENT_KEY}${this.state.user.username}${peer.username}`).toString(CryptoJS.enc.Utf8));
     else messages[peer.username] = [];
     
     this.setState({selectedRemotePeer: peer, messages: messages}, () => {
@@ -247,7 +230,7 @@ class Chat extends Component<ChatProps, ChatState> {
   
     localStorage.setItem(
       CryptoJS.SHA256(`${this.state.user.username}${remotePeerIndex}-messages`).toString(CryptoJS.enc.Base64), 
-      CryptoJS.AES.encrypt(JSON.stringify(messages[remotePeerIndex]), `${this.CLIENT_KEY}${this.state.user.username}${remotePeerIndex}`).toString()
+      CryptoJS.AES.encrypt(JSON.stringify(messages[remotePeerIndex]), `${CLIENT_KEY}${this.state.user.username}${remotePeerIndex}`).toString()
     );
     this.setState({messages: messages, lastMessage: message}, () => {
       this.scrollToBottom();

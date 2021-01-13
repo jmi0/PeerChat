@@ -2,7 +2,7 @@ import { Component } from 'react'
 import moment from 'moment'
 import { ListItem, Grid } from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
-import { Message } from '../Interfaces'
+import { Message } from '../App.config'
 
 
 type MessagesProps = {

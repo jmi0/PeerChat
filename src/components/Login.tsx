@@ -1,20 +1,11 @@
 import { Component } from 'react';
-import { Container, Box, TextField, Button } from '@material-ui/core';
+import { Container, Box, TextField, Button, FormControlLabel, Checkbox } from '@material-ui/core';
+import CryptoJS from 'crypto-js';
 import Peer from 'peerjs';
 import Chat from './Chat';
-import { User } from '../Interfaces';
+import CLIENT_KEY, { LoginProps, LoginState, User } from '../App.config';
 
-type LoginProps = {
 
-}
-
-type LoginState = {
-  username: string,
-  password: string,
-  isLoading: Boolean,
-  isLoggedIn: Boolean,
-  user: User
-}
 
 /************************************************************************
  * 
@@ -28,6 +19,7 @@ class Login extends Component<LoginProps, LoginState> {
     this.state = {
       username: '',
       password: '',
+      keepMeLoggedIn: false,
       isLoading: false,
       isLoggedIn: false,
       user: {username: '', peerID: '', _id: ''}
@@ -35,6 +27,7 @@ class Login extends Component<LoginProps, LoginState> {
 
     this.handleFormFieldChange = this.handleFormFieldChange.bind(this);
     this.login = this.login.bind(this);
+    this.submitLogin = this.submitLogin.bind(this);
 
   }
 
@@ -50,9 +43,12 @@ class Login extends Component<LoginProps, LoginState> {
         let user: User = this.state.user;
         user.username = result.username;
         this.setState({ isLoggedIn: true, isLoading: false, user: user});
-      } else this.setState({ isLoading: false });
+      } else {
+        this.setState({ isLoading: false });
+      }
     }, (error) => {
       console.log(error);
+
       this.setState({ isLoading: false });
     })
   }
@@ -61,13 +57,30 @@ class Login extends Component<LoginProps, LoginState> {
   
   }
 
-  login(e: React.SyntheticEvent) {
-    e.preventDefault();
+  keepMeLoggedIn() {
+    
+    let lastUser: string|null = localStorage.getItem(CryptoJS.SHA256(`lastUser`).toString(CryptoJS.enc.Base64));
+    if (lastUser !== null) {
+      /*
+      var user = JSON.parse(CryptoJS.AES.decrypt(lastUser, `${this.CLIENT_KEY}lastUser`).toString(CryptoJS.enc.Utf8));
+        this.setState({ 
+          username: user.username, 
+          localPeerID: user.peerID, 
+          localPeer: new Peer(user.peerID, {
+          host: window.location.hostname, port: 9000, path: '/peerserver'
+        })
+      });
+      */
+    }
+      
+  }
+
+  login(username: string, password: string, keepMeLoggedin: true|false) {
     fetch('/login', { 
       method: 'POST', 
       body: JSON.stringify({ 
-        username: this.state.username, 
-        password: this.state.password 
+        username: username, 
+        password: password 
       }), 
       headers: {'Content-Type': 'application/json'}
     })
@@ -77,20 +90,30 @@ class Login extends Component<LoginProps, LoginState> {
         let user: User = this.state.user;
         user.username = this.state.username;
         this.setState({ isLoggedIn: true, isLoading: false, user: user });
+        if (this.state.keepMeLoggedIn) {
+          localStorage.setItem(
+            CryptoJS.SHA256(`lastPersistentUser`).toString(CryptoJS.enc.Base64), 
+            CryptoJS.AES.encrypt(JSON.stringify({username: result.username, password: this.state.password}), `lastPersistentUser${CLIENT_KEY}`).toString()
+          );
+        }
+        
       }
       console.log(result);
     })
     .catch(error => {
       console.error('Error:', error);
     });
+  }
+
+  submitLogin(e: React.SyntheticEvent) {
+    this.login(this.state.username, this.state.password, this.state.keepMeLoggedIn);
+    e.preventDefault();
   };
 
-  handleFormFieldChange = (event: React.ChangeEvent) => {
-    if ((event.target as HTMLInputElement).name === 'username')
-      this.setState({ username: (event.target as HTMLInputElement).value });
-    else if ((event.target as HTMLInputElement).name === 'password')
-      this.setState({ password: (event.target as HTMLInputElement).value });
-    
+  handleFormFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    if (event.target.name === 'username') this.setState({ username: event.target.value });
+    else if (event.target.name === 'password') this.setState({ password: event.target.value });
+    else if (event.target.name === 'keepMeLoggedIn') this.setState({ keepMeLoggedIn: event.target.checked });
   }
 
 
@@ -98,7 +121,7 @@ class Login extends Component<LoginProps, LoginState> {
 
   render() {
 
-    const { username, password, isLoading, isLoggedIn, user } = this.state;
+    const { username, password, keepMeLoggedIn, isLoading, isLoggedIn, user } = this.state;
     
     if (isLoading) return(<></>);
     
@@ -115,12 +138,25 @@ class Login extends Component<LoginProps, LoginState> {
       return (
         <Container>
           <Box m={2}>
-            <form onSubmit={(e: React.SyntheticEvent) => { this.login(e) }}>
+            <form onSubmit={(e: React.SyntheticEvent) => { this.submitLogin(e) }}>
               <Box pt={2} >
                 <TextField required value={username} name="username" onChange={this.handleFormFieldChange} variant="outlined" label="username" type="text"  />
               </Box>
               <Box pt={2}>
                 <TextField required value={password} name="password" onChange={this.handleFormFieldChange} variant="outlined" label="password" type="password" />
+              </Box>
+              <Box pt={1} pl={1}>
+                <FormControlLabel
+                  control={
+                    <Checkbox
+                      checked={keepMeLoggedIn}
+                      onChange={this.handleFormFieldChange}
+                      name="keepMeLoggedIn"
+                      color="secondary"
+                    />
+                  }
+                  label="Keep me logged in"
+                />
               </Box>
               <Box pt={2}> 
                 <Button type='submit' size="large" variant="contained" color="primary">Login</Button>
