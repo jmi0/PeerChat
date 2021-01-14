@@ -1,10 +1,10 @@
 import { Component } from 'react';
-import { Container, Box, TextField, Button, FormControlLabel, Checkbox } from '@material-ui/core';
+import { Container, Box, TextField, Button, FormControlLabel, Checkbox, AppBar, Toolbar, IconButton, Typography } from '@material-ui/core';
+import MenuIcon from '@material-ui/icons/Menu';
 import CryptoJS from 'crypto-js';
 import Peer from 'peerjs';
 import Chat from './Chat';
 import CLIENT_KEY, { LoginProps, LoginState, User } from '../App.config';
-
 
 
 /************************************************************************
@@ -28,6 +28,8 @@ class Login extends Component<LoginProps, LoginState> {
     this.handleFormFieldChange = this.handleFormFieldChange.bind(this);
     this.login = this.login.bind(this);
     this.submitLogin = this.submitLogin.bind(this);
+    this.submitLogout = this.submitLogout.bind(this);
+    this.logout = this.logout.bind(this);
 
   }
 
@@ -110,6 +112,24 @@ class Login extends Component<LoginProps, LoginState> {
     e.preventDefault();
   };
 
+  submitLogout(e: React.MouseEvent) {
+    this.logout();
+  }
+
+  logout() {
+    this.setState({ isLoading: true });
+    fetch('/logout', { method: 'POST'})
+    .then(response => response.json())
+    .then(result => {
+      localStorage.removeItem(CryptoJS.SHA256(`persistentUser`).toString(CryptoJS.enc.Base64));
+    })
+    .catch(error => {
+      localStorage.removeItem(CryptoJS.SHA256(`persistentUser`).toString(CryptoJS.enc.Base64));
+    }).then(() => {
+      this.setState({ isLoading: false, isLoggedIn: false, user: {username: '', peerID: '', _id: ''} });
+    });
+  }
+
   handleFormFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.name === 'username') this.setState({ username: event.target.value });
     else if (event.target.name === 'password') this.setState({ password: event.target.value });
@@ -120,7 +140,6 @@ class Login extends Component<LoginProps, LoginState> {
 
 
   render() {
-
     const { username, password, keepMeLoggedIn, isLoading, isLoggedIn, user } = this.state;
     
     if (isLoading) return(<></>);
@@ -131,7 +150,11 @@ class Login extends Component<LoginProps, LoginState> {
         port: 9000, 
         path: '/peerserver'
       });
-      return (<><Chat localPeer={localPeer} user={user} /></>);
+      return (
+      <>
+        <Chat localPeer={localPeer} user={user} />
+      </>
+      );
     }
     
     else {

@@ -2,7 +2,7 @@
  * @Author: joe.iannone 
  * @Date: 2021-01-06 13:04:28 
  * @Last Modified by: joe.iannone
- * @Last Modified time: 2021-01-13 12:55:34
+ * @Last Modified time: 2021-01-14 10:55:53
  */
 
 
@@ -86,6 +86,11 @@ app.post('/login', (req, res) => {
       res.json({success: 1});
     }
   });
+});
+
+app.post('/logout', (req, res) => {
+  req.session.destroy();
+  res.json({success: 1});
 });
 
 

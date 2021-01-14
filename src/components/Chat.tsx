@@ -47,41 +47,6 @@ class Chat extends Component<ChatProps, ChatState> {
 
   componentDidMount() {
     
-    /**
-     * Check if logged in
-     */
-    /*
-    fetch("/check")
-    .then(res => res.json())
-    .then((result) => {
-      if (this.exists(result.username)) {
-        this.setState({ username: result.username });
-        localStorage.setItem(
-          CryptoJS.SHA256(`lastUser`).toString(CryptoJS.enc.Base64), 
-          CryptoJS.AES.encrypt(JSON.stringify({peerID: this.state.localPeerID, username: result.username, _id: ''}), `${this.CLIENT_KEY}lastUser`).toString()
-        );
-      } else {
-        window.location.href = "/login";
-      }
-    }, (error) => {
-      let lastUser: string|null = localStorage.getItem(CryptoJS.SHA256(`lastUser`).toString(CryptoJS.enc.Base64));
-      if (lastUser !== null) {
-         var user = JSON.parse(CryptoJS.AES.decrypt(lastUser, `${this.CLIENT_KEY}lastUser`).toString(CryptoJS.enc.Utf8));
-        this.setState({ 
-          username: user.username, 
-          localPeerID: user.peerID, 
-          localPeer: new Peer(user.peerID, {
-            host: window.location.hostname, port: 9000, path: '/peerserver'
-          })
-        });
-      } else {
-        window.location.href = "/login";
-      }
-      
-    })
-    */
-    
-    
     // get local peer id from peer server
     this.state.localPeer.on('open', (peerid) => {
       let user: User = this.state.user;
