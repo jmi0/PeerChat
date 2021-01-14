@@ -45,11 +45,12 @@ class Login extends Component<LoginProps, LoginState> {
         this.setState({ isLoggedIn: true, isLoading: false, user: user});
       } else {
         this.setState({ isLoading: false });
+        this.keepMeLoggedIn();
       }
     }, (error) => {
       console.log(error);
-
       this.setState({ isLoading: false });
+      this.keepMeLoggedIn();
     })
   }
 
@@ -58,24 +59,15 @@ class Login extends Component<LoginProps, LoginState> {
   }
 
   keepMeLoggedIn() {
-    
-    let lastUser: string|null = localStorage.getItem(CryptoJS.SHA256(`lastUser`).toString(CryptoJS.enc.Base64));
+    let lastUser: string|null = localStorage.getItem(CryptoJS.SHA256(`persistentUser`).toString(CryptoJS.enc.Base64));
     if (lastUser !== null) {
-      /*
-      var user = JSON.parse(CryptoJS.AES.decrypt(lastUser, `${this.CLIENT_KEY}lastUser`).toString(CryptoJS.enc.Utf8));
-        this.setState({ 
-          username: user.username, 
-          localPeerID: user.peerID, 
-          localPeer: new Peer(user.peerID, {
-          host: window.location.hostname, port: 9000, path: '/peerserver'
-        })
-      });
-      */
-    }
-      
+      let user: any = JSON.parse(CryptoJS.AES.decrypt(lastUser, `persistentUser${CLIENT_KEY}`).toString(CryptoJS.enc.Utf8));
+      this.login(user.username, user.password, true);
+    }   
   }
 
   login(username: string, password: string, keepMeLoggedin: true|false) {
+    this.setState({ isLoading: true });
     fetch('/login', { 
       method: 'POST', 
       body: JSON.stringify({ 
@@ -92,8 +84,8 @@ class Login extends Component<LoginProps, LoginState> {
         this.setState({ isLoggedIn: true, isLoading: false, user: user });
         if (this.state.keepMeLoggedIn) {
           localStorage.setItem(
-            CryptoJS.SHA256(`lastPersistentUser`).toString(CryptoJS.enc.Base64), 
-            CryptoJS.AES.encrypt(JSON.stringify({username: result.username, password: this.state.password}), `lastPersistentUser${CLIENT_KEY}`).toString()
+            CryptoJS.SHA256(`persistentUser`).toString(CryptoJS.enc.Base64), 
+            CryptoJS.AES.encrypt(JSON.stringify({username: username, password: password}), `persistentUser${CLIENT_KEY}`).toString()
           );
         }
         
@@ -101,6 +93,14 @@ class Login extends Component<LoginProps, LoginState> {
       console.log(result);
     })
     .catch(error => {
+      let lastUser: string|null = localStorage.getItem(CryptoJS.SHA256(`persistentUser`).toString(CryptoJS.enc.Base64));
+      if (lastUser !== null) {
+        let user: any = JSON.parse(CryptoJS.AES.decrypt(lastUser, `persistentUser${CLIENT_KEY}`).toString(CryptoJS.enc.Utf8));
+        // spoof login for offline mode
+        this.setState({ isLoggedIn: true, isLoading: false, user: {username: user.username, peerID: '', _id: ''}});
+      } else {
+        this.setState({ isLoggedIn: false, isLoading: false});
+      }
       console.error('Error:', error);
     });
   }
