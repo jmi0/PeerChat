@@ -5,10 +5,10 @@ import { Box, Badge, Button, List, ListItem, ListItemText, ListItemIcon } from '
 import CommentIcon from '@material-ui/icons/Comment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import Grid from '@material-ui/core/Grid';
-
 import CLIENT_KEY, { ChatProps, ChatState, User, Connections, Messages } from '../App.config'
 import MessagesDisplay from './Messages';
-import '../style/Chat.css';
+import '../style/Chat.scss';
+import Messenger from './Messenger';
 
 
 
@@ -171,14 +171,25 @@ class Chat extends Component<ChatProps, ChatState> {
     
   }
 
+  
   updateRemotePeerConnections(username: string, conn: Object) {
     let connections: Connections = this.state.connections;
     connections[username] = conn;
+    this.setState({ connections: connections});
+    /*
     this.setState({connections: connections}, () => {
       this.scrollToBottom();
     }); 
+    */
   }
 
+  // for incoming of peers that arent selected
+  updateIncomingMessages() {
+
+  }
+
+
+  // Messenger (will be for outgoing)
   updateRemotePeerMessages(username: string, textMessage: string, remotePeerIndex: string) {
 
     var messages: Messages = this.state.messages;
@@ -206,25 +217,27 @@ class Chat extends Component<ChatProps, ChatState> {
   connectToPeer(user: User) {
 
     var conn = this.props.localPeer.connect(user.peerID);
- 
+    
     conn.on('open', () => {
+      console.log('connected');
       this.updateRemotePeerConnections(user.username, conn);
-      
     });
 
+    
     conn.on('data', (data) => {
       this.updateRemotePeerMessages(data.username, data.message, data.username);
     });
     
   }
 
+  // Messenger
   sendMessage = (event: React.MouseEvent) => {
     this.state.connections[this.state.selectedRemotePeer.username].send({username: this.state.user.username, message: this.state.textMessage});
     this.updateRemotePeerMessages(this.state.user.username, this.state.textMessage, this.state.selectedRemotePeer.username);
     this.setState({textMessage: ''});
   }
 
-
+  // Messenger
   handleMessageChange = (event: React.ChangeEvent) => {
     this.setState({textMessage: (event.target as HTMLInputElement).value});
   }
@@ -239,10 +252,18 @@ class Chat extends Component<ChatProps, ChatState> {
   render() {
     
     const { user, remotePeers, connections, textMessage, selectedRemotePeer, messages, lastMessage } = this.state;
-    
+    console.log(this.exists(connections[selectedRemotePeer.username]));
     return (
       <>
       <Grid item xs={12} sm={8}>
+        <Messenger
+          key={`${JSON.stringify(messages[selectedRemotePeer.username])}${JSON.stringify(this.exists(connections[selectedRemotePeer.username]))}`}
+          localPeer={user}
+          remotePeer={selectedRemotePeer}
+          remotePeerConnection={(this.exists(connections[selectedRemotePeer.username])) ? connections[selectedRemotePeer.username] : false}
+          messages={(this.exists(messages[selectedRemotePeer.username])) ? messages[selectedRemotePeer.username] : []}
+        />
+        {/*
         <Box id='chat-window-container' >
           <Box id='chat-window'>
             <List>
@@ -273,6 +294,7 @@ class Chat extends Component<ChatProps, ChatState> {
           </Box> : ''
           }            
         </Box>
+        */}
       </Grid>
       <Grid item xs={12} sm={4} style={{borderLeft: '1px #d3d3d3 solid'}} >
         

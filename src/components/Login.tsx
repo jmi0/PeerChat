@@ -152,18 +152,7 @@ class Login extends Component<LoginProps, LoginState> {
       });
       return (
       <>
-      <Grid container spacing={0}>
-        
-        <AppBar position="static" id='app-bar'>
-          <Toolbar>
-            <IconButton edge="start" className={``} color="inherit" aria-label="menu">
-              <MenuIcon />
-            </IconButton>
-            <Typography variant="h6" className={``}>p2p-chat</Typography>
-              <Button color="inherit" onClick={this.submitLogout}>Logout</Button>
-          </Toolbar>
-        </AppBar>
-        
+      <Grid container spacing={0}>  
         <Chat localPeer={localPeer} user={user} />
       </Grid>
       </>
