@@ -1,5 +1,5 @@
 import { Component } from 'react';
-import { Container, Box, TextField, Button, FormControlLabel, Checkbox, AppBar, Toolbar, IconButton, Typography } from '@material-ui/core';
+import { Container, Box, TextField, Button, FormControlLabel, Checkbox, AppBar, Toolbar, IconButton, Typography, Grid } from '@material-ui/core';
 import MenuIcon from '@material-ui/icons/Menu';
 import CryptoJS from 'crypto-js';
 import Peer from 'peerjs';
@@ -152,7 +152,20 @@ class Login extends Component<LoginProps, LoginState> {
       });
       return (
       <>
+      <Grid container spacing={0}>
+        {/*
+        <AppBar position="static">
+          <Toolbar>
+            <IconButton edge="start" className={``} color="inherit" aria-label="menu">
+              <MenuIcon />
+            </IconButton>
+            <Typography variant="h6" className={``}>p2p-chat</Typography>
+              <Button color="inherit" onClick={this.submitLogout}>Logout</Button>
+          </Toolbar>
+        </AppBar>
+        */}
         <Chat localPeer={localPeer} user={user} />
+      </Grid>
       </>
       );
     }

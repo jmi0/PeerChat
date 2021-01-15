@@ -6,8 +6,6 @@
   width: 100%;
 }
 
-
-
 #text-send-region-container {
   margin-top: auto;
 }
@@ -38,8 +36,6 @@
   flex-direction: column;
   height: 100vh;
 }
-
-
 
 .messageDisplaycontainer {
   word-wrap: break-word;

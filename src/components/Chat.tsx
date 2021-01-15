@@ -241,80 +241,77 @@ class Chat extends Component<ChatProps, ChatState> {
     const { user, remotePeers, connections, textMessage, selectedRemotePeer, messages, lastMessage } = this.state;
     
     return (
-      <Grid container spacing={0}>
-
-        <Grid item xs={12} sm={8}>
-          <Box id='chat-window-container' >
-            <Box id='chat-window'>
-              <List>
-              {this.exists(connections[selectedRemotePeer.username]) ? 
-                <ListItem dense style={{color: 'green'}}>Connection opened with <b>&nbsp;{selectedRemotePeer.username}</b></ListItem> : 
-                <></>
-              }
-              {this.exists(messages[selectedRemotePeer.username]) ?
-                <>
-                  <MessagesDisplay
-                    messages={messages[selectedRemotePeer.username]}
-                    localUsername={user.username}
-                    remoteUsername={selectedRemotePeer.username}
-                    lastMessage={lastMessage}
-                  />
-                </>
+      <>
+      <Grid item xs={12} sm={8}>
+        <Box id='chat-window-container' >
+          <Box id='chat-window'>
+            <List>
+            {this.exists(connections[selectedRemotePeer.username]) ? 
+              <ListItem dense style={{color: 'green'}}>Connection opened with <b>&nbsp;{selectedRemotePeer.username}</b></ListItem> : 
+              <></>
+            }
+            {this.exists(messages[selectedRemotePeer.username]) ?
+              <>
+              <MessagesDisplay
+                messages={messages[selectedRemotePeer.username]}
+                localUsername={user.username}
+                remoteUsername={selectedRemotePeer.username}
+                lastMessage={lastMessage}
+              />
+              </>
               : ''
-              }
-              </List>
-              <div ref={this.chatWindowRef}></div>
-            </Box>
-            {this.exists(connections[selectedRemotePeer.username]) ?
-            <Box boxShadow={1} id={'text-send-region-container'} style={{borderTop: '1px #d3d3d3 solid'}}>
-              <Grid container spacing={0} id={'text-send-container'}>
-                <Grid item xs={8}><textarea style={{width: '100%', resize: 'none'}} value={textMessage} onChange={this.handleMessageChange} rows={2}></textarea></Grid>
-                <Grid item xs={2}><Button disableElevation variant="contained" color='primary' onClick={this.sendMessage} >Send</Button></Grid>
-              </Grid>
-            </Box> : ''
-            }            
+            }
+            </List>
+            <div ref={this.chatWindowRef}></div>
           </Box>
-        </Grid>
-        <Grid item xs={12} sm={4} style={{borderLeft: '1px #d3d3d3 solid'}} >
-          
+          {this.exists(connections[selectedRemotePeer.username]) ?
+          <Box boxShadow={1} id={'text-send-region-container'} style={{borderTop: '1px #d3d3d3 solid'}}>
+            <Grid container spacing={0} id={'text-send-container'}>
+              <Grid item xs={8}><textarea style={{width: '100%', resize: 'none'}} value={textMessage} onChange={this.handleMessageChange} rows={2}></textarea></Grid>
+              <Grid item xs={2}><Button disableElevation variant="contained" color='primary' onClick={this.sendMessage} >Send</Button></Grid>
+            </Grid>
+          </Box> : ''
+          }            
+        </Box>
+      </Grid>
+      <Grid item xs={12} sm={4} style={{borderLeft: '1px #d3d3d3 solid'}} >
+        
+        <List key={JSON.stringify(remotePeers)} disablePadding>
+        {(remotePeers.length < 2) ? 
+        <ListItem disabled>No Peers Available</ListItem> :
+          <>
+          {remotePeers.map((peer: User) => {
             
-          <List key={JSON.stringify(remotePeers)} disablePadding>
-          {(remotePeers.length < 2) ? 
-            <ListItem disabled>No Peers Available</ListItem> :
-            <>
-            {remotePeers.map((peer: User) => {
+            if (peer.username === user.username) return '';
+            
+            var unreadCount = 0;
+            var hasMessages = false;
+            
+            if (this.exists(messages[peer.username])) {
+              hasMessages = true;
+              unreadCount = messages[peer.username].filter((message) => peer.username === message.from ? message.seen === false : false).length;
+            }
 
-              if (peer.username === user.username) return '';
-              
-              var unreadCount = 0;
-              var hasMessages = false;
-              if (this.exists(messages[peer.username])) {
-                hasMessages = true;
-                unreadCount = messages[peer.username].filter((message) => peer.username === message.from ? message.seen === false : false).length;
-              }
-
-              return (
-                <ListItem key={JSON.stringify(peer)} button selected={selectedRemotePeer.username === peer.username} onClick={(event) => this.handleRemotePeerChange(event, peer)}>
+            return (
+              <ListItem key={JSON.stringify(peer)} button selected={selectedRemotePeer.username === peer.username} onClick={(event) => this.handleRemotePeerChange(event, peer)}>
                 {this.exists(connections[peer.username]) ? 
-                  <>
+                <>
                   <ListItemIcon>
                     <FiberManualRecordIcon fontSize='small' style={{color: 'green'}} />
                   </ListItemIcon>
                   <ListItemText primary={peer.username} />
-                  {hasMessages ? <Badge badgeContent={unreadCount} color="secondary"><CommentIcon fontSize='small' color='primary' /></Badge> : ''} 
+                    {hasMessages ? <Badge badgeContent={unreadCount} color="secondary"><CommentIcon fontSize='small' color='primary' /></Badge> : ''} 
                   </>: 
                   <ListItemText primary={peer.username} />
                 }
-                </ListItem>
-              )
-            })}
-            </>
-          }
-          </List>
-        </Grid>
-        
-
+              </ListItem>
+            )
+          })}
+          </>
+        }
+        </List>
       </Grid>
+      </>
     );
   }
 
