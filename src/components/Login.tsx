@@ -91,7 +91,7 @@ class Login extends Component<LoginProps, LoginState> {
           );
         }
         
-      }
+      } else this.setState({ isLoggedIn: false, isLoading: false});
       console.log(result);
     })
     .catch(error => {

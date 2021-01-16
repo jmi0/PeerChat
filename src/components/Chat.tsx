@@ -7,13 +7,13 @@ import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import Grid from '@material-ui/core/Grid';
 import CLIENT_KEY, { ChatProps, ChatState, User, Connections, Messages } from '../App.config'
 import MessagesDisplay from './Messages';
-import '../style/Chat.scss';
-import Messenger from './Messenger';
+import '../style/Chat.css';
+import { DataConnection } from 'peerjs';
 
 
 
 /************************************************************************
- * This component handles remote peer discovdery, connections, and 
+ * This component handles remote peer discovery, connections, and 
  * messages between peers
  */
 class Chat extends Component<ChatProps, ChatState> {
@@ -29,7 +29,8 @@ class Chat extends Component<ChatProps, ChatState> {
     this.state = {
       localPeer: this.props.localPeer,
       user: this.props.user,
-      remotePeers: [],
+      remotePeers: {},
+      onlinePeers: {},
       selectedRemotePeer: {username: '', peerID: '', _id: ''},
       textMessage: '',
       connections: {},
@@ -47,6 +48,13 @@ class Chat extends Component<ChatProps, ChatState> {
 
   componentDidMount() {
     
+    // get persistent peers
+    let peers: string|null = localStorage.getItem(CryptoJS.SHA256(`${this.state.user.username}-peers`).toString(CryptoJS.enc.Base64));
+    //var remotePeers: {[key: string]: User} = this.state.remotePeers;
+    if (peers !== null) {
+      this.setState({ remotePeers: JSON.parse(CryptoJS.AES.decrypt(peers, `${CLIENT_KEY}${this.state.user.username}-peers`).toString(CryptoJS.enc.Utf8))});
+    }
+
     // get local peer id from peer server
     this.state.localPeer.on('open', (peerid) => {
       let user: User = this.state.user;
@@ -65,12 +73,13 @@ class Chat extends Component<ChatProps, ChatState> {
       conn.on('data', (data) => {
         // received
         this.updateRemotePeerMessages(data.username, data.message, data.username);
+
       });
       
       // connection receiver
       conn.on('open', () => {
         // connected
-        this.state.remotePeers.forEach((peer, index) => {
+        Object.values(this.state.remotePeers).forEach((peer, index) => {
           if (peer.peerID === conn.peer) this.updateRemotePeerConnections(peer.username, conn);
         });
         
@@ -111,8 +120,15 @@ class Chat extends Component<ChatProps, ChatState> {
           if (peer.peerID !== this.state.connections[peer.username].peer) this.connectToPeer(peer);
         }
       });
-      if (JSON.stringify(result) !== JSON.stringify(this.state.remotePeers)) this.setState({remotePeers: result});
-    }, (error) => {
+
+      if (JSON.stringify(result) !== JSON.stringify(Object.values(this.state.remotePeers))) {
+        var online: {[key: string]: User} = {}; 
+        result.forEach((peer: any) => {
+          online[peer.username] = peer;
+        });
+        this.setState({onlinePeers: online });
+      }
+      }, (error) => {
       console.log(error);
     });
   }
@@ -172,21 +188,25 @@ class Chat extends Component<ChatProps, ChatState> {
   }
 
   
-  updateRemotePeerConnections(username: string, conn: Object) {
+  updateRemotePeerConnections(username: string, conn: DataConnection) {
     let connections: Connections = this.state.connections;
     connections[username] = conn;
-    this.setState({ connections: connections});
-    /*
     this.setState({connections: connections}, () => {
       this.scrollToBottom();
+      var persistentPeers = this.state.remotePeers;
+      persistentPeers[username] = {username: username, peerID: conn.peer, _id: ''};
+      this.updatePersistentPeers(persistentPeers);
     }); 
-    */
   }
 
-  // for incoming of peers that arent selected
-  updateIncomingMessages() {
-
+  updatePersistentPeers(peers: {[key: string]: User}) {
+    localStorage.setItem(
+      CryptoJS.SHA256(`${this.state.user.username}-peers`).toString(CryptoJS.enc.Base64), 
+      CryptoJS.AES.encrypt(JSON.stringify(peers), `${CLIENT_KEY}${this.state.user.username}-peers`).toString()
+    );
   }
+
+
 
 
   // Messenger (will be for outgoing)
@@ -219,11 +239,9 @@ class Chat extends Component<ChatProps, ChatState> {
     var conn = this.props.localPeer.connect(user.peerID);
     
     conn.on('open', () => {
-      console.log('connected');
       this.updateRemotePeerConnections(user.username, conn);
     });
 
-    
     conn.on('data', (data) => {
       this.updateRemotePeerMessages(data.username, data.message, data.username);
     });
@@ -251,25 +269,18 @@ class Chat extends Component<ChatProps, ChatState> {
 
   render() {
     
-    const { user, remotePeers, connections, textMessage, selectedRemotePeer, messages, lastMessage } = this.state;
+    const { user, remotePeers, onlinePeers, connections, textMessage, selectedRemotePeer, messages, lastMessage } = this.state;
     console.log(this.exists(connections[selectedRemotePeer.username]));
     return (
       <>
       <Grid item xs={12} sm={8}>
-        <Messenger
-          key={`${JSON.stringify(messages[selectedRemotePeer.username])}${JSON.stringify(this.exists(connections[selectedRemotePeer.username]))}`}
-          localPeer={user}
-          remotePeer={selectedRemotePeer}
-          remotePeerConnection={(this.exists(connections[selectedRemotePeer.username])) ? connections[selectedRemotePeer.username] : false}
-          messages={(this.exists(messages[selectedRemotePeer.username])) ? messages[selectedRemotePeer.username] : []}
-        />
-        {/*
         <Box id='chat-window-container' >
           <Box id='chat-window'>
             <List>
             {this.exists(connections[selectedRemotePeer.username]) ? 
-              <ListItem dense style={{color: 'green'}}>Connection opened with <b>&nbsp;{selectedRemotePeer.username}</b></ListItem> : 
-              <></>
+              <ListItem dense style={{color: 'green'}}>
+                Connection opened with <b>&nbsp;{selectedRemotePeer.username}</b>
+              </ListItem> : <></>
             }
             {this.exists(messages[selectedRemotePeer.username]) ?
               <>
@@ -280,7 +291,7 @@ class Chat extends Component<ChatProps, ChatState> {
                 lastMessage={lastMessage}
               />
               </>
-              : ''
+              : <></>
             }
             </List>
             <div ref={this.chatWindowRef}></div>
@@ -291,20 +302,17 @@ class Chat extends Component<ChatProps, ChatState> {
               <Grid item xs={8}><textarea style={{width: '100%', resize: 'none'}} value={textMessage} onChange={this.handleMessageChange} rows={2}></textarea></Grid>
               <Grid item xs={2}><Button disableElevation variant="contained" color='primary' onClick={this.sendMessage} >Send</Button></Grid>
             </Grid>
-          </Box> : ''
+          </Box> : <></>
           }            
         </Box>
-        */}
       </Grid>
       <Grid item xs={12} sm={4} style={{borderLeft: '1px #d3d3d3 solid'}} >
         
         <List key={JSON.stringify(remotePeers)} disablePadding>
-        {(remotePeers.length < 2) ? 
+        {(!Object.values(remotePeers).length && !Object.values(onlinePeers).length) ? 
         <ListItem disabled>No Peers Available</ListItem> :
           <>
-          {remotePeers.map((peer: User) => {
-            
-            if (peer.username === user.username) return '';
+          {Object.values(remotePeers).map((peer: User) => {
             
             var unreadCount = 0;
             var hasMessages = false;
@@ -329,9 +337,19 @@ class Chat extends Component<ChatProps, ChatState> {
               </ListItem>
             )
           })}
+          {Object.values(onlinePeers).map((peer: User) => {
+            if (this.exists(remotePeers[peer.username])) return <></>;
+            else if (peer.username === user.username) return <></>;
+            else return (
+              <ListItem key={JSON.stringify(peer)} button selected={selectedRemotePeer.username === peer.username} onClick={(event) => this.handleRemotePeerChange(event, peer)}>
+                <ListItemText primary={peer.username} />
+              </ListItem>
+            );
+          })}
           </>
         }
         </List>
+        
       </Grid>
       </>
     );

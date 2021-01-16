@@ -20,16 +20,17 @@ type ChatProps = {
     user: User
   }
   
-  type ChatState = {
+type ChatState = {
     localPeer: Peer,
     user: User,
-    remotePeers: User[],
+    remotePeers: {[key: string]: User},
+    onlinePeers: {[key: string]: User},
     selectedRemotePeer: User,
     textMessage: string,
     connections: Connections,
     messages: Messages,
     lastMessage: Message|Object
-  }
+}
 
 interface Connections {
     [key: string]: any
@@ -52,6 +53,13 @@ interface Messages {
     [key: string]: Message[]
 }
 
+type MessagesProps = {
+    messages: Message[],
+    localUsername: string,
+    remoteUsername: string,
+    lastMessage: Message|Object
+  }
+
 export type {
     LoginProps,
     LoginState,
@@ -60,7 +68,8 @@ export type {
     Connections,
     User,
     Message,
-    Messages
+    Messages,
+    MessagesProps
 }
 
 export default {
