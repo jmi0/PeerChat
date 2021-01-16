@@ -114,22 +114,21 @@ class Chat extends Component<ChatProps, ChatState> {
     fetch("/peers")
     .then(res => res.json())
     .then((result) => {
-      // establish new connection if there is a change in peerid of existing connection
-      result.forEach((peer: any) => {
-        if (this.exists(this.state.connections[peer.username])) {
-          if (peer.peerID !== this.state.connections[peer.username].peer) this.connectToPeer(peer);
-        }
-      });
-
-      if (JSON.stringify(result) !== JSON.stringify(Object.values(this.state.remotePeers))) {
-        var online: {[key: string]: User} = {}; 
+      
+      if (JSON.stringify(result) !== JSON.stringify(Object.values(this.state.onlinePeers))) {
+        
+        var online: {[key: string]: User} = {};
+        var remotePeers: {[key: string]: User} = this.state.remotePeers;
         result.forEach((peer: any) => {
+          if (peer.username === this.state.user.username) return;
           online[peer.username] = peer;
+          remotePeers[peer.username] = peer;
         });
-        this.setState({onlinePeers: online });
+        this.setState({onlinePeers: online, remotePeers: remotePeers });
       }
       }, (error) => {
-      console.log(error);
+        this.setState({onlinePeers: {} });
+        console.log(error);
     });
   }
 
@@ -160,7 +159,7 @@ class Chat extends Component<ChatProps, ChatState> {
         peerMessages[peer.username][index].seen = true;
       }, () => {
         this.setState({messages: this.state.messages}, () => {
-          this.scrollToBottom();
+          //this.scrollToBottom();
           localStorage.setItem(
             CryptoJS.SHA256(`${this.state.user.username}${peer.username}-messages`).toString(CryptoJS.enc.Base64), 
             CryptoJS.AES.encrypt(JSON.stringify(this.state.messages[peer.username]), `${CLIENT_KEY}${this.state.user.username}${peer.username}`).toString()
@@ -176,13 +175,13 @@ class Chat extends Component<ChatProps, ChatState> {
     // get stored messages on connection for this user
     let peerMessages: string|null = localStorage.getItem(CryptoJS.SHA256(`${this.state.user.username}${peer.username}-messages`).toString(CryptoJS.enc.Base64));
     let messages: Messages = this.state.messages;
-    if (peerMessages !== null)
-      messages[peer.username] = JSON.parse(CryptoJS.AES.decrypt(peerMessages, `${CLIENT_KEY}${this.state.user.username}${peer.username}`).toString(CryptoJS.enc.Utf8));
+    if (peerMessages !== null) messages[peer.username] = JSON.parse(CryptoJS.AES.decrypt(peerMessages, `${CLIENT_KEY}${this.state.user.username}${peer.username}`).toString(CryptoJS.enc.Utf8));
     else messages[peer.username] = [];
     
     this.setState({selectedRemotePeer: peer, messages: messages}, () => {
       this.updateSeenStateOnPeerMessages(peer);
       this.connectToPeer(peer);
+      //this.scrollToBottom();
     });
     
   }
@@ -192,7 +191,6 @@ class Chat extends Component<ChatProps, ChatState> {
     let connections: Connections = this.state.connections;
     connections[username] = conn;
     this.setState({connections: connections}, () => {
-      this.scrollToBottom();
       var persistentPeers = this.state.remotePeers;
       persistentPeers[username] = {username: username, peerID: conn.peer, _id: ''};
       this.updatePersistentPeers(persistentPeers);
@@ -209,7 +207,6 @@ class Chat extends Component<ChatProps, ChatState> {
 
 
 
-  // Messenger (will be for outgoing)
   updateRemotePeerMessages(username: string, textMessage: string, remotePeerIndex: string) {
 
     var messages: Messages = this.state.messages;
@@ -224,26 +221,35 @@ class Chat extends Component<ChatProps, ChatState> {
 
     messages[remotePeerIndex].push(message);
   
-    localStorage.setItem(
-      CryptoJS.SHA256(`${this.state.user.username}${remotePeerIndex}-messages`).toString(CryptoJS.enc.Base64), 
-      CryptoJS.AES.encrypt(JSON.stringify(messages[remotePeerIndex]), `${CLIENT_KEY}${this.state.user.username}${remotePeerIndex}`).toString()
-    );
     this.setState({messages: messages, lastMessage: message}, () => {
-      this.scrollToBottom();
+      //this.scrollToBottom();
+      localStorage.setItem(
+        CryptoJS.SHA256(`${this.state.user.username}${remotePeerIndex}-messages`).toString(CryptoJS.enc.Base64), 
+        CryptoJS.AES.encrypt(JSON.stringify(messages[remotePeerIndex]), `${CLIENT_KEY}${this.state.user.username}${remotePeerIndex}`).toString()
+      );
     });
     
   }
 
   connectToPeer(user: User) {
-
-    var conn = this.props.localPeer.connect(user.peerID);
     
+    if (this.exists(this.state.connections[user.username]) && this.state.connections[user.username].open) return; 
+    
+    let conn = this.props.localPeer.connect(user.peerID);
+    
+    if (!conn) return;
+   
     conn.on('open', () => {
+      console.log('open');
       this.updateRemotePeerConnections(user.username, conn);
     });
 
     conn.on('data', (data) => {
       this.updateRemotePeerMessages(data.username, data.message, data.username);
+    });
+ 
+    conn.on('error', function(err) { 
+      console.log(err);
     });
     
   }
@@ -270,7 +276,7 @@ class Chat extends Component<ChatProps, ChatState> {
   render() {
     
     const { user, remotePeers, onlinePeers, connections, textMessage, selectedRemotePeer, messages, lastMessage } = this.state;
-    console.log(this.exists(connections[selectedRemotePeer.username]));
+    
     return (
       <>
       <Grid item xs={12} sm={8}>
@@ -294,7 +300,6 @@ class Chat extends Component<ChatProps, ChatState> {
               : <></>
             }
             </List>
-            <div ref={this.chatWindowRef}></div>
           </Box>
           {this.exists(connections[selectedRemotePeer.username]) ?
           <Box boxShadow={1} id={'text-send-region-container'} style={{borderTop: '1px #d3d3d3 solid'}}>
@@ -308,7 +313,7 @@ class Chat extends Component<ChatProps, ChatState> {
       </Grid>
       <Grid item xs={12} sm={4} style={{borderLeft: '1px #d3d3d3 solid'}} >
         
-        <List key={JSON.stringify(remotePeers)} disablePadding>
+        <List key={`${JSON.stringify(remotePeers)}${JSON.stringify(onlinePeers)}`} disablePadding>
         {(!Object.values(remotePeers).length && !Object.values(onlinePeers).length) ? 
         <ListItem disabled>No Peers Available</ListItem> :
           <>
@@ -324,7 +329,7 @@ class Chat extends Component<ChatProps, ChatState> {
 
             return (
               <ListItem key={JSON.stringify(peer)} button selected={selectedRemotePeer.username === peer.username} onClick={(event) => this.handleRemotePeerChange(event, peer)}>
-                {this.exists(connections[peer.username]) ? 
+                {this.exists(onlinePeers[peer.username]) ? 
                 <>
                   <ListItemIcon>
                     <FiberManualRecordIcon fontSize='small' style={{color: 'green'}} />

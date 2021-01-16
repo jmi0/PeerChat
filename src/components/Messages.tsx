@@ -1,4 +1,4 @@
-import { Component } from 'react'
+import React, { Component } from 'react'
 import moment from 'moment'
 import { ListItem, Grid } from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
@@ -10,6 +10,11 @@ import { MessagesProps } from '../App.config'
  */
 class MessagesDisplay extends Component<MessagesProps> {
 
+  private chatWindowRef : React.RefObject<HTMLDivElement>|null  = React.createRef();
+
+  componentDidMount() {
+    this.scrollToBottom();
+  }
 
   shouldComponentUpdate (nextProps: MessagesProps) {
     // optimization so we only rerender if a message is added
@@ -18,6 +23,16 @@ class MessagesDisplay extends Component<MessagesProps> {
       (this.props.remoteUsername !== nextProps.remoteUsername)
     );
   }
+
+  componentDidUpdate() {
+    this.scrollToBottom();
+  }
+
+  scrollToBottom = () => {
+    if (this.chatWindowRef !== null && this.chatWindowRef.current !== null) {
+      this.chatWindowRef.current.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
 
   render() {
@@ -39,6 +54,7 @@ class MessagesDisplay extends Component<MessagesProps> {
           </ListItem>
         );
       })}
+      <div ref={this.chatWindowRef}></div>
       </>
     );
   }

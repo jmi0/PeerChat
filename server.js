@@ -2,7 +2,7 @@
  * @Author: joe.iannone 
  * @Date: 2021-01-06 13:04:28 
  * @Last Modified by: joe.iannone
- * @Last Modified time: 2021-01-14 10:55:53
+ * @Last Modified time: 2021-01-16 12:00:38
  */
 
 
@@ -35,7 +35,14 @@ users.insert({username: 'joe', passwordHash: crypto.SHA256('iannone').toString(c
 users.insert({username: 'rossi', passwordHash: crypto.SHA256('agent').toString(crypto.enc.Base64), peerID: '', lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
   if (err) console.log(err);
 });
+users.insert({username: 'test', passwordHash: crypto.SHA256('test').toString(crypto.enc.Base64), peerID: '', lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
+  if (err) console.log(err);
+});
+users.insert({username: 'test2', passwordHash: crypto.SHA256('test').toString(crypto.enc.Base64), peerID: '', lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
+  if (err) console.log(err);
+});
 */
+
 
 
 /***********************************************************************
