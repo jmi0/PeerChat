@@ -1,5 +1,6 @@
 import Peer from 'peerjs' // used for ChatState type
 
+
 const CLIENT_KEY : string = 'AfxKcLYZTn9SWcDZL';
 
 type LoginProps = {
@@ -16,12 +17,11 @@ type LoginState = {
 }
 
 type ChatProps = {
-    localPeer: Peer,
     user: User
   }
   
 type ChatState = {
-    localPeer: Peer,
+    localPeer: Peer|null,
     user: User,
     remotePeers: {[key: string]: User},
     onlinePeers: {[key: string]: User},
@@ -29,7 +29,8 @@ type ChatState = {
     textMessage: string,
     connections: Connections,
     messages: Messages,
-    lastMessage: Message|Object
+    lastMessage: Message|Object,
+    offline: Boolean
 }
 
 interface Connections {

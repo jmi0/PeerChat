@@ -145,15 +145,10 @@ class Login extends Component<LoginProps, LoginState> {
     if (isLoading) return(<></>);
     
     else if (isLoggedIn) {
-      const localPeer = new Peer({
-        host: window.location.hostname,
-        port: 9000, 
-        path: '/peerserver'
-      });
       return (
       <>
       <Grid container spacing={0}>  
-        <Chat localPeer={localPeer} user={user} />
+        <Chat user={user} />
       </Grid>
       </>
       );
