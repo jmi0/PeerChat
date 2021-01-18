@@ -22,7 +22,7 @@ type ChatProps = {
 }
   
 type ChatState = {
-    localPeer: Peer|null,
+    peer: Peer|null,
     user: User,
     remotePeers: {[key: string]: User},
     onlinePeers: {[key: string]: User},
@@ -41,8 +41,7 @@ interface Connections {
 
 interface User {
     username: string,
-    peerID: string,
-    _id: string
+    peerID: string
 }
   
 interface Message {

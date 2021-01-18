@@ -2,7 +2,7 @@
  * @Author: joe.iannone 
  * @Date: 2021-01-06 13:04:28 
  * @Last Modified by: joe.iannone
- * @Last Modified time: 2021-01-16 12:00:38
+ * @Last Modified time: 2021-01-18 13:31:21
  */
 
 
@@ -32,19 +32,19 @@ const users = new Datastore({ filename: './.app_data/users.db', autoload: true }
 // create unique index on username
 users.ensureIndex({ fieldName: 'username', unique: true, sparse: true });
 /*
-users.insert({username: 'gideon', passwordHash: crypto.SHA256('agent').toString(crypto.enc.Base64), peerID: '', lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
+users.insert({username: 'gideon', passwordHash: crypto.SHA256('agent').toString(crypto.enc.Base64), peerID: '', refreshToken: crypto.SHA256(`gideonagent${JWT_SECRET}${moment().format('YYYY-MM-DD HH:mm:ss')}`).toString(crypto.enc.Base64), lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
   if (err) console.log(err);
 });
-users.insert({username: 'joe', passwordHash: crypto.SHA256('iannone').toString(crypto.enc.Base64), peerID: '', lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
+users.insert({username: 'joe', passwordHash: crypto.SHA256('iannone').toString(crypto.enc.Base64), peerID: '', refreshToken: crypto.SHA256(`joeiannone${JWT_SECRET}${moment().format('YYYY-MM-DD HH:mm:ss')}`).toString(crypto.enc.Base64), lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
   if (err) console.log(err);
 });
-users.insert({username: 'rossi', passwordHash: crypto.SHA256('agent').toString(crypto.enc.Base64), peerID: '', lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
+users.insert({username: 'rossi', passwordHash: crypto.SHA256('agent').toString(crypto.enc.Base64), peerID: '', refreshToken: crypto.SHA256(`rossiagent${JWT_SECRET}${moment().format('YYYY-MM-DD HH:mm:ss')}`).toString(crypto.enc.Base64), lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
   if (err) console.log(err);
 });
-users.insert({username: 'test', passwordHash: crypto.SHA256('test').toString(crypto.enc.Base64), peerID: '', lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
+users.insert({username: 'test', passwordHash: crypto.SHA256('test').toString(crypto.enc.Base64), peerID: '', refreshToken: crypto.SHA256(`testtest${JWT_SECRET}${moment().format('YYYY-MM-DD HH:mm:ss')}`).toString(crypto.enc.Base64), lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
   if (err) console.log(err);
 });
-users.insert({username: 'test2', passwordHash: crypto.SHA256('test').toString(crypto.enc.Base64), peerID: '', lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
+users.insert({username: 'test2', passwordHash: crypto.SHA256('test').toString(crypto.enc.Base64), peerID: '', refreshToken: crypto.SHA256(`test2test${JWT_SECRET}${moment().format('YYYY-MM-DD HH:mm:ss')}`).toString(crypto.enc.Base64), lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
   if (err) console.log(err);
 });
 */
@@ -74,8 +74,10 @@ app.use((req, res, next) => {
 const validateToken = (req, res, next) => {
   let token = req.headers.authorization.split(' ')[1];
   jwt.verify(token, JWT_SECRET, function(err, decoded) {
-    if (err) res.json({error:err});
-    else {
+    if (err) {
+      if (err.name === 'TokenExpiredError') res.json({error:1, tokenexpired:1});
+      else res.json({error:err});
+    } else {
       req.body.username = decoded.username;
       next();
     }
@@ -97,11 +99,20 @@ app.post('/login', (req, res) => {
       jwt.sign({ username: doc.username }, JWT_SECRET, { expiresIn: 30 }, function(err, token) {
         if (err) res.json({error: err});
         else {
-          res.cookie('refresh_token', doc.passwordHash);
+          res.cookie('refresh_token', doc.refreshToken);
           res.json({success: 1, username: doc.username, token: token });
         }
       });
     }
+  });
+});
+
+
+app.get('/peers', validateToken, (req, res) => {
+  // get peers that are currently online
+  users.find({ peerID: { $in: Object.keys(peers) }}, { username: 1, peerID: 1, _id: 0}, function (err, docs) {
+    if (err) res.json({error:1});
+    else res.json(docs);
   });
 });
 
@@ -123,14 +134,14 @@ app.post('/checktoken', validateToken, (req, res) => {
 
 app.post('/refreshtoken', (req, res) => {
   const { refresh_token } = req.cookies;
-  users.findOne({ passwordHash: refresh_token }, (err, doc) => {
+  users.findOne({ refreshToken: refresh_token }, (err, doc) => {
     if (err) res.json({error: 1, msg: 'Something went wrong.'});
     else if (!doc) res.json({invalidtoken: 1, msg: 'Invalid token.'});
     else {
       jwt.sign({ username: doc.username }, JWT_SECRET, { expiresIn: 30 }, function(err, token) {
         if (err) res.json({error: err});
         else {
-          res.cookie('refresh_token', doc.passwordHash);
+          res.cookie('refresh_token', doc.refreshToken);
           res.json({success: 1, username: doc.username, token: token });
         }
       });
@@ -141,13 +152,7 @@ app.post('/refreshtoken', (req, res) => {
 
 
 
-app.get('/peers', (req, res) => {
-  // get peers that are currently online
-  users.find({ peerID: { $in: Object.keys(peers) }}, { username: 1, peerID: 1 }, function (err, docs) {
-    if (err) res.json({error:1});
-    else res.json(docs);
-  });
-});
+
 
 
 app.post('/register', (req, res) => {

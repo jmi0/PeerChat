@@ -1,10 +1,7 @@
 import { Component } from 'react';
 import { Container, Box, TextField, Button, FormControlLabel, Checkbox, AppBar, Toolbar, IconButton, Typography, Grid } from '@material-ui/core';
-import MenuIcon from '@material-ui/icons/Menu';
-import CryptoJS from 'crypto-js';
-import Peer from 'peerjs';
 import Chat from './Chat';
-import CLIENT_KEY, { LoginProps, LoginState, User } from '../App.config';
+import { LoginProps, LoginState, User } from '../App.config';
 
 
 /************************************************************************
@@ -21,7 +18,7 @@ class Login extends Component<LoginProps, LoginState> {
       password: '',
       isLoading: false,
       isLoggedIn: false,
-      user: {username: '', peerID: '', _id: ''},
+      user: {username: '', peerID: ''},
       token: false
     };
 
@@ -49,7 +46,7 @@ class Login extends Component<LoginProps, LoginState> {
         this.setState({ 
           isLoggedIn: true, 
           isLoading: false, 
-          user: { username: result.username, peerID: '',  _id: ''}, 
+          user: { username: result.username, peerID: ''}, 
           token: result.token
         });
       } else {
@@ -106,7 +103,7 @@ class Login extends Component<LoginProps, LoginState> {
     this.setState({ 
       isLoading: false, 
       isLoggedIn: false, 
-      user: {username: '', peerID: '', _id: ''}, 
+      user: {username: '', peerID: ''}, 
       token: false
     });
   }

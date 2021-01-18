@@ -27,11 +27,11 @@ class Chat extends Component<ChatProps, ChatState> {
     super(props);
 
     this.state = {
-      localPeer: null,
+      peer: null,
       user: this.props.user,
       remotePeers: {},
       onlinePeers: {},
-      selectedRemotePeer: {username: '', peerID: '', _id: ''},
+      selectedRemotePeer: {username: '', peerID: ''},
       textMessage: '',
       connections: {},
       messages: {},
@@ -77,7 +77,7 @@ class Chat extends Component<ChatProps, ChatState> {
 
     // get local peer id from peer server
     peer.on('open', (peerid) => {
-      console.log('OPEN');
+      
       let user: User = this.state.user;
       user.peerID = peerid;
       this.setState({user: user});
@@ -114,7 +114,7 @@ class Chat extends Component<ChatProps, ChatState> {
       //if (err.message.toLowerCase().search(`lost connection`) !== -1) this.receiver();
     });
 
-    this.setState({ localPeer: peer });
+    this.setState({ peer: peer });
   }
 
   scrollToBottom = () => {
@@ -133,74 +133,90 @@ class Chat extends Component<ChatProps, ChatState> {
    * Peer discovery method
    */
   getRemotePeers() {
-    fetch("/peers")
-    .then(res => res.json())
-    .then((result) => {
-
-      // restart receiver if going from offfline to online
+    
+    let headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    headers.append('Authorization', `Bearer ${this.state.token}`);
+    this.refreshFetch('/peers', 'GET', headers, null)
+    .then((result: any) => {
       
       if (this.state.offline) {
-        //console.log('restart receiver', this.state.localPeer.destroyed);
+        // if server was offline then create a new peer and update
+        // this will trigger another call to updateUserPeerID()
         this.receiver(new Peer({
           host: window.location.hostname,
           port: 9000, 
           path: '/peerserver'
         }));
-        //this.state.localPeer.reconnect();
       }
       
-      if (JSON.stringify(result) !== JSON.stringify(Object.values(this.state.onlinePeers))) {
-        
-        var online: {[key: string]: User} = {};
-        var remotePeers: {[key: string]: User} = this.state.remotePeers;
-        const setPeers = result.map((peer: any) => {
-          if (peer.username === this.state.user.username) return peer;
-          online[peer.username] = peer;
-          remotePeers[peer.username] = peer;
-          return peer;
-        });
-        
-        Promise.all(setPeers).then(() => {
-          this.setState({onlinePeers: online, remotePeers: remotePeers, offline: false });
-        });
-  
+      if (this.exists(result.token)) this.setState({token: result.token});
+      else {
+        if (JSON.stringify(result) !== JSON.stringify(Object.values(this.state.onlinePeers))) {
+          
+          var online: {[key: string]: User} = {};
+          var remotePeers: {[key: string]: User} = this.state.remotePeers;
+          const setPeers = result.map((peer: any) => {
+            if (peer.username === this.state.user.username) return peer;
+            online[peer.username] = peer;
+            remotePeers[peer.username] = peer;
+            return peer;
+          });
+            
+          Promise.all(setPeers).then(() => {
+            this.setState({onlinePeers: online, remotePeers: remotePeers, offline: false });
+          });
+      
+        }
       }
-    
-    }, (error) => {
-        this.setState({onlinePeers: {}, offline: true });
-        if (this.state.localPeer) this.state.localPeer.destroy();
-        //console.log(error);
+      
+    })
+    .catch((err) => {
+      this.setState({onlinePeers: {}, offline: true });
+      if (this.state.peer) this.state.peer.destroy();
     });
+
   }
 
+
+  refreshFetch(url: string, method: string, headers: Headers, body: string|Blob|ArrayBufferView|ArrayBuffer|FormData|URLSearchParams|null|undefined) {
+    return new Promise((resolve, reject) => {
+      // attempt to make request
+      fetch(url, {method: method, headers: headers, body: body})
+      .then(response => response.json())
+      .then(result => {
+        // token is expired
+        if (this.exists(result.tokenexpired)) {
+          // refresh token
+          fetch('/refreshtoken', { method: 'POST', headers: {'Content-Type': 'application/json'}})
+          .then(response => response.json())
+          .then(result => {
+            resolve(result);
+          })
+          .catch(err => reject(err))
+        } else resolve(result);
+      })
+      .catch(err => reject(err) )
+    });
+  }
 
 
   
   updateUserPeerID(user: User) {
     
-    fetch('/updatepeerid', {
-      method: 'POST',
-      body: JSON.stringify({ peerid: user.peerID }), 
-      headers: {
-        'Content-Type': 'application/json', 
-        'Authorization': `Bearer ${this.state.token}`
-      }
+    let headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    headers.append('Authorization', `Bearer ${this.state.token}`);
+    this.refreshFetch('/updatepeerid', 'POST', headers, JSON.stringify({ peerid: user.peerID }))
+    .then((result: any) => {
+      if (this.exists(result.token))
+        this.setState({token: result.token, offline: false}, () => { this.updateUserPeerID(user); });
+      else this.setState({ offline: false });
     })
-    .then(response => response.json())
-    .then(result => {
-      if (this.exists(result.error)) {
-        if (result.error.name === 'TokenExpiredError') {
-          // get new token
-          
-        }
-      }
-      console.log(result);
-      this.setState({ offline: false });
-    })
-    .catch(error => {
+    .catch((err) => {
       this.setState({ offline: true });
-      if (this.state.localPeer) this.state.localPeer.destroy();
-      console.error('Error:', error);
+      if (this.state.peer) this.state.peer.destroy();
+      console.log('Error:', err);
     });
   }
 
@@ -242,7 +258,7 @@ class Chat extends Component<ChatProps, ChatState> {
     connections[username] = conn;
     this.setState({connections: connections}, () => {
       var persistentPeers = this.state.remotePeers;
-      persistentPeers[username] = {username: username, peerID: conn.peer, _id: ''};
+      persistentPeers[username] = {username: username, peerID: conn.peer };
       this.updatePersistentPeers(persistentPeers);
     }); 
   }
@@ -282,11 +298,11 @@ class Chat extends Component<ChatProps, ChatState> {
 
   connectToPeer(user: User) {
     
-    if (!this.state.localPeer) return;
+    if (!this.state.peer) return;
 
     if (this.exists(this.state.connections[user.username]) && this.state.connections[user.username].open) return; 
     
-    let conn = this.state.localPeer.connect(user.peerID);
+    let conn = this.state.peer.connect(user.peerID);
     
     if (!conn) return;
    
