@@ -10,15 +10,16 @@ type LoginProps = {
 type LoginState = {
   username: string,
   password: string,
-  keepMeLoggedIn: true|false,
   isLoading: Boolean,
   isLoggedIn: Boolean,
-  user: User
+  user: User,
+  token: string|false,
 }
 
 type ChatProps = {
-    user: User
-  }
+    user: User,
+    token: string|false,
+}
   
 type ChatState = {
     localPeer: Peer|null,
@@ -30,7 +31,8 @@ type ChatState = {
     connections: Connections,
     messages: Messages,
     lastMessage: Message|Object,
-    offline: Boolean
+    offline: Boolean,
+    token: string|false,
 }
 
 interface Connections {

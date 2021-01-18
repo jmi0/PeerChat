@@ -12,12 +12,18 @@ const path = require('path');
 const moment = require('moment');
 const Datastore = require('nedb');
 const crypto = require('crypto-js');
-const session = require('express-session');
 const bodyParser = require('body-parser');
+const cookieParser = require('cookie-parser');
+const jwt = require('jsonwebtoken');
+
+
 
 var peers = {};
 
 const PORT = process.env.PORT || 9000;
+
+const JWT_SECRET = 'WWB42bAX6qnyVytguzxSj';
+
 
 /**********************************************************************
  * initialiaze nedb datastore for usernames
@@ -49,32 +55,32 @@ users.insert({username: 'test2', passwordHash: crypto.SHA256('test').toString(cr
  * Setup express app/server 
  */
 const app = express();
-app.use(bodyParser.urlencoded({
-  extended: true
-}));
-app.use(bodyParser.json())
 
-if (app.get('env') === 'production') app.set('trust proxy', 1)
-
-app.use(session({
-  secret: 'keyboard cat',
-  resave: false,
-  saveUninitialized: true,
-  cookie: {
-    expires: 60 * 60000, // 1 hour
-    secure: (app.get('env') === 'production')
-  }
-}))
-
+if (app.get('env') === 'production') app.set('trust proxy', 1);
 
 app.use(express.static('build'));
+
+app.use(cookieParser());
+app.use(bodyParser.urlencoded({extended: true}));
+app.use(bodyParser.json());
 
 
 // on each request
 app.use((req, res, next) => {
-
   next();
 });
+
+
+const validateToken = (req, res, next) => {
+  let token = req.headers.authorization.split(' ')[1];
+  jwt.verify(token, JWT_SECRET, function(err, decoded) {
+    if (err) res.json({error:err});
+    else {
+      req.body.username = decoded.username;
+      next();
+    }
+  });
+};
 
 // serve client build
 app.get('/', (req, res) => {
@@ -83,41 +89,56 @@ app.get('/', (req, res) => {
 
 
 app.post('/login', (req, res) => {
-  const username = req.body.username;
-  const password = req.body.password;
+  const { username, password } = req.body;
   users.findOne({ username: username, passwordHash: crypto.SHA256(password).toString(crypto.enc.Base64)}, (err, doc) => {
     if (err) res.json({error: 1, msg: 'Something went wrong.'});
     else if (!doc) res.json({nouser: 1, msg: 'Could not find user name and password combination.'});
     else {
-      req.session.username = doc.username
-      res.json({success: 1});
+      jwt.sign({ username: doc.username }, JWT_SECRET, { expiresIn: 30 }, function(err, token) {
+        if (err) res.json({error: err});
+        else {
+          res.cookie('refresh_token', doc.passwordHash);
+          res.json({success: 1, username: doc.username, token: token });
+        }
+      });
     }
   });
 });
 
-app.post('/logout', (req, res) => {
-  req.session.destroy();
-  res.json({success: 1});
+
+app.post('/updatepeerid', validateToken,  (req, res) => {
+  const { peerid, username } = req.body;
+  users.update({ username: username }, { $set: { peerID: peerid, lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') } }, {}, function (err, numReplaced) {
+    if (err) res.json({error:1});
+    else if (numReplaced == 0) res.json({error:1});
+    else res.json({success:1});
+  });
 });
 
 
-app.post('/updatepeerid', (req, res) => {
-  const username = req.body.username;
-  const peerid = req.body.peerid;
-
-  if (typeof req.session.username === 'undefined') res.json({error:1});
-  else if (req.session.username !== username) res.json({error:1});
-  else {
-    // renew session
-    req.session.touch();
-    // update users peerid
-    users.update({ username: username }, { $set: { peerID: peerid, lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') } }, {}, function (err, numReplaced) {
-      if (err) res.json({error:1});
-      else if (numReplaced == 0) res.json({error:1});
-      else res.json({success:1});
-    });
-  }
+app.post('/checktoken', validateToken, (req, res) => {
+  res.json({success:1, username: req.username });
 });
+
+
+app.post('/refreshtoken', (req, res) => {
+  const { refresh_token } = req.cookies;
+  users.findOne({ passwordHash: refresh_token }, (err, doc) => {
+    if (err) res.json({error: 1, msg: 'Something went wrong.'});
+    else if (!doc) res.json({invalidtoken: 1, msg: 'Invalid token.'});
+    else {
+      jwt.sign({ username: doc.username }, JWT_SECRET, { expiresIn: 30 }, function(err, token) {
+        if (err) res.json({error: err});
+        else {
+          res.cookie('refresh_token', doc.passwordHash);
+          res.json({success: 1, username: doc.username, token: token });
+        }
+      });
+    }
+  });
+});
+
+
 
 
 app.get('/peers', (req, res) => {
@@ -128,13 +149,11 @@ app.get('/peers', (req, res) => {
   });
 });
 
-app.get('/check', (req, res) => {
-  res.json(req.session);
-})
 
 app.post('/register', (req, res) => {
 
 });
+
 
 // listen on PORT
 const server = app.listen(PORT, () => {
@@ -151,6 +170,7 @@ const peerServer = ExpressPeerServer(server, {
   proxied: true
 });
 
+
 app.use('/peerserver', peerServer);
 
 
@@ -158,6 +178,7 @@ peerServer.on('connection', (client) => {
   peers[client.id] = client.id;
   //console.log("Server: Peer connected with ID:", client.id);
 });
+
 
 peerServer.on('disconnect', (client) => {
   delete peers[client.id];

@@ -13,7 +13,7 @@ import Peer, { DataConnection } from 'peerjs';
 
 
 /************************************************************************
- * This component handles remote peer discovery, connections, and 
+ * This component handles remote peer discovery, updating username/peerid associaiton on server, connections, and 
  * messages between peers
  */
 class Chat extends Component<ChatProps, ChatState> {
@@ -36,7 +36,8 @@ class Chat extends Component<ChatProps, ChatState> {
       connections: {},
       messages: {},
       lastMessage: {},
-      offline: false
+      offline: false,
+      token: this.props.token
     };
 
     
@@ -162,30 +163,37 @@ class Chat extends Component<ChatProps, ChatState> {
         Promise.all(setPeers).then(() => {
           this.setState({onlinePeers: online, remotePeers: remotePeers, offline: false });
         });
-
-        
-        
+  
       }
-      }, (error) => {
+    
+    }, (error) => {
         this.setState({onlinePeers: {}, offline: true });
         if (this.state.localPeer) this.state.localPeer.destroy();
         //console.log(error);
     });
   }
 
+
+
   
   updateUserPeerID(user: User) {
     
     fetch('/updatepeerid', {
-      method: 'POST', 
-      body: JSON.stringify({ 
-        username: user.username,
-        peerid: user.peerID
-      }), 
-      headers: {'Content-Type': 'application/json'}
+      method: 'POST',
+      body: JSON.stringify({ peerid: user.peerID }), 
+      headers: {
+        'Content-Type': 'application/json', 
+        'Authorization': `Bearer ${this.state.token}`
+      }
     })
     .then(response => response.json())
     .then(result => {
+      if (this.exists(result.error)) {
+        if (result.error.name === 'TokenExpiredError') {
+          // get new token
+          
+        }
+      }
       console.log(result);
       this.setState({ offline: false });
     })
