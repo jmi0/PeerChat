@@ -1,13 +1,14 @@
 import React, { Component } from 'react'
 import moment from 'moment';
 import CryptoJS from 'crypto-js';
-import { Box, Badge, Button, List, ListItem, ListItemText, ListItemIcon } from '@material-ui/core';
+import { Box, Badge, Button, List, ListItem, ListItemText, ListItemIcon, AppBar, IconButton, Typography, Toolbar } from '@material-ui/core';
+import MenuIcon from '@material-ui/icons/Menu';
 import CommentIcon from '@material-ui/icons/Comment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import Grid from '@material-ui/core/Grid';
 import CLIENT_KEY, { ChatProps, ChatState, User, Connections, Messages } from '../App.config'
 import MessagesDisplay from './Messages';
-import '../style/Chat.css';
+import '../style/Chat.scss';
 import Peer, { DataConnection } from 'peerjs';
 
 
@@ -361,83 +362,100 @@ class Chat extends Component<ChatProps, ChatState> {
     
     return (
       <>
-      <Grid item xs={12} sm={8}>
-        <Box id='chat-window-container' >
-          <Box id='chat-window'>
-            <List>
-            {this.exists(connections[selectedRemotePeer.username]) && connections[selectedRemotePeer.username].open ? 
-              <ListItem dense style={{color: 'green'}}>
-                Connection opened with <b>&nbsp;{selectedRemotePeer.username}</b>
-              </ListItem> : <></>
-            }
-            {this.exists(messages[selectedRemotePeer.username]) ?
-              <>
-              <MessagesDisplay
-                messages={messages[selectedRemotePeer.username]}
-                localUsername={user.username}
-                remoteUsername={selectedRemotePeer.username}
-                lastMessage={lastMessage}
-              />
-              </>
-              : <></>
-            }
-            </List>
-          </Box>
-          {this.exists(connections[selectedRemotePeer.username]) ?
-          <Box boxShadow={1} id={'text-send-region-container'} style={{borderTop: '1px #d3d3d3 solid'}}>
-            <Grid container spacing={0} id={'text-send-container'}>
-              <Grid item xs={8}><textarea style={{width: '100%', resize: 'none'}} value={textMessage} onChange={this.handleMessageChange} rows={2}></textarea></Grid>
-              <Grid item xs={2}><Button disableElevation variant="contained" color='primary' onClick={this.sendMessage} >Send</Button></Grid>
-            </Grid>
-          </Box> : <></>
-          }            
+      <Box className='app'>
+        <Box className='header'>
+          <AppBar position="static">
+            <Toolbar>
+              <IconButton edge="start" color="inherit" aria-label="menu">
+                <MenuIcon />
+              </IconButton>
+              <Typography variant="h6">p2pChat</Typography>
+              <Button color="inherit">Logout</Button>
+            </Toolbar>
+          </AppBar>
         </Box>
-      </Grid>
-      <Grid item xs={12} sm={4} style={{borderLeft: '1px #d3d3d3 solid'}} >
-        
-        <List key={`${JSON.stringify(remotePeers)}${JSON.stringify(onlinePeers)}`} disablePadding>
-        {(!Object.values(remotePeers).length && !Object.values(onlinePeers).length) ? 
-          <ListItem key={'nopeersavailable'} disabled>No Peers Available</ListItem> :
-          <>
-          {Object.values(remotePeers).map((peer: User) => {
-            
-            var unreadCount = 0;
-            var hasMessages = false;
-            
-            if (this.exists(messages[peer.username])) {
-              hasMessages = true;
-              unreadCount = messages[peer.username].filter((message) => peer.username === message.from ? message.seen === false : false).length;
-            }
+        <Box className='wrapper'>
+        <Box className={'conversation-area'} >
+          
+          <List key={`${JSON.stringify(remotePeers)}${JSON.stringify(onlinePeers)}`} disablePadding>
+          {(!Object.values(remotePeers).length && !Object.values(onlinePeers).length) ? 
+            <ListItem key={'nopeersavailable'} disabled>No Peers Available</ListItem> :
+            <>
+            {Object.values(remotePeers).map((peer: User) => {
+              
+              var unreadCount = 0;
+              var hasMessages = false;
+              
+              if (this.exists(messages[peer.username])) {
+                hasMessages = true;
+                unreadCount = messages[peer.username].filter((message) => peer.username === message.from ? message.seen === false : false).length;
+              }
 
-            return (
-              <ListItem key={JSON.stringify(peer)} button selected={selectedRemotePeer.username === peer.username} onClick={(event) => this.handleRemotePeerChange(event, peer)}>
-                {this.exists(onlinePeers[peer.username]) ? 
-                <>
-                  <ListItemIcon>
-                    <FiberManualRecordIcon fontSize='small' style={{color: 'green'}} />
-                  </ListItemIcon>
+              return (
+                <ListItem key={JSON.stringify(peer)} button selected={selectedRemotePeer.username === peer.username} onClick={(event) => this.handleRemotePeerChange(event, peer)}>
+                  {this.exists(onlinePeers[peer.username]) ? 
+                  <>
+                    <ListItemIcon>
+                      <FiberManualRecordIcon fontSize='small' style={{color: 'green'}} />
+                    </ListItemIcon>
+                    <ListItemText primary={peer.username} />
+                      {hasMessages ? <Badge badgeContent={unreadCount} color="secondary"><CommentIcon fontSize='small' color='primary' /></Badge> : ''} 
+                    </>: 
+                    <ListItemText primary={peer.username} />
+                  }
+                </ListItem>
+              )
+            })}
+            {Object.values(onlinePeers).map((peer: User) => {
+              if (this.exists(remotePeers[peer.username])) return <></>;
+              else if (peer.username === user.username) return <></>;
+              else return (
+                <ListItem key={JSON.stringify(peer)} button selected={selectedRemotePeer.username === peer.username} onClick={(event) => this.handleRemotePeerChange(event, peer)}>
                   <ListItemText primary={peer.username} />
-                    {hasMessages ? <Badge badgeContent={unreadCount} color="secondary"><CommentIcon fontSize='small' color='primary' /></Badge> : ''} 
-                  </>: 
-                  <ListItemText primary={peer.username} />
-                }
-              </ListItem>
-            )
-          })}
-          {Object.values(onlinePeers).map((peer: User) => {
-            if (this.exists(remotePeers[peer.username])) return <></>;
-            else if (peer.username === user.username) return <></>;
-            else return (
-              <ListItem key={JSON.stringify(peer)} button selected={selectedRemotePeer.username === peer.username} onClick={(event) => this.handleRemotePeerChange(event, peer)}>
-                <ListItemText primary={peer.username} />
-              </ListItem>
-            );
-          })}
-          </>
-        }
-        </List>
+                </ListItem>
+              );
+            })}
+            </>
+          }
+          </List>
+          
+        </Box>
         
-      </Grid>
+        <Box className='chat-area' >
+            <Box className='chat-area-header'>Header</Box>
+            <Box className='chat-area-main'>
+              <List>
+              {this.exists(connections[selectedRemotePeer.username]) && connections[selectedRemotePeer.username].open ? 
+                <ListItem dense style={{color: 'green'}}>
+                  Connection opened with <b>&nbsp;{selectedRemotePeer.username}</b>
+                </ListItem> : <></>
+              }
+              {this.exists(messages[selectedRemotePeer.username]) ?
+                <>
+                <MessagesDisplay
+                  messages={messages[selectedRemotePeer.username]}
+                  localUsername={user.username}
+                  remoteUsername={selectedRemotePeer.username}
+                  lastMessage={lastMessage}
+                />
+                </>
+                : <></>
+              }
+              </List>
+              {this.exists(connections[selectedRemotePeer.username]) ?
+              <Box className={'chat-area-footer'}>
+                <Grid container spacing={0} id={'text-send-container'}>
+                  <Grid item xs={8}><textarea style={{width: '100%', resize: 'none'}} value={textMessage} onChange={this.handleMessageChange} rows={2}></textarea></Grid>
+                  <Grid item xs={2}><Button disableElevation variant="contained" color='primary' onClick={this.sendMessage} >Send</Button></Grid>
+                </Grid>
+              </Box> : <></>
+              }            
+            </Box>
+           
+        </Box>
+        
+      </Box>
+      </Box>
       </>
     );
   }

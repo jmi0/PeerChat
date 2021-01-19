@@ -123,9 +123,9 @@ class Login extends Component<LoginProps, LoginState> {
 
       return (
       <>
-      <Grid container spacing={0}>  
-        <Chat user={user} token={token} />
-      </Grid>
+      
+      <Chat user={user} token={token} />
+      
       </>
       );
     }
