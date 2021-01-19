@@ -107,6 +107,11 @@ app.post('/login', (req, res) => {
   });
 });
 
+app.post('/logout', (req, res) => {
+  res.clearCookie('refresh_token');
+  res.json({success:1});
+});
+
 
 app.get('/peers', validateToken, (req, res) => {
   // get peers that are currently online

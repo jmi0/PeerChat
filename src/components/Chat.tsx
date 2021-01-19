@@ -20,46 +20,48 @@ class Chat extends Component<ChatProps, ChatState> {
 
   // variable to hold interval for remote peer discovery
   private updateRemotePeersInterval : number = 0;
-  private chatWindowRef : React.RefObject<HTMLDivElement>|null  = React.createRef();
+  
 
   constructor(props: ChatProps | Readonly<ChatProps>) {
 
     super(props);
 
     this.state = {
-      peer: null,
       user: this.props.user,
+      token: this.props.token,
+      peer: null,
       remotePeers: {},
       onlinePeers: {},
-      selectedRemotePeer: {username: '', peerID: ''},
-      textMessage: '',
       connections: {},
       messages: {},
+      selectedRemotePeer: {username: '', peerID: ''},
+      textMessage: '',
       lastMessage: {},
       offline: false,
-      token: this.props.token
     };
 
-    
+    this.setUpPeer = this.setUpPeer.bind(this);
     this.handleRemotePeerChange = this.handleRemotePeerChange.bind(this);
     this.connectToPeer = this.connectToPeer.bind(this);
-    this.sendMessage = this.sendMessage.bind(this);
     this.handleMessageChange = this.handleMessageChange.bind(this);
+    this.sendMessage = this.sendMessage.bind(this);
+    this.getRemotePeers = this.getRemotePeers.bind(this);
+    this.updateUserPeerID = this.updateUserPeerID.bind(this);
+    this.updateRemotePeerConnections = this.updateRemotePeerConnections.bind(this);
+    this.updatePersistentPeers = this.updatePersistentPeers.bind(this);
+    this.updateRemotePeerMessages = this.updateRemotePeerMessages.bind(this);
     this.updateSeenStateOnPeerMessages = this.updateSeenStateOnPeerMessages.bind(this);
-    this.receiver = this.receiver.bind(this);
 
   }
+
 
   componentDidMount() {
     
     // get persistent peers
     let peers: string|null = localStorage.getItem(CryptoJS.SHA256(`${this.state.user.username}-peers`).toString(CryptoJS.enc.Base64));
-    //var remotePeers: {[key: string]: User} = this.state.remotePeers;
-    if (peers !== null) {
-      this.setState({ remotePeers: JSON.parse(CryptoJS.AES.decrypt(peers, `${CLIENT_KEY}${this.state.user.username}-peers`).toString(CryptoJS.enc.Utf8))});
-    }
-
-    this.receiver(new Peer({
+    if (peers !== null) this.setState({ remotePeers: JSON.parse(CryptoJS.AES.decrypt(peers, `${CLIENT_KEY}${this.state.user.username}-peers`).toString(CryptoJS.enc.Utf8))});
+    
+    this.setUpPeer(new Peer({
       host: window.location.hostname,
       port: 9000, 
       path: '/peerserver'
@@ -70,10 +72,22 @@ class Chat extends Component<ChatProps, ChatState> {
       this.getRemotePeers();
     }, 1000);
 
-
   }
 
-  receiver(peer: Peer) {
+
+  componentWillUnmount() {
+    // clear this interval before unmounting
+    clearInterval(this.updateRemotePeersInterval);
+  }
+
+
+  exists(v: any) {
+    if (typeof v !== 'undefined') return true;
+    else return false;
+  }
+
+
+  setUpPeer(peer: Peer) {
 
     // get local peer id from peer server
     peer.on('open', (peerid) => {
@@ -111,23 +125,11 @@ class Chat extends Component<ChatProps, ChatState> {
 
     peer.on('error', (err) => {
       console.log(`ERROR: ${err.message}`);
-      //if (err.message.toLowerCase().search(`lost connection`) !== -1) this.receiver();
     });
 
     this.setState({ peer: peer });
   }
 
-  scrollToBottom = () => {
-    
-    if (this.chatWindowRef !== null && this.chatWindowRef.current !== null) {
-      this.chatWindowRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  };
-
-  componentWillUnmount() {
-    // clear this interval before unmounting
-    clearInterval(this.updateRemotePeersInterval);
-  }
 
   /**
    * Peer discovery method
@@ -143,31 +145,44 @@ class Chat extends Component<ChatProps, ChatState> {
       if (this.state.offline) {
         // if server was offline then create a new peer and update
         // this will trigger another call to updateUserPeerID()
-        this.receiver(new Peer({
+        this.setUpPeer(new Peer({
           host: window.location.hostname,
           port: 9000, 
           path: '/peerserver'
         }));
       }
       
+      // if token set then just update token
       if (this.exists(result.token)) this.setState({token: result.token});
+
       else {
-        if (JSON.stringify(result) !== JSON.stringify(Object.values(this.state.onlinePeers))) {
-          
-          var online: {[key: string]: User} = {};
-          var remotePeers: {[key: string]: User} = this.state.remotePeers;
-          const setPeers = result.map((peer: any) => {
-            if (peer.username === this.state.user.username) return peer;
+
+        // initialize to assign to state
+        var online: {[key: string]: User} = {};
+        var remotePeers: {[key: string]: User} = this.state.remotePeers;
+
+        // make state updates about our peers (connections and online status)
+        result.forEach((peer: User) => {
+
+          // add to remote peer and online peer lists (if not self)
+          if (peer.username !== this.state.user.username) {
             online[peer.username] = peer;
             remotePeers[peer.username] = peer;
-            return peer;
-          });
+          }
+
+          // reconnect any broken connections on online peer update
+          // if connection exists
+          if (this.exists(this.state.connections[peer.username])) {
             
-          Promise.all(setPeers).then(() => {
-            this.setState({onlinePeers: online, remotePeers: remotePeers, offline: false });
-          });
-      
-        }
+            // if peer id changed create new connection
+            if (this.state.connections[peer.username].peer !== peer.peerID) this.connectToPeer(peer);
+            
+          }
+
+        });
+
+        this.setState({onlinePeers: online, remotePeers: remotePeers, offline: false });
+
       }
       
     })
@@ -248,7 +263,6 @@ class Chat extends Component<ChatProps, ChatState> {
     this.setState({selectedRemotePeer: peer, messages: messages}, () => {
       this.updateSeenStateOnPeerMessages(peer);
       this.connectToPeer(peer);
-      //this.scrollToBottom();
     });
   }
 
@@ -263,6 +277,7 @@ class Chat extends Component<ChatProps, ChatState> {
     }); 
   }
 
+
   updatePersistentPeers(peers: {[key: string]: User}) {
     localStorage.setItem(
       CryptoJS.SHA256(`${this.state.user.username}-peers`).toString(CryptoJS.enc.Base64), 
@@ -271,12 +286,16 @@ class Chat extends Component<ChatProps, ChatState> {
   }
 
 
-
-
   updateRemotePeerMessages(username: string, textMessage: string, remotePeerIndex: string) {
 
     var messages: Messages = this.state.messages;
-    if (!this.exists(messages[remotePeerIndex])) messages[remotePeerIndex] = [];
+
+    if (!this.exists(messages[remotePeerIndex])) {
+      // check localStorage 
+      let peerMessages: string|null = localStorage.getItem(CryptoJS.SHA256(`${this.state.user.username}${remotePeerIndex}-messages`).toString(CryptoJS.enc.Base64));
+      if (peerMessages !== null) messages[remotePeerIndex] = JSON.parse(CryptoJS.AES.decrypt(peerMessages, `${CLIENT_KEY}${this.state.user.username}${remotePeerIndex}`).toString(CryptoJS.enc.Utf8));
+      else messages[remotePeerIndex] = [];
+    }
 
     let message = {
       message: {message: textMessage, username: username}, 
@@ -296,6 +315,7 @@ class Chat extends Component<ChatProps, ChatState> {
     
   }
 
+
   connectToPeer(user: User) {
     
     if (!this.state.peer) return;
@@ -307,7 +327,6 @@ class Chat extends Component<ChatProps, ChatState> {
     if (!conn) return;
    
     conn.on('open', () => {
-      console.log('open');
       this.updateRemotePeerConnections(user.username, conn);
     });
 
@@ -315,11 +334,12 @@ class Chat extends Component<ChatProps, ChatState> {
       this.updateRemotePeerMessages(data.username, data.message, data.username);
     });
  
-    conn.on('error', function(err) { 
+    conn.on('error', function(err) {
       console.log(err);
     });
     
   }
+
 
   // Messenger
   sendMessage = (event: React.MouseEvent) => {
@@ -328,18 +348,13 @@ class Chat extends Component<ChatProps, ChatState> {
     this.setState({textMessage: ''});
   }
 
+
   // Messenger
   handleMessageChange = (event: React.ChangeEvent) => {
     this.setState({textMessage: (event.target as HTMLInputElement).value});
   }
 
   
-  exists(v: any) {
-    if (typeof v !== 'undefined') return true;
-    else return false;
-  }
-
-
   render() {
     
     const { user, remotePeers, onlinePeers, connections, textMessage, selectedRemotePeer, messages, lastMessage } = this.state;
@@ -366,7 +381,6 @@ class Chat extends Component<ChatProps, ChatState> {
               </>
               : <></>
             }
-            <div ref={this.chatWindowRef}></div>
             </List>
           </Box>
           {this.exists(connections[selectedRemotePeer.username]) ?
@@ -383,7 +397,7 @@ class Chat extends Component<ChatProps, ChatState> {
         
         <List key={`${JSON.stringify(remotePeers)}${JSON.stringify(onlinePeers)}`} disablePadding>
         {(!Object.values(remotePeers).length && !Object.values(onlinePeers).length) ? 
-          <ListItem disabled>No Peers Available</ListItem> :
+          <ListItem key={'nopeersavailable'} disabled>No Peers Available</ListItem> :
           <>
           {Object.values(remotePeers).map((peer: User) => {
             
@@ -429,7 +443,6 @@ class Chat extends Component<ChatProps, ChatState> {
   }
 
 }
-
 
 
 export default Chat;
