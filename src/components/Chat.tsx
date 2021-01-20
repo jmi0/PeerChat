@@ -1,11 +1,10 @@
 import React, { Component } from 'react'
 import moment from 'moment';
 import CryptoJS from 'crypto-js';
-import { Box, Badge, Button, List, ListItem, ListItemText, ListItemIcon } from '@material-ui/core';
+import { Box, Badge, List, ListItem, ListItemText, ListItemIcon, Fab } from '@material-ui/core';
 import CommentIcon from '@material-ui/icons/Comment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import SendSharpIcon from '@material-ui/icons/SendSharp';
-import Grid from '@material-ui/core/Grid';
 import CLIENT_KEY, { ChatProps, ChatState, User, Connections, Messages } from '../App.config'
 import MessagesDisplay from './Messages';
 import '../style/Chat.scss';
@@ -414,7 +413,7 @@ class Chat extends Component<ChatProps, ChatState> {
         </Box>
         
         <Box className='chat-area' >
-            <Box className='chat-area-header'>
+            <Box className='chat-area-header' key={`header-connected-${this.exists(connections[selectedRemotePeer.username]) && connections[selectedRemotePeer.username].open}`}>
               <h2 className='peer-title'>{selectedRemotePeer.username}</h2>
               {this.exists(connections[selectedRemotePeer.username]) && connections[selectedRemotePeer.username].open ? <span style={{color:'green'}}> Connected</span> : <></>}
             </Box>
@@ -435,16 +434,17 @@ class Chat extends Component<ChatProps, ChatState> {
               </List>
               
             </Box>
-            <Box className={'chat-area-footer'}>
-              <Grid container spacing={0} id={'text-send-container'}>
+            <Box className={'chat-area-footer'} key={`${this.exists(connections[selectedRemotePeer.username]) && connections[selectedRemotePeer.username].open}`}>
+              <Box id={'text-send-container'}>
+                
                 {this.exists(connections[selectedRemotePeer.username]) && connections[selectedRemotePeer.username].open ?
-                  <>
-                  <Grid item xs={8}><textarea placeholder='Type message here...' value={textMessage} onChange={this.handleMessageChange} rows={2}></textarea></Grid>
-                  <Grid item xs={2}><Button disableElevation variant="contained" color='primary' onClick={this.sendMessage} ><SendSharpIcon /></Button></Grid>
-                  </>
+                <>  
+                  <div id='message-textarea-container'><textarea placeholder='Type message here...' value={textMessage} onChange={this.handleMessageChange} rows={2}></textarea></div>
+                  <div id='message-btn-container'><Fab size="small" color='primary' onClick={this.sendMessage} ><SendSharpIcon /></Fab></div>
+                </>
                 : <></>
                 }       
-              </Grid>
+              </Box>
             </Box>     
         </Box>
       </>
