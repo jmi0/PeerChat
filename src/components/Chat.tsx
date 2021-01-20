@@ -1,10 +1,10 @@
 import React, { Component } from 'react'
 import moment from 'moment';
 import CryptoJS from 'crypto-js';
-import { Box, Badge, Button, List, ListItem, ListItemText, ListItemIcon, AppBar, IconButton, Typography, Toolbar } from '@material-ui/core';
-import MenuIcon from '@material-ui/icons/Menu';
+import { Box, Badge, Button, List, ListItem, ListItemText, ListItemIcon } from '@material-ui/core';
 import CommentIcon from '@material-ui/icons/Comment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
+import SendSharpIcon from '@material-ui/icons/SendSharp';
 import Grid from '@material-ui/core/Grid';
 import CLIENT_KEY, { ChatProps, ChatState, User, Connections, Messages } from '../App.config'
 import MessagesDisplay from './Messages';
@@ -79,6 +79,7 @@ class Chat extends Component<ChatProps, ChatState> {
   componentWillUnmount() {
     // clear this interval before unmounting
     clearInterval(this.updateRemotePeersInterval);
+    if (this.state.peer) this.state.peer.destroy();
   }
 
 
@@ -125,6 +126,7 @@ class Chat extends Component<ChatProps, ChatState> {
     });
 
     peer.on('error', (err) => {
+      console.log(err);
       console.log(`ERROR: ${err.message}`);
     });
 
@@ -321,6 +323,8 @@ class Chat extends Component<ChatProps, ChatState> {
     
     if (!this.state.peer) return;
 
+    if (!this.exists(this.state.onlinePeers[user.username])) return;
+
     if (this.exists(this.state.connections[user.username]) && this.state.connections[user.username].open) return; 
     
     let conn = this.state.peer.connect(user.peerID);
@@ -362,19 +366,7 @@ class Chat extends Component<ChatProps, ChatState> {
     
     return (
       <>
-      <Box className='app'>
-        <Box className='header'>
-          <AppBar position="static">
-            <Toolbar>
-              <IconButton edge="start" color="inherit" aria-label="menu">
-                <MenuIcon />
-              </IconButton>
-              <Typography variant="h6">p2pChat</Typography>
-              <Button color="inherit">Logout</Button>
-            </Toolbar>
-          </AppBar>
-        </Box>
-        <Box className='wrapper'>
+      
         <Box className={'conversation-area'} >
           
           <List key={`${JSON.stringify(remotePeers)}${JSON.stringify(onlinePeers)}`} disablePadding>
@@ -422,14 +414,13 @@ class Chat extends Component<ChatProps, ChatState> {
         </Box>
         
         <Box className='chat-area' >
-            <Box className='chat-area-header'>Header</Box>
+            <Box className='chat-area-header'>
+              <h2 className='peer-title'>{selectedRemotePeer.username}</h2>
+              {this.exists(connections[selectedRemotePeer.username]) && connections[selectedRemotePeer.username].open ? <span style={{color:'green'}}> Connected</span> : <></>}
+            </Box>
             <Box className='chat-area-main'>
               <List>
-              {this.exists(connections[selectedRemotePeer.username]) && connections[selectedRemotePeer.username].open ? 
-                <ListItem dense style={{color: 'green'}}>
-                  Connection opened with <b>&nbsp;{selectedRemotePeer.username}</b>
-                </ListItem> : <></>
-              }
+              
               {this.exists(messages[selectedRemotePeer.username]) ?
                 <>
                 <MessagesDisplay
@@ -442,20 +433,20 @@ class Chat extends Component<ChatProps, ChatState> {
                 : <></>
               }
               </List>
-              {this.exists(connections[selectedRemotePeer.username]) ?
-              <Box className={'chat-area-footer'}>
-                <Grid container spacing={0} id={'text-send-container'}>
-                  <Grid item xs={8}><textarea style={{width: '100%', resize: 'none'}} value={textMessage} onChange={this.handleMessageChange} rows={2}></textarea></Grid>
-                  <Grid item xs={2}><Button disableElevation variant="contained" color='primary' onClick={this.sendMessage} >Send</Button></Grid>
-                </Grid>
-              </Box> : <></>
-              }            
+              
             </Box>
-           
+            <Box className={'chat-area-footer'}>
+              <Grid container spacing={0} id={'text-send-container'}>
+                {this.exists(connections[selectedRemotePeer.username]) && connections[selectedRemotePeer.username].open ?
+                  <>
+                  <Grid item xs={8}><textarea placeholder='Type message here...' value={textMessage} onChange={this.handleMessageChange} rows={2}></textarea></Grid>
+                  <Grid item xs={2}><Button disableElevation variant="contained" color='primary' onClick={this.sendMessage} ><SendSharpIcon /></Button></Grid>
+                  </>
+                : <></>
+                }       
+              </Grid>
+            </Box>     
         </Box>
-        
-      </Box>
-      </Box>
       </>
     );
   }

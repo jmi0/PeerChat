@@ -1,5 +1,6 @@
 import { Component } from 'react';
-import { Container, Box, TextField, Button, FormControlLabel, Checkbox, AppBar, Toolbar, IconButton, Typography, Grid } from '@material-ui/core';
+import { Container, Box, TextField, Button, AppBar, Toolbar, IconButton, Typography } from '@material-ui/core';
+import MenuIcon from '@material-ui/icons/Menu';
 import Chat from './Chat';
 import { LoginProps, LoginState, User } from '../App.config';
 
@@ -100,12 +101,22 @@ class Login extends Component<LoginProps, LoginState> {
 
 
   logout() {
-    this.setState({ 
-      isLoading: false, 
-      isLoggedIn: false, 
-      user: {username: '', peerID: ''}, 
-      token: false
+    fetch('/logout', { method: 'POST', headers: {'Content-Type': 'application/json'}})
+    .then(response => response.json())
+    .then(result => {
+      console.log(result);
+    })
+    .catch(err => {
+      console.error(err);
+    }).finally(() => {
+      this.setState({ 
+        isLoading: false, 
+        isLoggedIn: false, 
+        user: {username: '', peerID: ''}, 
+        token: false
+      });
     });
+    
   }
 
   handleFormFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,9 +134,22 @@ class Login extends Component<LoginProps, LoginState> {
 
       return (
       <>
-      
-      <Chat user={user} token={token} />
-      
+      <Box className='app'>
+        <Box className='header'>
+          <AppBar position="static" elevation={0}>
+            <Toolbar>
+              <IconButton edge="start" color="inherit" aria-label="menu">
+                <MenuIcon />
+              </IconButton>
+              <Typography variant="h6">p2pChat</Typography>
+              <Button color="inherit" onClick={this.submitLogout} >Logout</Button>
+            </Toolbar>
+          </AppBar>
+        </Box>
+        <Box className='wrapper'>
+          <Chat user={user} token={token} />
+        </Box>
+      </Box>
       </>
       );
     }

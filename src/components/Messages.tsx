@@ -13,7 +13,7 @@ class MessagesDisplay extends Component<MessagesProps> {
   private chatWindowRef : React.RefObject<HTMLDivElement>|null  = React.createRef();
 
   componentDidMount() {
-    this.scrollToBottom();
+    this.scrollToBottom('auto');
   }
 
   shouldComponentUpdate (nextProps: MessagesProps) {
@@ -25,12 +25,12 @@ class MessagesDisplay extends Component<MessagesProps> {
   }
 
   componentDidUpdate() {
-    this.scrollToBottom();
+    this.scrollToBottom('smooth');
   }
 
-  scrollToBottom = () => {
+  scrollToBottom = (behavior: 'auto'|'smooth') => {
     if (this.chatWindowRef !== null && this.chatWindowRef.current !== null) {
-      this.chatWindowRef.current.scrollIntoView({ behavior: "smooth" });
+      this.chatWindowRef.current.scrollIntoView({ behavior: behavior });
     }
   };
 
