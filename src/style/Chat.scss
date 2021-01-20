@@ -30,15 +30,7 @@ html {
   -webkit-font-smoothing: antialiased;
 }
 
-.app {
-  display: flex;
-  flex-direction: column;
-  background-color: var(--theme-bg-color);
-  max-width: 1600px;
-  height: 100vh;
-  margin: 0 auto;
-  overflow: hidden;
-}
+
 
 .header {
   //height: 80px;
@@ -117,15 +109,6 @@ html {
     //padding: 0px 20px 20px 20px;
     background: var(--chat-header-bg);
   }
-  &-profile {
-    width: 32px;
-    border-radius: 50%;
-    object-fit: cover;
-  }
-  &-title {
-    font-size: 18px;
-    font-weight: 600;
-  }
   &-main {
     flex-grow: 1;
   }
@@ -147,7 +130,7 @@ html {
   position: -webkit-sticky;
   bottom: 0;
   left: 0;
-  min-height: 58px;
+  min-height: 100px;
 }
 
 .chat-area-group {
@@ -183,6 +166,35 @@ html {
 }
 
 
+.chat-area-footer svg {
+  //color: var(--settings-icon-color);
+  //width: 20px;
+  //flex-shrink: 0;
+  //cursor: pointer;
+  &:hover {
+   //color: var(--settings-icon-hover);
+  }
+ 
+  & + svg {
+   //margin-left: 12px;
+  }
+ }
+ 
+ .chat-area-footer input {
+  border: none;
+  color: var(--body-color);
+  background-color: var(--input-bg);
+  padding: 12px;
+  border-radius: 6px;
+  font-size: 15px;
+  margin: 0 12px;
+  width: 100%;
+  &::placeholder {
+   color: var(--input-chat-color);
+  }
+ }
+
+
 
 .messageDisplaycontainer {
   word-wrap: break-word;
@@ -208,16 +220,19 @@ html {
   width: 100%; 
   > div {
     
-    display: inline-block;
+    //display: inline-block;
   }
   #message-textarea-container {
-    width: 85%;
-    float: left;
+    width: 100%;
+    //float: left;
   }
 
   #message-btn-container {
-    width: 15%;
-    float: right;
+    width: 100%;
+    #send-icon {
+      float: right;
+    }
+    
   }
 
   textarea {
@@ -235,7 +250,7 @@ html {
   button {
     //border-radius: 50%;
     //padding: 15px;
-    float: right;
+    //float: right;
     //margin-left: 10px;
   }
 }

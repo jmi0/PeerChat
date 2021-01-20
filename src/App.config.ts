@@ -33,6 +33,7 @@ type ChatState = {
     lastMessage: Message|Object,
     offline: Boolean,
     token: string|false,
+    isConnecting: Boolean
 }
 
 interface Connections {

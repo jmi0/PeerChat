@@ -8,10 +8,14 @@
     "@testing-library/jest-dom": "^5.11.8",
     "@testing-library/react": "^11.2.2",
     "@testing-library/user-event": "^12.6.0",
+    "@types/crypto-js": "^4.0.1",
     "@types/jest": "^26.0.19",
+    "@types/material-ui": "^0.21.8",
     "@types/node": "^12.19.11",
+    "@types/node-sass": "^4.11.1",
     "@types/react": "^16.14.2",
     "@types/react-dom": "^16.9.10",
+    "@types/react-router-dom": "^5.1.7",
     "body-parser": "^1.19.0",
     "cookie-parser": "^1.4.5",
     "crypto-js": "^4.0.0",
@@ -67,9 +71,6 @@
     ]
   },
   "devDependencies": {
-    "@types/crypto-js": "^4.0.1",
-    "@types/node-sass": "^4.11.1",
-    "@types/react-router-dom": "^5.1.7",
     "nodemon": "^2.0.6"
   },
   "proxy": "http://127.0.0.1:9000"

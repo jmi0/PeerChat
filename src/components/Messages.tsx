@@ -36,13 +36,14 @@ class MessagesDisplay extends Component<MessagesProps> {
 
 
   render() {
+    
     return (
       <>
       {this.props.messages.map((message, index) => {
         return (
           <ListItem dense key={`${JSON.stringify(message)}-${index}`}>
             <Grid container justify="flex-start" direction="row">
-              <Grid item xs={1}><AccountCircleIcon style={{float: 'left'}} color={message.from === this.props.localUsername ? 'primary':'secondary'} fontSize={'large'} /></Grid>
+              <Grid item xs={1}><AccountCircleIcon style={{float: 'left'}} color={message.from === this.props.localUsername ? 'disabled':'secondary'} fontSize={'large'} /></Grid>
               <Grid item xs={11} className={'messageDisplaycontainer'}>
                 <div>
                   <span className='messageDisplayName'>{message.from}</span>

@@ -9,7 +9,16 @@ html {
   box-sizing: border-box;
 }
 
-
+.app {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--theme-bg-color);
+  //max-width: 1600px;
+  height: 100vh;
+  margin: 0 auto;
+  overflow: hidden;
+}
+/*
 #root {
   display: flex;
   flex-direction: column;
@@ -19,3 +28,4 @@ html {
   margin: 0 auto;
   overflow: hidden;
 }
+*/
