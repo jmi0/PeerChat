@@ -163,7 +163,8 @@ class Chat extends Component<ChatProps, ChatState> {
       if (this.exists(result.token)) this.setState({token: result.token});
 
       else {
-
+        
+        console.log(this.state.peer?.connections);
         // initialize to assign to state
         var online: {[key: string]: User} = {};
         var remotePeers: {[key: string]: User} = this.state.remotePeers;
@@ -185,6 +186,9 @@ class Chat extends Component<ChatProps, ChatState> {
             if (this.state.connections[peer.username].peer !== peer.peerID) this.connectToPeer(peer);
             
           }
+
+          // if selected peer is now online and connection doesn't already exist
+          if (!this.exists(this.state.connections[this.state.selectedRemotePeer.username])) this.connectToPeer(peer);
 
         });
 
