@@ -83,7 +83,7 @@ class Chat extends Component<ChatProps, ChatState> {
     // clear this interval before unmounting
     clearInterval(this.updateRemotePeersInterval);
 
-    if (this.state.peer) this.state.peer.destroy();
+    this.state.peer?.destroy();
   }
 
 
@@ -98,13 +98,17 @@ class Chat extends Component<ChatProps, ChatState> {
     // get local peer id from peer server
     peer.on('open', (peerid) => {
       
+      // set this users peerid
       let user: User = this.state.user;
       user.peerID = peerid;
       this.setState({user: user});
+
       //associate peer id to username on server side
       this.updateUserPeerID(user);
+
       // retrieve remote peers
       this.getRemotePeers();
+
     });
 
     // listen for connections
@@ -125,14 +129,17 @@ class Chat extends Component<ChatProps, ChatState> {
 
     });
 
+
     peer.on('disconnected', () => {
       console.log('disconnected');
     });
+
 
     peer.on('error', (err) => {
       console.log(err);
       console.log(`ERROR: ${err.message}`);
     });
+
 
     this.setState({ peer: peer });
   }
@@ -164,7 +171,8 @@ class Chat extends Component<ChatProps, ChatState> {
 
       else {
         
-        console.log(this.state.peer?.connections);
+        console.log(`Peer IDS: ${Object.keys(this.state.peer?.connections).length}`, this.state.peer?.connections);
+
         // initialize to assign to state
         var online: {[key: string]: User} = {};
         var remotePeers: {[key: string]: User} = this.state.remotePeers;
@@ -183,13 +191,14 @@ class Chat extends Component<ChatProps, ChatState> {
           if (this.exists(this.state.connections[peer.username])) {
             
             // if peer id changed create new connection
-            if (this.state.connections[peer.username].peer !== peer.peerID) this.connectToPeer(peer);
-            
+            if (this.state.connections[peer.username].peer !== peer.peerID) {
+              console.log(`${peer.peerID}: PEER ID HAS CHANGED`);
+              console.log(this.state.connections[peer.username].peer, peer.peerID);
+              this.connectToPeer(peer);
+            }
           }
 
-          // if selected peer is now online and connection doesn't already exist
-          if (!this.exists(this.state.connections[this.state.selectedRemotePeer.username])) this.connectToPeer(peer);
-
+          
         });
 
         this.setState({onlinePeers: online, remotePeers: remotePeers, offline: false });
@@ -199,7 +208,7 @@ class Chat extends Component<ChatProps, ChatState> {
     })
     .catch((err) => {
       this.setState({onlinePeers: {}, offline: true });
-      if (this.state.peer) this.state.peer.destroy();
+      this.state.peer?.destroy();
     });
 
   }
@@ -241,7 +250,7 @@ class Chat extends Component<ChatProps, ChatState> {
     })
     .catch((err) => {
       this.setState({ offline: true });
-      if (this.state.peer) this.state.peer.destroy();
+      this.state.peer?.destroy();
       console.log('Error:', err);
     });
   }
@@ -335,7 +344,7 @@ class Chat extends Component<ChatProps, ChatState> {
 
     if (this.exists(this.state.connections[user.username]) && this.state.connections[user.username].open) return; 
     
-    
+    console.log('CONNECTIN 1');
     
     this.setState({isConnecting: true});
     let conn = this.state.peer.connect(user.peerID);
@@ -355,6 +364,10 @@ class Chat extends Component<ChatProps, ChatState> {
     conn.on('error', function(err) {
       console.log(err);
       self.setState({isConnecting: false});
+    });
+
+    conn.on('disconnected', () => {
+      console.log('PEER DISCONNECTED');
     });
     
   }
