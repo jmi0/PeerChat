@@ -115,6 +115,13 @@ html {
   .peer-title {
     margin: 0;
   }
+
+  .emoji-picker-react {
+    position: absolute;
+    bottom: 0;
+    margin-bottom: 100px;
+    z-index: 1000;
+  }
 }
 
 

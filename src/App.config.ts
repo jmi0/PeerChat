@@ -33,7 +33,8 @@ type ChatState = {
     lastMessage: Message|Object,
     offline: Boolean,
     token: string|false,
-    isConnecting: Boolean
+    isConnecting: Boolean,
+    emojiPickerOpen: Boolean
 }
 
 interface Connections {

@@ -9,6 +9,7 @@ import ImageOutlinedIcon from '@material-ui/icons/ImageOutlined';
 import AttachFileOutlinedIcon from '@material-ui/icons/AttachFileOutlined';
 import EmojiEmotionsOutlinedIcon from '@material-ui/icons/EmojiEmotionsOutlined';
 import ThumbUpAltOutlinedIcon from '@material-ui/icons/ThumbUpAltOutlined';
+import Picker, { SKIN_TONE_MEDIUM_DARK } from "emoji-picker-react";
 import CLIENT_KEY, { ChatProps, ChatState, User, Connections, Messages } from '../App.config'
 import MessagesDisplay from './Messages';
 import '../style/Chat.scss';
@@ -41,7 +42,8 @@ class Chat extends Component<ChatProps, ChatState> {
       textMessage: '',
       lastMessage: {},
       offline: false,
-      isConnecting: false
+      isConnecting: false,
+      emojiPickerOpen: false
     };
 
     this.setUpPeer = this.setUpPeer.bind(this);
@@ -55,6 +57,8 @@ class Chat extends Component<ChatProps, ChatState> {
     this.updatePersistentPeers = this.updatePersistentPeers.bind(this);
     this.updateRemotePeerMessages = this.updateRemotePeerMessages.bind(this);
     this.updateSeenStateOnPeerMessages = this.updateSeenStateOnPeerMessages.bind(this);
+    this.handleEmojiPicker = this.handleEmojiPicker.bind(this);
+    this.handleDocumentClick = this.handleDocumentClick.bind(this);
 
   }
 
@@ -115,6 +119,7 @@ class Chat extends Component<ChatProps, ChatState> {
     peer.on('connection', (conn) => {
       // message receiver
       conn.on('data', (data) => {
+        console.log(data);
         // received
         this.updateRemotePeerMessages(data.username, data.message, data.username);
       });
@@ -343,14 +348,15 @@ class Chat extends Component<ChatProps, ChatState> {
     if (!this.exists(this.state.onlinePeers[user.username])) return;
 
     if (this.exists(this.state.connections[user.username]) && this.state.connections[user.username].open) return; 
-    
-    console.log('CONNECTIN 1');
+  
+    console.log(`Connecting to ${user.username}`);
     
     this.setState({isConnecting: true});
-    let conn = this.state.peer.connect(user.peerID);
+    let conn = this.state.peer.connect(user.peerID, {serialization: 'json'});
     
     if (!conn) return;
-   
+    
+
     conn.on('open', () => {
       this.updateRemotePeerConnections(user.username, conn);
       this.setState({isConnecting: false});
@@ -372,10 +378,14 @@ class Chat extends Component<ChatProps, ChatState> {
     
   }
 
-  sendMessage() {
-    if (!this.state.textMessage.length) return;
-    this.state.connections[this.state.selectedRemotePeer.username].send({username: this.state.user.username, message: this.state.textMessage});
-    this.updateRemotePeerMessages(this.state.user.username, this.state.textMessage, this.state.selectedRemotePeer.username);
+  sendMessage(message?: string) {
+    var payload: string;
+    if (message?.length) payload = message;
+    else payload = this.state.textMessage;
+    if (!payload?.length) return;
+    console.log(payload, payload?.length);
+    this.state.connections[this.state.selectedRemotePeer.username].send({username: this.state.user.username, message: payload});
+    this.updateRemotePeerMessages(this.state.user.username, payload, this.state.selectedRemotePeer.username);
     this.setState({textMessage: ''});
   }
 
@@ -385,11 +395,26 @@ class Chat extends Component<ChatProps, ChatState> {
     this.sendMessage();
   }
 
+  handleDocumentClick = (event: React.MouseEvent) => {
+    this.setState({emojiPickerOpen: false});
+  }
 
   // Messenger
   handleMessageChange = (event: React.ChangeEvent) => {
     this.setState({textMessage: (event.target as HTMLInputElement).value});
   }
+
+  handleEmojiBlur() {
+    this.setState({emojiPickerOpen: false});
+  }
+
+  handleEmojiPicker = (event: React.MouseEvent) => {
+    var open = true;
+    if (this.state.emojiPickerOpen) open = false;
+    this.setState({emojiPickerOpen: open});
+  };
+
+
 
   handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.keyCode === 13) {
@@ -401,12 +426,11 @@ class Chat extends Component<ChatProps, ChatState> {
   
   render() {
     
-    const { user, remotePeers, onlinePeers, connections, textMessage, selectedRemotePeer, messages, lastMessage, isConnecting } = this.state;
+    const { user, remotePeers, onlinePeers, connections, textMessage, selectedRemotePeer, messages, lastMessage, isConnecting, emojiPickerOpen } = this.state;
     
     return (
       <>
-      
-        <Box className={'conversation-area'} >
+        <Box className={'conversation-area'}>
           
           <List key={`${JSON.stringify(remotePeers)}${JSON.stringify(onlinePeers)}`} disablePadding>
           {(!Object.values(remotePeers).length && !Object.values(onlinePeers).length) ? 
@@ -452,7 +476,7 @@ class Chat extends Component<ChatProps, ChatState> {
           
         </Box>
         
-        <Box className='chat-area' >
+        <Box className='chat-area'>
             <Box className='chat-area-header' key={`header-connected-${this.exists(connections[selectedRemotePeer.username]) && connections[selectedRemotePeer.username].open}`}>
               <h2 className='peer-title'>{selectedRemotePeer.username}</h2>
               {}
@@ -483,9 +507,10 @@ class Chat extends Component<ChatProps, ChatState> {
                   <div id='message-textarea-container'><textarea placeholder='Type message here...' value={textMessage} onChange={this.handleMessageChange} onKeyDown={this.handleKeyDown} rows={2}></textarea></div>
                   <div id='message-btn-container'>
                     <IconButton><ImageOutlinedIcon /></IconButton> 
-                    <IconButton><AttachFileOutlinedIcon /></IconButton> 
-                    <IconButton><EmojiEmotionsOutlinedIcon /></IconButton>
-                    <IconButton><ThumbUpAltOutlinedIcon /></IconButton>
+                    <IconButton><AttachFileOutlinedIcon /></IconButton>
+                    <IconButton onClick={this.handleEmojiPicker}><EmojiEmotionsOutlinedIcon /></IconButton>
+                    <span onBlur={(event) => { this.handleEmojiBlur(); }}>{emojiPickerOpen ? <Picker onEmojiClick={(event) => {console.log(event);}} />:<></>}</span>
+                    <IconButton onClick={(event) => {this.sendMessage('👍');}}><ThumbUpAltOutlinedIcon /></IconButton>
                     <IconButton color="primary" id='send-icon' onClick={this.handleSendButton}><SendSharpIcon /></IconButton>
                   </div>
                 </>
