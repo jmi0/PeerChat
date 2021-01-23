@@ -18,10 +18,15 @@ export function chat (
 ): ChatState {
   switch (action.type) {
     case UPDATE_CONNECTIONS:
-      return Object.assign({}, state, state.connections, {[action.key]: action.connection});
+      return {
+        ...state, 
+        connections: {
+          ...state.connections,
+          [action.key]: action.connection
+        }
+      }
     case UPDATE_ONLINE:
-      console.log(action);
-      return Object.assign({}, state, state.online, action.payload);
+      return Object.assign({}, state, {online: action.payload});
     default:
       return state
   }
