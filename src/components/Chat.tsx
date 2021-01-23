@@ -26,6 +26,8 @@ class Chat extends Component<ChatProps, ChatState> {
   // variable to hold interval for remote peer discovery
   private updateRemotePeersInterval : number = 0;
 
+  private emojiRef : React.RefObject<HTMLDivElement>  = React.createRef();
+
   constructor(props: ChatProps | Readonly<ChatProps>) {
 
     super(props);
