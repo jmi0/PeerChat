@@ -1,4 +1,4 @@
-import Peer from 'peerjs' // used for ChatState type
+import Peer, { DataConnection } from 'peerjs' // used for ChatState type
 
 
 const CLIENT_KEY : string = 'AfxKcLYZTn9SWcDZL';
