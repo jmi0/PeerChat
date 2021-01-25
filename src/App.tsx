@@ -1,13 +1,38 @@
 import React, { useState, useEffect } from 'react';
-import { Provider } from 'react-redux';
+import { Provider, connect } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import reducer from './reducers';
+import Dexie from 'dexie';
+import Peer, { DataConnection } from 'peerjs';
+
 import { User, Connections, Messages } from './App.config';
+import reducer from './reducers';
+
 import LoginForm from './components/Login';
 import Chat from './components/Chat';
+import ConnectionsList from './components/Connections';
+import Messenger from './components/Messenger';
+
 import { Box, Button, AppBar, Toolbar, IconButton, Typography } from '@material-ui/core';
 import MenuIcon from '@material-ui/icons/Menu';
 import "./style/App.scss";
+import './style/Chat.scss';
+
+import { updateLoginState, UpdateSystemUser, updateToken } from './actions';
+
+
+const db = new Dexie('test');
+
+const store = configureStore({reducer: reducer});
+
+const peer = new Peer({
+  host: window.location.hostname,
+  port: 9000, 
+  path: '/peerserver'
+});
+
+
+
+
 
 
 const App: React.FC = (props: any) => {
@@ -15,22 +40,13 @@ const App: React.FC = (props: any) => {
   const [ isLoggedIn, setIsLoggedIn ] = useState<boolean>(false);
   const [ token, setToken ] = useState<string|false>(false);
   const [ user, setUser ] = useState<User|false>(false);
-  const [ isLoading, setIsLoading ] = useState<boolean>(false);
+  const [ peerID, setPeerID ] = useState<string|false>(false);
+  const [ connections, setConnections ] = useState<{[key: string]:DataConnection|false}>({});
+  const [ isLoading, setIsLoading ] = useState<boolean>(true);
 
-  let connections: Connections = {};
   let messages: Messages = {};
   let online: {[key: string]: User} = {};
-
-  const store = configureStore({reducer: reducer});
   
-  store.subscribe(() => {
-    const { chat, system } = store.getState();
-    setIsLoggedIn(system.isLoggedIn);
-    setToken(system.token);
-    setUser(system.user);
-    console.log(system);
-  });
-
   const logout = () => {
     fetch('/logout', { method: 'POST', headers: {'Content-Type': 'application/json'}})
     .then(response => response.json())
@@ -47,7 +63,43 @@ const App: React.FC = (props: any) => {
   }
   
   useEffect(() => {
-    setIsLoading(true);
+
+    // get local peer id from peer server
+    peer.on('open', (peerid) => {
+      // set this users peerid
+      console.log(`My peer ID is ${peerid}`);
+      
+      
+    });
+    // listen for connections
+    peer.on('connection', (conn) => {
+      // message receiver
+      conn.on('data', (data) => {
+        console.log(`${conn.peer}:`, data);
+      });
+      // connection receiver
+      conn.on('open', () => {
+        // connected
+        console.log(`Connected: ${conn.peer}`);
+      });
+    });
+    peer.on('disconnected', () => {
+      console.log('disconnected');
+    });
+    peer.on('error', (err) => {
+      console.log(`ERROR: ${err.message}`);
+    });
+
+
+    store.subscribe(() => {
+      const { system, chat } = store.getState();
+      setIsLoggedIn(system.isLoggedIn);
+      setToken(system.token);
+      setUser(system.user);
+      console.log(system);
+    });
+    
+    
     // try to refresh token
     fetch('/refreshtoken', {
       method: 'POST',
@@ -55,24 +107,27 @@ const App: React.FC = (props: any) => {
     })
     .then(res => res.json())
     .then((result) => {
-      setIsLoading(false);
       if (typeof result.username !== 'undefined') {
-        setIsLoggedIn(true);
-        setToken(result.token);
-        setUser({username: result.username, peerID:''});
+        store.dispatch(updateLoginState(true));
+        store.dispatch(updateToken(result.token));
+        store.dispatch(UpdateSystemUser({username: result.username, peerID: ''}));
       }
     }, (error) => {
-      setIsLoading(false);
+      
       console.log(error);
+    }).finally(() => {
+      setIsLoading(false);
     });
 
     return () => {
-      // unsubscribe on unmount
+      //  on unmount
       
     }
+
+    
     
   }, []);
-
+  console.log('render');
   if (isLoading) return (<div>Loading...</div>);
   else
     return (
@@ -92,7 +147,14 @@ const App: React.FC = (props: any) => {
               </AppBar>
             </Box>
             <Box className='wrapper'>
-              <Chat user={user} token={token} />
+              <Box className={'conversation-area'}>
+                <ConnectionsList connections={connections} />
+              </Box>
+              <Box className='chat-area'>
+                <Box className='chat-area-header'></Box>
+                <Box className='chat-area-main'></Box>
+                <Box className='chat-area-footer'><Messenger /></Box>
+              </Box>
             </Box>
           </>
           }

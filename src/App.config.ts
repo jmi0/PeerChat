@@ -93,6 +93,7 @@ export const UPDATE_TOKEN = 'UPDATE_TOKEN'
 export const UPDATE_LOGIN_STATE = 'UPDATE_LOGIN_STATE'
 export const UPDATE_OFFLINE_STATE = 'UPDATE_OFFLINE_STATE'
 export const UPDATE_SYSTEM_USER = 'UPDATE_SYSTEM_USER'
+
   
   
 interface AddConnectionAction {
@@ -135,6 +136,10 @@ interface UpdateSystemUser {
 
 
 
-export type ActionTypes = AddConnectionAction | UpdateOnlineAction | UpdateMessagesAction | UpdateTokenAction | UpdateLoginAction | UpdateOfflineAction | UpdateSystemUser
+export type ActionTypes = 
+    AddConnectionAction | UpdateOnlineAction | 
+    UpdateMessagesAction | UpdateTokenAction | 
+    UpdateLoginAction | UpdateOfflineAction | 
+    UpdateSystemUser
 
 

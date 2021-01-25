@@ -68,6 +68,7 @@ class Chat extends Component<ChatProps, ChatState> {
 
 
   componentDidMount() {
+    //this.props.dispatch(updateOnline({joe: {username: 'joe', peerID: ''}}));
     
     // get persistent peers
     let peers: string|null = localStorage.getItem(CryptoJS.SHA256(`${this.state.user.username}-peers`).toString(CryptoJS.enc.Base64));
