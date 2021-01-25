@@ -10,7 +10,7 @@ import AttachFileOutlinedIcon from '@material-ui/icons/AttachFileOutlined';
 import EmojiEmotionsOutlinedIcon from '@material-ui/icons/EmojiEmotionsOutlined';
 import ThumbUpAltOutlinedIcon from '@material-ui/icons/ThumbUpAltOutlined';
 import Picker, { SKIN_TONE_MEDIUM_DARK } from "emoji-picker-react";
-import CLIENT_KEY, { ChatProps, ChatState, User, Connections, Messages } from '../App.config'
+import APP_CONFIG, { ChatProps, ChatState, User, Connections, Messages } from '../App.config'
 import MessagesDisplay from './Messages';
 import '../style/Chat.scss';
 import Peer, { DataConnection } from 'peerjs';
@@ -69,7 +69,7 @@ class Chat extends Component<ChatProps, ChatState> {
     
     // get persistent peers
     let peers: string|null = localStorage.getItem(CryptoJS.SHA256(`${this.state.user.username}-peers`).toString(CryptoJS.enc.Base64));
-    if (peers !== null) this.setState({ remotePeers: JSON.parse(CryptoJS.AES.decrypt(peers, `${CLIENT_KEY}${this.state.user.username}-peers`).toString(CryptoJS.enc.Utf8))});
+    if (peers !== null) this.setState({ remotePeers: JSON.parse(CryptoJS.AES.decrypt(peers, `${APP_CONFIG.CLIENT_KEY}${this.state.user.username}-peers`).toString(CryptoJS.enc.Utf8))});
     
     this.setUpPeer(new Peer({
       host: window.location.hostname,
@@ -273,7 +273,7 @@ class Chat extends Component<ChatProps, ChatState> {
       this.setState({messages: this.state.messages}, () => {
         localStorage.setItem(
           CryptoJS.SHA256(`${this.state.user.username}${peer.username}-messages`).toString(CryptoJS.enc.Base64), 
-          CryptoJS.AES.encrypt(JSON.stringify(this.state.messages[peer.username]), `${CLIENT_KEY}${this.state.user.username}${peer.username}`).toString()
+          CryptoJS.AES.encrypt(JSON.stringify(this.state.messages[peer.username]), `${APP_CONFIG.CLIENT_KEY}${this.state.user.username}${peer.username}`).toString()
         );
       });
     }
@@ -284,7 +284,7 @@ class Chat extends Component<ChatProps, ChatState> {
     // get stored messages on connection for this user
     let peerMessages: string|null = localStorage.getItem(CryptoJS.SHA256(`${this.state.user.username}${peer.username}-messages`).toString(CryptoJS.enc.Base64));
     let messages: Messages = this.state.messages;
-    if (peerMessages !== null) messages[peer.username] = JSON.parse(CryptoJS.AES.decrypt(peerMessages, `${CLIENT_KEY}${this.state.user.username}${peer.username}`).toString(CryptoJS.enc.Utf8));
+    if (peerMessages !== null) messages[peer.username] = JSON.parse(CryptoJS.AES.decrypt(peerMessages, `${APP_CONFIG.CLIENT_KEY}${this.state.user.username}${peer.username}`).toString(CryptoJS.enc.Utf8));
     else messages[peer.username] = [];
     
     this.setState({selectedRemotePeer: peer, messages: messages}, () => {
@@ -308,7 +308,7 @@ class Chat extends Component<ChatProps, ChatState> {
   updatePersistentPeers(peers: {[key: string]: User}) {
     localStorage.setItem(
       CryptoJS.SHA256(`${this.state.user.username}-peers`).toString(CryptoJS.enc.Base64), 
-      CryptoJS.AES.encrypt(JSON.stringify(peers), `${CLIENT_KEY}${this.state.user.username}-peers`).toString()
+      CryptoJS.AES.encrypt(JSON.stringify(peers), `${APP_CONFIG.CLIENT_KEY}${this.state.user.username}-peers`).toString()
     );
   }
 
@@ -320,7 +320,7 @@ class Chat extends Component<ChatProps, ChatState> {
     if (!this.exists(messages[remotePeerIndex])) {
       // check localStorage 
       let peerMessages: string|null = localStorage.getItem(CryptoJS.SHA256(`${this.state.user.username}${remotePeerIndex}-messages`).toString(CryptoJS.enc.Base64));
-      if (peerMessages !== null) messages[remotePeerIndex] = JSON.parse(CryptoJS.AES.decrypt(peerMessages, `${CLIENT_KEY}${this.state.user.username}${remotePeerIndex}`).toString(CryptoJS.enc.Utf8));
+      if (peerMessages !== null) messages[remotePeerIndex] = JSON.parse(CryptoJS.AES.decrypt(peerMessages, `${APP_CONFIG.CLIENT_KEY}${this.state.user.username}${remotePeerIndex}`).toString(CryptoJS.enc.Utf8));
       else messages[remotePeerIndex] = [];
     }
 
@@ -337,7 +337,7 @@ class Chat extends Component<ChatProps, ChatState> {
 
     localStorage.setItem(
       CryptoJS.SHA256(`${this.state.user.username}${remotePeerIndex}-messages`).toString(CryptoJS.enc.Base64), 
-      CryptoJS.AES.encrypt(JSON.stringify(messages[remotePeerIndex]), `${CLIENT_KEY}${this.state.user.username}${remotePeerIndex}`).toString()
+      CryptoJS.AES.encrypt(JSON.stringify(messages[remotePeerIndex]), `${APP_CONFIG.CLIENT_KEY}${this.state.user.username}${remotePeerIndex}`).toString()
     );
     
   }
@@ -360,6 +360,7 @@ class Chat extends Component<ChatProps, ChatState> {
     
 
     conn.on('open', () => {
+      
       this.updateRemotePeerConnections(user.username, conn);
       this.setState({isConnecting: false});
     });

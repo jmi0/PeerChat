@@ -1,12 +1,7 @@
-import {
-  ChatState,
-  ActionTypes,
-  UPDATE_CONNECTIONS,
-  UPDATE_ONLINE
-} from '../actionTypes'
+import { ChatStoreState, ActionTypes, ADD_CONNECTION, UPDATE_ONLINE, UPDATE_MESSAGES } from '../App.config'
 
 
-const initialState: ChatState = {
+const initialState: ChatStoreState = {
   online: {},
   connections: {},
   messages: {}
@@ -15,9 +10,12 @@ const initialState: ChatState = {
 export function chat (
   state = initialState,
   action: ActionTypes
-): ChatState {
+): ChatStoreState {
+
   switch (action.type) {
-    case UPDATE_CONNECTIONS:
+
+    case ADD_CONNECTION:
+      
       return {
         ...state, 
         connections: {
@@ -25,9 +23,25 @@ export function chat (
           [action.key]: action.connection
         }
       }
+
     case UPDATE_ONLINE:
       return Object.assign({}, state, {online: action.payload});
+
+    case UPDATE_MESSAGES:
+      return {
+        ...state,
+        messages:{
+          ...state.messages,
+          [action.key]: (
+            state.messages[action.key] ? 
+              [...state.messages[action.key], action.message] : 
+              [action.message]
+          )
+        }
+      }
+
     default:
       return state
+  
   }
 }
