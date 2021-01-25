@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import reducer from './reducers';
-import { User } from './App.config';
+import { User, Connections, Messages } from './App.config';
 import LoginForm from './components/Login';
 import Chat from './components/Chat';
 import { Box, Button, AppBar, Toolbar, IconButton, Typography } from '@material-ui/core';
@@ -17,13 +17,18 @@ const App: React.FC = (props: any) => {
   const [ user, setUser ] = useState<User|false>(false);
   const [ isLoading, setIsLoading ] = useState<boolean>(false);
 
+  let connections: Connections = {};
+  let messages: Messages = {};
+  let online: {[key: string]: User} = {};
+
   const store = configureStore({reducer: reducer});
   
   store.subscribe(() => {
-    const { chat, system} = store.getState();
+    const { chat, system } = store.getState();
     setIsLoggedIn(system.isLoggedIn);
     setToken(system.token);
     setUser(system.user);
+    console.log(system);
   });
 
   const logout = () => {
@@ -60,6 +65,11 @@ const App: React.FC = (props: any) => {
       setIsLoading(false);
       console.log(error);
     });
+
+    return () => {
+      // unsubscribe on unmount
+      
+    }
     
   }, []);
 

@@ -10,7 +10,7 @@ export function addConnection(key: string, connection: any): ActionTypes {
   }
 }
 
-export function updateOnline(newOnline: {[key: string]: User}): ActionTypes {
+export function updateOnline(newOnline: {[key: string]: User}|{}): ActionTypes {
   return {
     type: UPDATE_ONLINE,
     payload: newOnline

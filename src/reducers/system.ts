@@ -12,7 +12,7 @@ export function system (
   state = initialState,
   action: ActionTypes
 ): SystemState {
-
+  
   switch (action.type) {
 
     case UPDATE_LOGIN_STATE:

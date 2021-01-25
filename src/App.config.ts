@@ -22,6 +22,7 @@ export type LoginState = {
 export type ChatProps = {
     user: User,
     token: string|false,
+    dispatch: any
 }
   
 export type ChatState = {
@@ -102,7 +103,7 @@ interface AddConnectionAction {
 
 interface UpdateOnlineAction {
     type: typeof UPDATE_ONLINE
-    payload: {[key: string]: User}
+    payload: {[key: string]: User}|{}
 }
 
 interface UpdateMessagesAction {

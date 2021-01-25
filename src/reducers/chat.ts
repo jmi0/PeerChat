@@ -15,7 +15,6 @@ export function chat (
   switch (action.type) {
 
     case ADD_CONNECTION:
-      
       return {
         ...state, 
         connections: {
@@ -25,7 +24,7 @@ export function chat (
       }
 
     case UPDATE_ONLINE:
-      return Object.assign({}, state, {online: action.payload});
+      return {...state, online: action.payload}
 
     case UPDATE_MESSAGES:
       return {

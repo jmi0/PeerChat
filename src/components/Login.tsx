@@ -4,14 +4,6 @@ import { connect } from 'react-redux';
 import { Container, Box, TextField, Button } from '@material-ui/core';
 
 
-const mapStateToProps = (state: any) => {
-  return { 
-    isLoggedIn: state.system.isLoggedIn, 
-    token: state.system.token 
-  }
-};
-
-
 const LoginForm: React.FC = (props: any) => {
   
   const [username, setUsername] = useState<string>('');
@@ -68,7 +60,7 @@ const LoginForm: React.FC = (props: any) => {
           <Box pt={2}>
             <TextField required value={password} name="password" onChange={handleFormFieldChange} variant="outlined" label="password" type="password" />
           </Box>
-          <Box pt={2}> 
+          <Box pt={2}>
             <Button type='submit' size="large" variant="contained" color="primary">Login</Button>
           </Box>
         </form>
@@ -78,5 +70,5 @@ const LoginForm: React.FC = (props: any) => {
 
 }
 
-export default connect(mapStateToProps)(LoginForm);
+export default connect()(LoginForm);
 

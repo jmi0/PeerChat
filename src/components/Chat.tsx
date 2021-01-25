@@ -11,9 +11,11 @@ import EmojiEmotionsOutlinedIcon from '@material-ui/icons/EmojiEmotionsOutlined'
 import ThumbUpAltOutlinedIcon from '@material-ui/icons/ThumbUpAltOutlined';
 import Picker, { SKIN_TONE_MEDIUM_DARK } from "emoji-picker-react";
 import APP_CONFIG, { ChatProps, ChatState, User, Connections, Messages } from '../App.config'
+import { connect } from 'react-redux';
 import MessagesDisplay from './Messages';
 import '../style/Chat.scss';
 import Peer, { DataConnection } from 'peerjs';
+import { addConnection, updateOnline, updateMessages } from '../actions';
 
 
 
@@ -28,10 +30,10 @@ class Chat extends Component<ChatProps, ChatState> {
 
   private emojiRef : React.RefObject<HTMLDivElement>  = React.createRef();
 
-  constructor(props: ChatProps | Readonly<ChatProps>) {
-
+  constructor(props: ChatProps) {
+    
     super(props);
-
+    
     this.state = {
       user: this.props.user,
       token: this.props.token,
@@ -209,7 +211,7 @@ class Chat extends Component<ChatProps, ChatState> {
         });
 
         this.setState({onlinePeers: online, remotePeers: remotePeers, offline: false });
-
+        //this.props.dispatch(updateOnline(online));
       }
       
     })
@@ -301,6 +303,7 @@ class Chat extends Component<ChatProps, ChatState> {
       var persistentPeers = this.state.remotePeers;
       persistentPeers[username] = {username: username, peerID: conn.peer };
       this.updatePersistentPeers(persistentPeers);
+      console.log(this.props)
     }); 
   }
 
@@ -529,4 +532,4 @@ class Chat extends Component<ChatProps, ChatState> {
 }
 
 
-export default Chat;
+export default connect()(Chat);
