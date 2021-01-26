@@ -9,7 +9,6 @@ import ImageOutlinedIcon from '@material-ui/icons/ImageOutlined';
 import AttachFileOutlinedIcon from '@material-ui/icons/AttachFileOutlined';
 import EmojiEmotionsOutlinedIcon from '@material-ui/icons/EmojiEmotionsOutlined';
 import ThumbUpAltOutlinedIcon from '@material-ui/icons/ThumbUpAltOutlined';
-import Picker, { SKIN_TONE_MEDIUM_DARK } from "emoji-picker-react";
 import APP_CONFIG, { ChatProps, ChatState, User, Connections, Messages } from '../App.config'
 import { connect } from 'react-redux';
 import MessagesDisplay from './Messages';
@@ -516,7 +515,7 @@ class Chat extends Component<ChatProps, ChatState> {
                     <IconButton><ImageOutlinedIcon /></IconButton> 
                     <IconButton><AttachFileOutlinedIcon /></IconButton>
                     <IconButton onClick={this.handleEmojiPicker}><EmojiEmotionsOutlinedIcon /></IconButton>
-                    <span onBlur={(event) => { this.handleEmojiBlur(); }}>{emojiPickerOpen ? <Picker onEmojiClick={(event) => {console.log(event);}} />:<></>}</span>
+                    <span onBlur={(event) => { this.handleEmojiBlur(); }}>{emojiPickerOpen ? <></>:<></>}</span>
                     <IconButton onClick={(event) => {this.sendMessage('👍');}}><ThumbUpAltOutlinedIcon /></IconButton>
                     <IconButton color="primary" id='send-icon' onClick={this.handleSendButton}><SendSharpIcon /></IconButton>
                   </div>
