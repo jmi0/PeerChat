@@ -1,5 +1,5 @@
 import { User, Message, ADD_CONNECTION, UPDATE_ONLINE, ActionTypes, UPDATE_MESSAGES, UPDATE_LOGIN_STATE, UPDATE_TOKEN, UPDATE_OFFLINE_STATE, UPDATE_SYSTEM_USER } from './App.config'
-import { DataConnection } from 'peerjs'
+import Peer, { DataConnection } from 'peerjs'
 
 
 export function addConnection(key: string, connection: any): ActionTypes {
@@ -47,10 +47,14 @@ export function updateOfflineState(offline: boolean): ActionTypes {
 }
 
 
-export function UpdateSystemUser(user: User|false): ActionTypes {
+export function UpdateSystemUser(user: User|false, isLoggedIn: boolean, offline: boolean, token: string|false): ActionTypes {
   return {
     type: UPDATE_SYSTEM_USER,
-    user: user
+    user: user,
+    isLoggedIn: isLoggedIn,
+    offline: offline,
+    token: token
   }
 }
+
 

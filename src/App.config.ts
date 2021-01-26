@@ -58,7 +58,7 @@ export const UPDATE_TOKEN = 'UPDATE_TOKEN'
 export const UPDATE_LOGIN_STATE = 'UPDATE_LOGIN_STATE'
 export const UPDATE_OFFLINE_STATE = 'UPDATE_OFFLINE_STATE'
 export const UPDATE_SYSTEM_USER = 'UPDATE_SYSTEM_USER'
-
+export const UPDATE_SYSTEM_PEER = 'UPDATE_SYSTEM_PEER'
   
   
 interface AddConnectionAction {
@@ -94,9 +94,18 @@ interface UpdateOfflineAction {
     offline: boolean
 }
 
+
 interface UpdateSystemUser {
     type: typeof UPDATE_SYSTEM_USER
     user: User|false
+    isLoggedIn: boolean,
+    offline: boolean,
+    token: string|false
+}
+
+interface UpdateSystemPeer {
+    type: typeof UPDATE_SYSTEM_PEER,
+    peer: Peer
 }
 
 
@@ -105,6 +114,6 @@ export type ActionTypes =
     AddConnectionAction | UpdateOnlineAction | 
     UpdateMessagesAction | UpdateTokenAction | 
     UpdateLoginAction | UpdateOfflineAction | 
-    UpdateSystemUser
+    UpdateSystemUser | UpdateSystemPeer
 
 

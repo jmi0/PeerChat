@@ -4,8 +4,10 @@ import {
   UPDATE_TOKEN, 
   UPDATE_LOGIN_STATE, 
   UPDATE_OFFLINE_STATE, 
-  UPDATE_SYSTEM_USER
+  UPDATE_SYSTEM_USER,
+  UPDATE_SYSTEM_PEER
 } from '../App.config'
+
 
 
 const initialState: SystemState = {
@@ -32,7 +34,8 @@ export function system (
       return {...state, offline: action.offline}
 
     case UPDATE_SYSTEM_USER:
-      return {...state, user: action.user}
+      return {...state, user: action.user, isLoggedIn: action.isLoggedIn, offline: action.offline, token: action.token }
+    
     
     default:
       

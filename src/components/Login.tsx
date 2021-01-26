@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from 'react'
-import { updateLoginState, UpdateSystemUser, updateToken } from '../actions';
+import React, { useState } from 'react'
+import { UpdateSystemUser } from '../actions';
 import { connect } from 'react-redux';
 import { Container, Box, TextField, Button } from '@material-ui/core';
 
@@ -32,9 +32,12 @@ const LoginForm: React.FC = (props: any) => {
     .then(response => response.json())
     .then(result => {
       if (typeof result.success !== 'undefined') {
-        props.dispatch(updateLoginState(true));
-        props.dispatch(updateToken(result.token));
-        props.dispatch(UpdateSystemUser({username: result.username, peerID: ''}));
+        props.dispatch(UpdateSystemUser(
+          {username: result.username, peerID: ''}, 
+          true, 
+          false, 
+          result.token
+        ));
       } else {
         //TODO
         // form handling (bad login)

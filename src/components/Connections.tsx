@@ -5,7 +5,8 @@ import { List, ListItem, ListItemText, ListItemIcon, Badge } from '@material-ui/
 import CommentIcon from '@material-ui/icons/Comment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import { Connections, User } from '../App.config';
-
+import Peer from 'peerjs';
+import { refreshFetch, exists } from '../App.fn'
 
 type ConnectionsProps = {
   connections: Connections
@@ -23,21 +24,22 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
   useEffect(() => {
     
     discoveryInterval = window.setInterval(() => {
-      //getRemotePeers();
+      getRemotePeers();
     }, 1000);
 
     return () => {
+      // token update
       clearInterval(discoveryInterval);
     }
 
-  }, []);
+  }, [token]);
 
   const handleSelectedPeerChange = (event: React.MouseEvent, peer: User) => {
     console.log(peer);
   }
 
   const getRemotePeers = () => {
-
+    
     let headers = new Headers();
     headers.append('Content-Type', 'application/json');
     headers.append('Authorization', `Bearer ${token}`);
@@ -45,12 +47,9 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
     .then((result: any) => {
       
       // if token set then just update token
-      if (typeof result.token !== 'undefined') {
-        console.log('new token:', result.token);
-        setToken(result.token);
-      }
+      if (exists(result.token)) setToken(result.token);
       else {
-        console.log('result',result);
+        console.log('result', result);
       }
       
     })
@@ -60,25 +59,21 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
 
   }
 
-  const refreshFetch = (url: string, method: string, headers: Headers, body: string|Blob|ArrayBufferView|ArrayBuffer|FormData|URLSearchParams|null|undefined) => {
-    return new Promise((resolve, reject) => {
-      // attempt to make request
-      fetch(url, {method: method, headers: headers, body: body})
-      .then(response => response.json())
-      .then(result => {
-        // token is expired
-        if (typeof result.tokenexpired !== 'undefined') {
-          // refresh token
-          fetch('/refreshtoken', { method: 'POST', headers: {'Content-Type': 'application/json'}})
-          .then(response => response.json())
-          .then(result => {
-            console.log('token expired');
-            resolve(result);
-          })
-          .catch(err => reject(err))
-        } else resolve(result);
-      })
-      .catch(err => reject(err) )
+  
+
+  
+
+  const updateUserPeerID = (peerid: string) => {
+    
+    let headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    headers.append('Authorization', `Bearer ${token}`);
+    refreshFetch('/updatepeerid', 'POST', headers, JSON.stringify({ peerid: peerid }))
+    .then((result: any) => {
+      if (exists(result.token)) setToken(result.token);
+    })
+    .catch((err) => {
+      //this.state.peer?.destroy();
     });
   }
  
@@ -93,7 +88,7 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
             
             return (
               <ListItem key={JSON.stringify(peer)} button selected={'' === peer.username} onClick={(event) => handleSelectedPeerChange(event, peer)}>
-              {(typeof props.connections[peer.username]) ? 
+              {(exists(props.connections[peer.username])) ? 
                 <>
                 <ListItemIcon>
                   <FiberManualRecordIcon fontSize='small' style={{color: 'green'}} />
