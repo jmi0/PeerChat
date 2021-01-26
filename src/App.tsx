@@ -17,6 +17,9 @@ import MenuIcon from '@material-ui/icons/Menu';
 import "./style/App.scss";
 import './style/Chat.scss';
 
+import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
+import Loader from 'react-loader-spinner'
+
 import { updateLoginState, UpdateSystemUser, updateToken } from './actions';
 
 

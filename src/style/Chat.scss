@@ -116,11 +116,16 @@ html {
     margin: 0;
   }
 
-  .emoji-picker-react {
+  .emoji-mart {
     position: absolute;
     bottom: 0;
-    margin-bottom: 100px;
-    z-index: 1000;
+    margin-bottom: 110px;
+    z-index: 2000;
+    left: 0;
+    margin-left: 20px;
+    .emoji-mart-bar {
+      display: none;;
+    }
   }
 }
 
