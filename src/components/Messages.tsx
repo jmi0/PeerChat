@@ -2,8 +2,20 @@ import React, { Component } from 'react'
 import moment from 'moment'
 import { ListItem, Grid } from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
-import { MessagesProps } from '../App.config'
 
+interface Message {
+  message: { username: string, message: string},
+  from: string,
+  timestamp: string,
+  seen: Boolean
+}
+
+export type MessagesProps = {
+  messages: Message[],
+  localUsername: string,
+  remoteUsername: string,
+  lastMessage: Message|Object
+}
 
 /************************************************************************
  * 

@@ -6,67 +6,32 @@ const APP_CONFIG = {
 };
 export default APP_CONFIG;
 
-export type LoginProps = {
-
-}
-
-export type LoginState = {
-  username: string,
-  password: string,
-  isLoading: Boolean,
-  isLoggedIn: Boolean,
-  user: User,
-  token: string|false,
-}
-
-export type ChatProps = {
-    user: User,
-    token: string|false,
-    dispatch: any
-}
-  
-export type ChatState = {
-    peer: Peer|null,
-    user: User,
-    remotePeers: {[key: string]: User},
-    onlinePeers: {[key: string]: User},
-    selectedRemotePeer: User,
-    textMessage: string,
-    connections: Connections,
-    messages: Messages,
-    lastMessage: Message|Object,
-    offline: Boolean,
-    token: string|false,
-    isConnecting: Boolean,
-    emojiPickerOpen: Boolean
-}
 
 export interface Connections {
-    [key: string]: any
+    [key: string]: DataConnection|false
 }
 
 export interface User {
     username: string,
     peerID: string
 }
-  
+
 export interface Message {
-    message: { username: string, message: string},
-    from: string,
+    sent: boolean,
+    seen: boolean,
     timestamp: string,
-    seen: Boolean
+    from: string,
+    to: string,
+    text: string|false,
+    image: {blob: Blob, type: string}|false
+    attachment: {blob: Blob, type: string}|false
 }
 
 export interface Messages {
     [key: string]: Message[]
 }
 
-export type MessagesProps = {
-    messages: Message[],
-    localUsername: string,
-    remoteUsername: string,
-    lastMessage: Message|Object
-}
+
 
 
 
@@ -104,7 +69,7 @@ interface AddConnectionAction {
 
 interface UpdateOnlineAction {
     type: typeof UPDATE_ONLINE
-    payload: {[key: string]: User}|{}
+    payload: {[key: string]: User}
 }
 
 interface UpdateMessagesAction {

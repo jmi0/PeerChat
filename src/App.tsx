@@ -34,10 +34,6 @@ const peer = new Peer({
 });
 
 
-
-
-
-
 const App: React.FC = (props: any) => {
 
   const [ isLoggedIn, setIsLoggedIn ] = useState<boolean>(false);
@@ -47,6 +43,7 @@ const App: React.FC = (props: any) => {
   const [ connections, setConnections ] = useState<{[key: string]:DataConnection|false}>({});
   const [ isLoading, setIsLoading ] = useState<boolean>(true);
 
+  
   let messages: Messages = {};
   let online: {[key: string]: User} = {};
   
@@ -66,6 +63,8 @@ const App: React.FC = (props: any) => {
   }
   
   useEffect(() => {
+
+    
 
     // get local peer id from peer server
     peer.on('open', (peerid) => {
@@ -99,7 +98,7 @@ const App: React.FC = (props: any) => {
       setIsLoggedIn(system.isLoggedIn);
       setToken(system.token);
       setUser(system.user);
-      console.log(system);
+      console.log('subscribe',system);
     });
     
     
@@ -122,14 +121,21 @@ const App: React.FC = (props: any) => {
       setIsLoading(false);
     });
 
+
+    
+
     return () => {
       //  on unmount
       
     }
 
-    
-    
   }, []);
+  
+
+  
+
+
+
   console.log('render');
   if (isLoading) return (<div>Loading...</div>);
   else
@@ -151,12 +157,14 @@ const App: React.FC = (props: any) => {
             </Box>
             <Box className='wrapper'>
               <Box className={'conversation-area'}>
-                <ConnectionsList connections={connections} />
+                <ConnectionsList connections={connections} token={token} />
               </Box>
               <Box className='chat-area'>
                 <Box className='chat-area-header'></Box>
                 <Box className='chat-area-main'></Box>
-                <Box className='chat-area-footer'><Messenger /></Box>
+                <Box className='chat-area-footer'>
+                  <Messenger connection={false} systemUser={user} selectedUser={{username:'', peerID:''}} />
+                </Box>
               </Box>
             </Box>
           </>

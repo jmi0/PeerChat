@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { updateOnline } from '../actions';
 import { connect } from 'react-redux';
 import { Message, User } from '../App.config';
+import { DataConnection } from 'peerjs';
 import SendSharpIcon from '@material-ui/icons/SendSharp';
 import ImageOutlinedIcon from '@material-ui/icons/ImageOutlined';
 import AttachFileOutlinedIcon from '@material-ui/icons/AttachFileOutlined';
@@ -15,7 +16,9 @@ import { Picker } from 'emoji-mart'
 
 
 type MessengerProps = {
-
+  connection: DataConnection|false,
+  selectedUser: User,
+  systemUser: User
 }
 
 
@@ -30,7 +33,8 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
 
 
   useEffect(() => {
-
+    console.log(props);
+    // component did mount
     document.addEventListener("click", handleEmojiPickerBlur, false);
 
     return () => {
@@ -67,16 +71,27 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
   }
 
 
-  const handleEmojiPicker = (event: React.MouseEvent) => {
+  const toggleEmojiPicker = (event: React.MouseEvent) => {
     if (emojiPickerOpen) setEmojiPickerOpen(false);
     else setEmojiPickerOpen(true);
+  };
+
+  const handleEmojiPicker = (event: any) => {
+    let emojiText = text;
+    setText(emojiText += event.native);
   };
 
 
   const sendMessage = (message: any) => {
     // send
+    if (props.connection) {
+      
+      
+    } else {
+      // save to be dispatched to user next time both online
+    }
+    console.log(`send and/or store`, message);
     setText('');
-    console.log(`actually send`, message);
   }
 
 
@@ -88,8 +103,8 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
         <IconButton onClick={() => {imageInputRef.current?.click();}}><ImageOutlinedIcon /><input ref={imageInputRef} style={{display:'none'}} type={"file"} accept={'.jpg,.jpeg,.png,.gif'} /></IconButton> 
         <IconButton onClick={() => {fileInputRef.current?.click();}}><AttachFileOutlinedIcon /><input ref={fileInputRef} style={{display:'none'}} type={"file"} /></IconButton>
         <span ref={emojiPickerRef}>
-          <IconButton onClick={handleEmojiPicker}><EmojiEmotionsOutlinedIcon /></IconButton>
-          {emojiPickerOpen ? <Picker onClick={(event) => {console.log(event);}} />:<></>}
+          <IconButton onClick={toggleEmojiPicker}><EmojiEmotionsOutlinedIcon /></IconButton>
+          {emojiPickerOpen ? <Picker onSelect={handleEmojiPicker} />:<></>}
         </span>
         <IconButton onClick={(event) => {sendMessage('👍');}}><ThumbUpAltOutlinedIcon /></IconButton>
         <IconButton color="primary" id='send-icon' onClick={handleSendButton}><SendSharpIcon /></IconButton>

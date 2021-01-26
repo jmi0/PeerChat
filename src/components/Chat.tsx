@@ -9,14 +9,49 @@ import ImageOutlinedIcon from '@material-ui/icons/ImageOutlined';
 import AttachFileOutlinedIcon from '@material-ui/icons/AttachFileOutlined';
 import EmojiEmotionsOutlinedIcon from '@material-ui/icons/EmojiEmotionsOutlined';
 import ThumbUpAltOutlinedIcon from '@material-ui/icons/ThumbUpAltOutlined';
-import APP_CONFIG, { ChatProps, ChatState, User, Connections, Messages } from '../App.config'
+import APP_CONFIG, { User } from '../App.config'
 import { connect } from 'react-redux';
 import MessagesDisplay from './Messages';
 import '../style/Chat.scss';
 import Peer, { DataConnection } from 'peerjs';
 import { addConnection, updateOnline, updateMessages } from '../actions';
 
+interface Connections {
+  [key: string]: any
+}
 
+type ChatProps = {
+  user: User,
+  token: string|false,
+  dispatch: any
+}
+
+type ChatState = {
+  peer: Peer|null,
+  user: User,
+  remotePeers: {[key: string]: User},
+  onlinePeers: {[key: string]: User},
+  selectedRemotePeer: User,
+  textMessage: string,
+  connections: Connections,
+  messages: Messages,
+  lastMessage: Message|Object,
+  offline: Boolean,
+  token: string|false,
+  isConnecting: Boolean,
+  emojiPickerOpen: Boolean
+}
+
+interface Message {
+  message: { username: string, message: string},
+  from: string,
+  timestamp: string,
+  seen: Boolean
+}
+
+interface Messages {
+  [key: string]: Message[]
+}
 
 /************************************************************************
  * This component handles remote peer discovery, updating username/peerid associaiton on server, connections, and 
