@@ -33,7 +33,7 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
 
 
   useEffect(() => {
-    console.log(props);
+    
     // component did mount
     document.addEventListener("click", handleEmojiPickerBlur, false);
 

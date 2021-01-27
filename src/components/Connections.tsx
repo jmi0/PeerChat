@@ -17,12 +17,35 @@ type ConnectionsProps = {
 
 const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) => {
   
-  let discoveryInterval: number;
+  
 
   const [ token, setToken ] = useState(props.token);
 
   useEffect(() => {
     
+    let discoveryInterval: number;
+
+    const getRemotePeers = () => {
+    
+      let headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+      headers.append('Authorization', `Bearer ${token}`);
+      refreshFetch('/peers', 'GET', headers, null)
+      .then((result: any) => {
+        
+        // if token set then just update token
+        if (exists(result.token)) setToken(result.token);
+        else {
+          console.log('result', result);
+        }
+        
+      })
+      .catch((err) => {
+        
+      });
+  
+    }
+
     discoveryInterval = window.setInterval(() => {
       getRemotePeers();
     }, 1000);
@@ -38,26 +61,7 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
     console.log(peer);
   }
 
-  const getRemotePeers = () => {
-    
-    let headers = new Headers();
-    headers.append('Content-Type', 'application/json');
-    headers.append('Authorization', `Bearer ${token}`);
-    refreshFetch('/peers', 'GET', headers, null)
-    .then((result: any) => {
-      
-      // if token set then just update token
-      if (exists(result.token)) setToken(result.token);
-      else {
-        console.log('result', result);
-      }
-      
-    })
-    .catch((err) => {
-      
-    });
-
-  }
+  
 
   
 

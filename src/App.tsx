@@ -24,12 +24,12 @@ import Loader from 'react-loader-spinner'
 
 
 
-
 const store = configureStore({reducer: reducer});
 
 
 const App: React.FC = (props: any) => {
   
+
   const [ isLoggedIn, setIsLoggedIn ] = useState<boolean>(false);
   const [ token, setToken ] = useState<string|false>(false);
   const [ peer, setPeer ] = useState<Peer|false>(false);
@@ -38,13 +38,17 @@ const App: React.FC = (props: any) => {
   const [ isLoading, setIsLoading ] = useState<boolean>(true);
   
   useEffect(() => {
-    
-    setPeer(new Peer({
-      host: window.location.hostname,
-      port: 9000, 
-      path: '/peerserver'
-    }));
 
+    console.log('peer', peer);
+    if ((!peer || peer?.destroyed) && isLoggedIn) {
+      console.log('PEER CREATED');
+      setPeer(new Peer({
+        host: window.location.hostname,
+        port: 9000, 
+        path: '/peerserver'
+      }));
+    }
+    
     const unsubscribe = store.subscribe(() => {
       const { system, chat } = store.getState();
       setIsLoggedIn(system.isLoggedIn);
@@ -76,13 +80,14 @@ const App: React.FC = (props: any) => {
     });
     
 
+
     return () => {
       //  on unmount
       if (peer) peer.destroy();
       unsubscribe();
     }
 
-  }, [isLoggedIn]);
+  }, [peer, isLoggedIn]);
 
   console.log('render');
   if (isLoading) return (<div>Loading...</div>);

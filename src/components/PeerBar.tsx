@@ -27,9 +27,8 @@ type PeerBarProps = {
 
 
 const PeerBar: React.FC<PeerBarProps> = (props: PeerBarProps) => {
-  console.log(props.peer);
+  
   const [ token, setToken ] = useState<string>(props.token);
-  const [ peer, setPeer ] = useState<Peer>(props.peer);
 
   
   const logout = () => {
@@ -45,18 +44,42 @@ const PeerBar: React.FC<PeerBarProps> = (props: PeerBarProps) => {
     });
   }
 
+ 
+  
 
-  const setUpPeer = (peer: Peer) => {
+  
+  
+  useEffect(() => {
+    console.log('PEEERBAR', props.peer);
+    if (props.peer.disconnected) {
+      //props.peer.reconnect();
+
+      console.log(props.peer);
+    } 
+    const updateUserPeerID = (peerid: string) => {
     
+      let headers = new Headers();
+      headers.append('Content-Type', 'application/json');
+      headers.append('Authorization', `Bearer ${token}`);
+      refreshFetch('/updatepeerid', 'POST', headers, JSON.stringify({ peerid: peerid }))
+      .then((result: any) => {
+        if (exists(result.token)) setToken(result.token);
+      })
+
+      .catch((err) => {props.peer.disconnect();});
+    }
+
     // get local peer id from peer server
-    peer.on('open', (peerid) => {
+    if (props.peer.id) updateUserPeerID(props.peer.id);
+    
+    props.peer.on('open', (peerid) => {
       // set this users peerid
-      updateUserPeerID(peerid);
+      //updateUserPeerID(peerid);
       console.log(`My peer ID is ${peerid}`);
-      
+        
     });
     // listen for connections
-    peer.on('connection', (conn) => {
+    props.peer.on('connection', (conn) => {
       // message receiver
       conn.on('data', (data) => {
         console.log(`${conn.peer}:`, data);
@@ -67,53 +90,34 @@ const PeerBar: React.FC<PeerBarProps> = (props: PeerBarProps) => {
         console.log(`Connected: ${conn.peer}`);
       });
     });
-    peer.on('disconnected', () => {
-      console.log('disconnected');  
+    props.peer.on('disconnected', () => {
+      console.log('disconnected'); 
+
     });
-    peer.on('error', (err) => {
+    props.peer.on('error', (err) => {
       console.log(`ERROR: ${err.message}`);
     });
 
-  };
-
-  const updateUserPeerID = (peerid: string) => {
-    
-    let headers = new Headers();
-    headers.append('Content-Type', 'application/json');
-    headers.append('Authorization', `Bearer ${token}`);
-    refreshFetch('/updatepeerid', 'POST', headers, JSON.stringify({ peerid: peerid }))
-    .then((result: any) => {
-      if (exists(result.token)) setToken(result.token);
-    })
-    .catch((err) => {if (peer) peer.destroy();});
-  }
-  
-  useEffect(() => {
-    
-    setUpPeer(props.peer);
-    
 
     return () => {
+
       //  on unmount
-      peer.destroy();
- 
+      props.peer.disconnect();
     }
 
   }, []);
 
   console.log('render');
   return (
-     
-              <AppBar position="static" elevation={0}>
-                <Toolbar>
-                  <IconButton edge="start" color="inherit" aria-label="menu">
-                    <MenuIcon />
-                  </IconButton>
-                  <Typography variant="h6">p2pChat</Typography>
-                  <Button color="inherit" onClick={logout} >Logout</Button>
-                </Toolbar>
-              </AppBar>
-          
+    <AppBar position="static" elevation={0}>
+      <Toolbar>
+        <IconButton edge="start" color="inherit" aria-label="menu">
+          <MenuIcon />
+        </IconButton>
+        <Typography variant="h6">p2pChat</Typography>
+        <Button color="inherit" onClick={logout} >Logout</Button>
+      </Toolbar>
+    </AppBar>      
   );
 
 }
