@@ -50,14 +50,10 @@ const PeerBar: React.FC<PeerBarProps> = (props: PeerBarProps) => {
   
   
   useEffect(() => {
-    console.log('PEEERBAR', props.peer);
-    if (props.peer.disconnected) {
-      //props.peer.reconnect();
+    console.log('running');
+    if (props.peer.disconnected) props.peer.reconnect();
 
-      console.log(props.peer);
-    } 
     const updateUserPeerID = (peerid: string) => {
-    
       let headers = new Headers();
       headers.append('Content-Type', 'application/json');
       headers.append('Authorization', `Bearer ${token}`);
@@ -65,18 +61,14 @@ const PeerBar: React.FC<PeerBarProps> = (props: PeerBarProps) => {
       .then((result: any) => {
         if (exists(result.token)) setToken(result.token);
       })
-
       .catch((err) => {props.peer.disconnect();});
     }
 
     // get local peer id from peer server
-    if (props.peer.id) updateUserPeerID(props.peer.id);
-    
     props.peer.on('open', (peerid) => {
       // set this users peerid
-      //updateUserPeerID(peerid);
-      console.log(`My peer ID is ${peerid}`);
-        
+      updateUserPeerID(peerid);
+
     });
     // listen for connections
     props.peer.on('connection', (conn) => {
@@ -94,9 +86,14 @@ const PeerBar: React.FC<PeerBarProps> = (props: PeerBarProps) => {
       console.log('disconnected'); 
 
     });
+    props.peer.on('close', () => {
+      console.log('closed'); 
+
+    });
     props.peer.on('error', (err) => {
       console.log(`ERROR: ${err.message}`);
     });
+
 
 
     return () => {
@@ -105,7 +102,7 @@ const PeerBar: React.FC<PeerBarProps> = (props: PeerBarProps) => {
       props.peer.disconnect();
     }
 
-  }, []);
+  }, [props.peer]);
 
   console.log('render');
   return (

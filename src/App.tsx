@@ -39,9 +39,7 @@ const App: React.FC = (props: any) => {
   
   useEffect(() => {
 
-    console.log('peer', peer);
     if ((!peer || peer?.destroyed) && isLoggedIn) {
-      console.log('PEER CREATED');
       setPeer(new Peer({
         host: window.location.hostname,
         port: 9000, 
@@ -79,8 +77,6 @@ const App: React.FC = (props: any) => {
       setIsLoading(false);
     });
     
-
-
     return () => {
       //  on unmount
       if (peer) peer.destroy();
@@ -89,7 +85,6 @@ const App: React.FC = (props: any) => {
 
   }, [peer, isLoggedIn]);
 
-  console.log('render');
   if (isLoading) return (<div>Loading...</div>);
   else
     return (
