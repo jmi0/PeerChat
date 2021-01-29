@@ -174,53 +174,11 @@ class App extends Component<any, AppState> {
     });
   }
 
-  updateConnections(username: string, conn: DataConnection) {
-    let connections = this.state.connections;
-    connections[username] = conn;
-    this.setState({ connections: connections });
-  }
-
-  connectToPeer(user: User) : DataConnection|false {
-
-    if (!this.state.peer) return false;
-    
-    if (
-      exists(this.state.connections[user.username]) && 
-      this.state.connections[user.username] && 
-      this.state.connections[user.username].open
-    ) return false;
-
-    let conn = this.state.peer.connect(user.peerID, {serialization: 'json'});
-    
-    if (!conn) return false;
-    
-    conn.on('open', () => {
-      console.log(`Connected to ${user.username}`);
-      //this.updateConnections(user.username, conn);
-    });
-
-    conn.on('data', (data) => {
-      console.log(data);
-    });
- 
-    const self = this;
-    conn.on('error', function(err) {
-      console.log(err);
-    });
-
-    conn.on('disconnected', () => {
-      console.log(`Disconnected from ${user.username}`);
-    });
-
-    return conn;
-    
-  }
-
   
   render() {
     
     const { isLoading, isLoggedIn, user, peer, token, connections, selectedUser } = this.state; 
-      
+    
     if (isLoading) return (<div>Loading...</div>);
     else return (
       <Box className="App">
@@ -247,8 +205,9 @@ class App extends Component<any, AppState> {
                   />
                 </Box>
                 <Box className='chat-area-footer'>
-                  <Messenger 
-                    connection={this.connectToPeer(selectedUser)} 
+                  <Messenger
+                    key={`connectto${selectedUser}`}
+                    peer={peer}
                     systemUser={user} 
                     selectedUser={selectedUser} 
                   />

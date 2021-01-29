@@ -10,7 +10,6 @@ const refreshFetch = (url: string, method: string, headers: Headers, body: strin
         fetch('/refreshtoken', { method: 'POST', headers: {'Content-Type': 'application/json'}})
         .then(response => response.json())
         .then(result => {
-          console.log('token expired');
           resolve(result);
         })
         .catch(err => reject(err))

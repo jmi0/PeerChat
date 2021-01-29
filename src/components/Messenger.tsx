@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { updateOnline } from '../actions';
 import { connect } from 'react-redux';
 import { Message, User } from '../App.config';
-import { DataConnection } from 'peerjs';
+import Peer, { DataConnection } from 'peerjs';
 import SendSharpIcon from '@material-ui/icons/SendSharp';
 import ImageOutlinedIcon from '@material-ui/icons/ImageOutlined';
 import AttachFileOutlinedIcon from '@material-ui/icons/AttachFileOutlined';
@@ -16,7 +16,7 @@ import { Picker } from 'emoji-mart'
 
 
 type MessengerProps = {
-  connection: DataConnection|false,
+  peer: Peer,
   selectedUser: User,
   systemUser: User
 }
@@ -28,20 +28,39 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const [text, setText] = useState<string>('');
-  const [emojiPickerOpen, setEmojiPickerOpen] = useState<boolean>(false);
+  const [ connection, setConnection ] = useState<DataConnection|false>(false);
+  const [ text, setText ] = useState<string>('');
+  const [ emojiPickerOpen, setEmojiPickerOpen ] = useState<boolean>(false);
 
 
   useEffect(() => {
 
-    console.log(props.connection);
+    let conn: DataConnection = props.peer.connect(props.selectedUser.peerID, {serialization: 'json'});
+
+    conn.on('open', () => {
+      console.log(`Connected to ${props.selectedUser.username}`);
+      setConnection(conn);
+    });
+
+    conn.on('data', (data) => {
+      console.log(data);
+    });
+  
+    conn.on('error', function(err) {
+      console.log(err);
+    });
     
-    // component did mount
+    conn.on('disconnected', () => {
+      console.log(`Disconnected from ${props.selectedUser.username}`);
+    });
+    
+    
     document.addEventListener("click", handleEmojiPickerBlur, false);
 
     return () => {
       // unmounting
       document.removeEventListener('click', handleEmojiPickerBlur, false);
+      if (connection) connection.close();
     }
 
   }, []);
@@ -86,8 +105,8 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
 
   const sendMessage = (message: any) => {
     // send
-    if (props.connection) {
-      props.connection.send({message: message});
+    if (connection && connection?.open) {
+      connection.send({message: message});
       
     } else {
       // save to be dispatched to user next time both online

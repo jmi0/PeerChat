@@ -100,7 +100,7 @@ const App: React.FC = (props: any) => {
                 <Box className='chat-area-header'></Box>
                 <Box className='chat-area-main'></Box>
                 <Box className='chat-area-footer'>
-                  <Messenger connection={false} systemUser={user} selectedUser={{username:'', peerID:''}} />
+                  <Messenger peer={peer} systemUser={user} selectedUser={{username:'', peerID:''}} />
                 </Box>
               </Box>
             </Box>
