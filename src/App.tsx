@@ -3,9 +3,11 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import Peer, { DataConnection } from 'peerjs';
 import Dexie from 'dexie';
+//import { DB } from './db';
 
-import { User } from './App.config';
-import { exists } from './App.fn';
+
+import { User, Connections, SystemState, ChatStoreState } from './App.config';
+import { exists, refreshFetch } from './App.fn';
 import reducer from './reducers';
 import { UpdateSystemUser } from './actions';
 
@@ -13,6 +15,7 @@ import LoginForm from './components/Login';
 import ConnectionsList from './components/Connections';
 import Messenger from './components/Messenger';
 import PeerBar from './components/PeerBar';
+import MessagesDisplay from './components/Messages'
 
 import { Box } from '@material-ui/core';
 import "./style/App.scss";
@@ -23,36 +26,139 @@ import Loader from 'react-loader-spinner'
 
 
 
-const store = configureStore({reducer: reducer});
+type AppState = {
+  isLoading: boolean,
+  isLoggedIn: boolean,
+  user: User|false,
+  token: string|false,
+  peer: Peer|false,
+  connections: Connections,
+  selectedUser: User|false
+}
 
-const App: React.FC = (props: any) => {
-  
 
-  const [ isLoggedIn, setIsLoggedIn ] = useState<boolean>(false);
-  const [ token, setToken ] = useState<string|false>(false);
-  const [ peer, setPeer ] = useState<Peer|false>(false);
-  const [ user, setUser ] = useState<User|false>(false);
-  const [ connections, setConnections ] = useState<{[key: string]:DataConnection|false}>({});
-  const [ isLoading, setIsLoading ] = useState<boolean>(true);
-  
-  useEffect(() => {
+class App extends Component<any, AppState> {
 
-    if ((!peer || peer?.destroyed) && isLoggedIn) {
-      setPeer(new Peer({
-        host: window.location.hostname,
-        port: 9000, 
-        path: '/peerserver'
-      }));
+  store = configureStore({reducer: reducer});
+  db: Dexie = new Dexie('p2pchat');
+  unsubscribe: any;
+
+  constructor(props: any) {
+    
+    super(props);
+    
+    this.state = {
+      isLoading: true,
+      isLoggedIn: false,
+      user: false,
+      token: false,
+      peer: false,
+      connections: {},
+      selectedUser: false
     }
+
+  }
+  
+  componentDidMount() {
     
-    const unsubscribe = store.subscribe(() => {
-      const { system, chat } = store.getState();
-      setIsLoggedIn(system.isLoggedIn);
-      setToken(system.token);
-      setUser(system.user);
+    this.db.version(1).stores({
+      messages: '++id, sent, seen, timestamp, from, to, text, image, attachment'
     });
-    
-    
+    //this.db.open();
+
+    this.init();
+
+    this.unsubscribe = this.store.subscribe(() => {
+      
+      const { system, chat } = this.store.getState();
+
+      // re init if just logging in
+      if (!this.state.isLoggedIn && system.isLoggedIn) {
+        if (!this.state.peer || this.state.peer.destroyed) this.init();
+      }
+      // if just logging out destroy peer first
+      if (this.state.isLoggedIn && !system.isLoggedIn) {
+        if (this.state.peer) this.state.peer?.destroy();
+      }
+
+      this.setState({ 
+        isLoggedIn: system.isLoggedIn, 
+        user: system.user, 
+        token: system.token,
+        selectedUser: chat.selectedUser
+      });      
+
+    });
+
+  }
+  
+
+  componentWillUnmount() {
+    if (this.state.peer) this.state.peer.destroy();
+    this.unsubscribe();
+    this.db.close();
+  }
+
+  setUpPeer(token: string) : Peer {
+
+    let peer = new Peer({
+      host: window.location.hostname,
+      port: 9000, 
+      path: '/peerserver'
+    });
+
+    // get local peer id from peer server
+    peer.on('open', (peerid) => {
+      console.log(`Peer id is ${peerid}`);
+      // associate peer id to username on server side
+      this.updateUserPeerID(peerid, token);
+
+    });
+
+    // listen for connections
+    peer.on('connection', (conn) => {
+      // message receiver
+      conn.on('data', (data) => {
+        console.log(data);
+        this.db.table('messages').add(data);
+      });
+      
+      // connection receiver
+      conn.on('open', () => {
+        // connected
+        console.log('Connected',conn);
+      });
+
+    });
+
+
+    peer.on('disconnected', () => {
+      console.log('disconnected');
+    });
+
+
+    peer.on('error', (err) => {
+      console.log(err);
+      console.log(`ERROR: ${err.message}`);
+    });
+
+    return peer;
+  }
+
+  updateUserPeerID(peerid: string, token: string) {
+    let headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    headers.append('Authorization', `Bearer ${token}`);
+    refreshFetch('/updatepeerid', 'POST', headers, JSON.stringify({peerid:peerid}))
+    .then((result: any) => {
+      if (exists(result.token)) this.setState({token:result.token});
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+  }
+
+  init() {
     // try to refresh token
     fetch('/refreshtoken', {
       method: 'POST',
@@ -61,33 +167,32 @@ const App: React.FC = (props: any) => {
     .then(res => res.json())
     .then((result) => {
       if (exists(result.username)) {
-        store.dispatch(UpdateSystemUser(
-          {username: result.username, peerID: ''},
-          true,
-          false,
-          result.token
-        ));
+        this.setState({ peer: this.setUpPeer(result.token)}, () => {
+          this.store.dispatch(UpdateSystemUser(
+            {username: result.username, peerID: ''}, 
+            true, 
+            false, 
+            result.token
+          ));
+        });
+        
       }
     }, (error) => {
-      
       console.log(error);
     }).finally(() => {
-      setIsLoading(false);
+      this.setState({isLoading: false});
     });
+  }
+
+  
+  render() {
     
-    return () => {
-      //  on unmount
-      if (peer) peer.destroy();
-      unsubscribe();
-    }
-
-  }, [peer, isLoggedIn]);
-
-  if (isLoading) return (<div>Loading...</div>);
-  else
-    return (
+    const { isLoading, isLoggedIn, user, peer, token, connections, selectedUser } = this.state; 
+    
+    if (isLoading) return (<div>Loading...</div>);
+    else return (
       <Box className="App">
-        <Provider store={store} >
+        <Provider store={this.store} >
           {!isLoggedIn || !token || !user || !peer ? <LoginForm /> : 
           <>
             <Box className='header'>
@@ -95,14 +200,31 @@ const App: React.FC = (props: any) => {
             </Box>
             <Box className='wrapper'>
               <Box className={'conversation-area'}>
-                <ConnectionsList connections={{}} token={token} user={user} />
+                <ConnectionsList connections={connections} token={token} user={user} />
               </Box>
               <Box className='chat-area'>
+              { selectedUser ? 
+                <>
                 <Box className='chat-area-header'></Box>
-                <Box className='chat-area-main'></Box>
-                <Box className='chat-area-footer'>
-                 
+                <Box className='chat-area-main'>
+                  <MessagesDisplay 
+                    messages={[]}
+                    localUsername={user.username}
+                    remoteUsername={selectedUser.username}
+                    lastMessage={{}}
+                  />
                 </Box>
+                <Box className='chat-area-footer'>
+                  <Messenger
+                    key={`connectto${selectedUser}`}
+                    peer={peer}
+                    systemUser={user} 
+                    selectedUser={selectedUser} 
+                    db={this.db}
+                  />
+                </Box> 
+                </>
+              : <></>}
               </Box>
             </Box>
           </>
@@ -111,6 +233,7 @@ const App: React.FC = (props: any) => {
       </Box>
     );
 
+  }
 }
 
 export default App;
