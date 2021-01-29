@@ -33,6 +33,8 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
 
 
   useEffect(() => {
+
+    console.log(props.connection);
     
     // component did mount
     document.addEventListener("click", handleEmojiPickerBlur, false);
@@ -85,7 +87,7 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
   const sendMessage = (message: any) => {
     // send
     if (props.connection) {
-      
+      props.connection.send({message: message});
       
     } else {
       // save to be dispatched to user next time both online

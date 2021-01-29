@@ -56,7 +56,6 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
 
   const handleSelectedPeerChange = (event: React.MouseEvent, peer: User) => {
     props.dispatch(UpdateSelectedUser(peer));
-    console.log(peer);
   }
  
   return (

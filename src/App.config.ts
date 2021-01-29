@@ -8,7 +8,7 @@ export default APP_CONFIG;
 
 
 export interface Connections {
-    [key: string]: DataConnection|false
+    [key: string]: DataConnection
 }
 
 export interface User {

@@ -94,7 +94,7 @@ const App: React.FC = (props: any) => {
             </Box>
             <Box className='wrapper'>
               <Box className={'conversation-area'}>
-                <ConnectionsList connections={connections} token={token} user={user} />
+                <ConnectionsList connections={{}} token={token} user={user} />
               </Box>
               <Box className='chat-area'>
                 <Box className='chat-area-header'></Box>
