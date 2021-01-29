@@ -1,4 +1,4 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { UpdateSystemUser } from '../actions';
 import { connect } from 'react-redux';
 import { Container, Box, TextField, Button } from '@material-ui/core';
@@ -38,6 +38,7 @@ const LoginForm: React.FC = (props: any) => {
           false, 
           result.token
         ));
+        
       } else {
         //TODO
         // form handling (bad login)

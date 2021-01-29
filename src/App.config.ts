@@ -48,7 +48,8 @@ export interface SystemState {
 export interface ChatStoreState {
     online: {[key: string]: User},
     connections: Connections,
-    messages: Messages
+    messages: Messages,
+    selectedUser: User|false
 }
   
 export const ADD_CONNECTION = 'UPDATE_CONNECTIONS'
@@ -59,6 +60,7 @@ export const UPDATE_LOGIN_STATE = 'UPDATE_LOGIN_STATE'
 export const UPDATE_OFFLINE_STATE = 'UPDATE_OFFLINE_STATE'
 export const UPDATE_SYSTEM_USER = 'UPDATE_SYSTEM_USER'
 export const UPDATE_SYSTEM_PEER = 'UPDATE_SYSTEM_PEER'
+export const UPDATE_SELECTED_USER = 'UPDATE_SELECTED_USER'
   
   
 interface AddConnectionAction {
@@ -108,12 +110,17 @@ interface UpdateSystemPeer {
     peer: Peer
 }
 
+interface UpdateSelectedUserAction {
+    type: typeof UPDATE_SELECTED_USER,
+    user: User|false
+}
+
 
 
 export type ActionTypes = 
     AddConnectionAction | UpdateOnlineAction | 
     UpdateMessagesAction | UpdateTokenAction | 
     UpdateLoginAction | UpdateOfflineAction | 
-    UpdateSystemUser | UpdateSystemPeer
+    UpdateSystemUser | UpdateSystemPeer | UpdateSelectedUserAction
 
 

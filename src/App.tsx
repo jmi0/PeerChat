@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Component } from 'react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import Peer, { DataConnection } from 'peerjs';
@@ -22,10 +22,7 @@ import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import Loader from 'react-loader-spinner'
 
 
-
-
 const store = configureStore({reducer: reducer});
-
 
 const App: React.FC = (props: any) => {
   
@@ -97,7 +94,7 @@ const App: React.FC = (props: any) => {
             </Box>
             <Box className='wrapper'>
               <Box className={'conversation-area'}>
-                <ConnectionsList connections={connections} token={token} />
+                <ConnectionsList connections={connections} token={token} user={user} />
               </Box>
               <Box className='chat-area'>
                 <Box className='chat-area-header'></Box>

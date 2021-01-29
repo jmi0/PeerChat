@@ -1,25 +1,24 @@
 import React, { useEffect, useState } from 'react'
-import { updateOnline } from '../actions';
+import { updateOnline, UpdateSelectedUser } from '../actions';
 import { connect } from 'react-redux';
 import { List, ListItem, ListItemText, ListItemIcon, Badge } from '@material-ui/core';
 import CommentIcon from '@material-ui/icons/Comment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import { Connections, User } from '../App.config';
 import Peer from 'peerjs';
-import { refreshFetch, exists } from '../App.fn'
+import { refreshFetch, exists } from '../App.fn';
 
 type ConnectionsProps = {
+  user: User,
   connections: Connections
-  token: string
+  token: string,
+  dispatch: any
 }
-
-
 
 const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) => {
   
-  
-
   const [ token, setToken ] = useState(props.token);
+  const [ online, setOnline ] = useState<User[]>([]);
 
   useEffect(() => {
     
@@ -35,13 +34,11 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
         
         // if token set then just update token
         if (exists(result.token)) setToken(result.token);
-        else {
-          console.log('result', result);
-        }
+        else setOnline(result);
         
       })
       .catch((err) => {
-        
+        console.log(err);
       });
   
     }
@@ -58,35 +55,19 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
   }, [token]);
 
   const handleSelectedPeerChange = (event: React.MouseEvent, peer: User) => {
+    props.dispatch(UpdateSelectedUser(peer));
     console.log(peer);
-  }
-
-  
-
-  
-
-  
-
-  const updateUserPeerID = (peerid: string) => {
-    
-    let headers = new Headers();
-    headers.append('Content-Type', 'application/json');
-    headers.append('Authorization', `Bearer ${token}`);
-    refreshFetch('/updatepeerid', 'POST', headers, JSON.stringify({ peerid: peerid }))
-    .then((result: any) => {
-      if (exists(result.token)) setToken(result.token);
-    })
-    .catch((err) => {
-      //this.state.peer?.destroy();
-    });
   }
  
   return (
-    <List  disablePadding>
-      {(!Object.values(props.connections).length) ? 
+    <List key={JSON.stringify(online)} disablePadding>
+      {!(online.length-1) ? 
         <ListItem key={'nopeersavailable'} disabled>No Peers Available</ListItem> :
         <>
-          {Object.values(props.connections).map((peer: any) => {
+          {online.map((peer: User) => {
+
+            if (peer.username === props.user.username) return;
+
             var unreadCount = 0;
             var hasMessages = false;
             

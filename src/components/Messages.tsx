@@ -2,6 +2,7 @@ import React, { Component } from 'react'
 import moment from 'moment'
 import { ListItem, Grid } from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
+import { connect } from 'react-redux';
 
 interface Message {
   message: { username: string, message: string},
@@ -76,4 +77,4 @@ class MessagesDisplay extends Component<MessagesProps> {
 
 
 
-export default MessagesDisplay;
+export default connect()(MessagesDisplay);

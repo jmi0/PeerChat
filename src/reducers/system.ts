@@ -21,7 +21,7 @@ export function system (
   state = initialState,
   action: ActionTypes
 ): SystemState {
-  console.log(action.type);
+  
   switch (action.type) {
 
     case UPDATE_LOGIN_STATE:
