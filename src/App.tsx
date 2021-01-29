@@ -22,6 +22,7 @@ import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import Loader from 'react-loader-spinner'
 
 
+
 const store = configureStore({reducer: reducer});
 
 const App: React.FC = (props: any) => {
@@ -100,7 +101,7 @@ const App: React.FC = (props: any) => {
                 <Box className='chat-area-header'></Box>
                 <Box className='chat-area-main'></Box>
                 <Box className='chat-area-footer'>
-                  <Messenger peer={peer} systemUser={user} selectedUser={{username:'', peerID:''}} />
+                 
                 </Box>
               </Box>
             </Box>

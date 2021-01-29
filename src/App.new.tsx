@@ -3,6 +3,8 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import Peer, { DataConnection } from 'peerjs';
 import Dexie from 'dexie';
+//import { DB } from './db';
+
 
 import { User, Connections, SystemState, ChatStoreState } from './App.config';
 import { exists, refreshFetch } from './App.fn';
@@ -38,6 +40,7 @@ type AppState = {
 class App extends Component<any, AppState> {
 
   store = configureStore({reducer: reducer});
+  db: Dexie = new Dexie('p2pchat');
   unsubscribe: any;
 
   constructor(props: any) {
@@ -58,6 +61,11 @@ class App extends Component<any, AppState> {
   
   componentDidMount() {
     
+    this.db.version(1).stores({
+      messages: '++id, sent, seen, timestamp, from, to, text, image, attachment'
+    });
+    //this.db.open();
+
     this.init();
 
     this.unsubscribe = this.store.subscribe(() => {
@@ -88,6 +96,7 @@ class App extends Component<any, AppState> {
   componentWillUnmount() {
     if (this.state.peer) this.state.peer.destroy();
     this.unsubscribe();
+    this.db.close();
   }
 
   setUpPeer(token: string) : Peer {
@@ -111,6 +120,7 @@ class App extends Component<any, AppState> {
       // message receiver
       conn.on('data', (data) => {
         console.log(data);
+        this.db.table('messages').add(data);
       });
       
       // connection receiver
@@ -210,6 +220,7 @@ class App extends Component<any, AppState> {
                     peer={peer}
                     systemUser={user} 
                     selectedUser={selectedUser} 
+                    db={this.db}
                   />
                 </Box> 
                 </>

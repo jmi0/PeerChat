@@ -2,6 +2,7 @@ import React, { useEffect, useState, useRef } from 'react'
 import { updateOnline } from '../actions';
 import { connect } from 'react-redux';
 import { Message, User } from '../App.config';
+import { exists } from '../App.fn'
 import Peer, { DataConnection } from 'peerjs';
 import SendSharpIcon from '@material-ui/icons/SendSharp';
 import ImageOutlinedIcon from '@material-ui/icons/ImageOutlined';
@@ -11,14 +12,16 @@ import ThumbUpAltOutlinedIcon from '@material-ui/icons/ThumbUpAltOutlined';
 import { Box, IconButton } from '@material-ui/core';
 import 'emoji-mart/css/emoji-mart.css'
 import { Picker } from 'emoji-mart'
- 
+import moment from 'moment';
+import Dexie from 'dexie'
 
 
 
 type MessengerProps = {
   peer: Peer,
   selectedUser: User,
-  systemUser: User
+  systemUser: User,
+  db: Dexie
 }
 
 
@@ -67,7 +70,16 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
 
   
   const handleSendButton = (event: React.MouseEvent) => {
-    sendMessage(text);
+    sendMessage({
+      sent: true,
+      seen: false,
+      timestamp: moment().format('YYYY-MM-DD HH:mm:ss'),
+      from: props.systemUser.username,
+      to: props.selectedUser.username,
+      text: text,
+      image: false,
+      attachment: false
+    });
   }
 
 
@@ -76,9 +88,31 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
       (event.target as HTMLInputElement).blur();
       
       // send
-      sendMessage(text);
+      sendMessage({
+        sent: true,
+        seen: false,
+        timestamp: moment().format('YYYY-MM-DD HH:mm:ss'),
+        from: props.systemUser.username,
+        to: props.selectedUser.username,
+        text: text,
+        image: false,
+        attachment: false
+      });
       
     }
+  }
+
+  const sendThumbsUp = (event: React.MouseEvent) => {
+    sendMessage({
+      sent: false,
+      seen: false,
+      timestamp: moment().format('YYYY-MM-DD HH:mm:ss'),
+      from: props.systemUser.username,
+      to: props.selectedUser.username,
+      text: '👍',
+      image: false,
+      attachment: false
+    });                                                                     
   }
 
 
@@ -103,15 +137,13 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
   };
 
 
-  const sendMessage = (message: any) => {
+  const sendMessage = (message: Message) => {
     // send
     if (connection && connection?.open) {
+      message.sent = true;
       connection.send({message: message});
-      
-    } else {
-      // save to be dispatched to user next time both online
     }
-    console.log(`send and/or store`, message);
+    props.db.table('messages').add(message);
     setText('');
   }
 
@@ -127,7 +159,7 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
           <IconButton onClick={toggleEmojiPicker}><EmojiEmotionsOutlinedIcon /></IconButton>
           {emojiPickerOpen ? <Picker onSelect={handleEmojiPicker} />:<></>}
         </span>
-        <IconButton onClick={(event) => {sendMessage('👍');}}><ThumbUpAltOutlinedIcon /></IconButton>
+        <IconButton onClick={sendThumbsUp}><ThumbUpAltOutlinedIcon /></IconButton>
         <IconButton color="primary" id='send-icon' onClick={handleSendButton}><SendSharpIcon /></IconButton>
       </div>
     </Box>
