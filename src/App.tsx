@@ -3,7 +3,6 @@ import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
 import Peer, { DataConnection } from 'peerjs';
 import Dexie from 'dexie';
-//import { DB } from './db';
 
 
 import { User, Connections, SystemState, ChatStoreState } from './App.config';
