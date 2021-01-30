@@ -5,10 +5,10 @@ import Peer, { DataConnection } from 'peerjs';
 import Dexie from 'dexie';
 
 
-import { User, Connections, SystemState, ChatStoreState } from './App.config';
+import { User, Connections, SystemState, ChatStoreState, Messages } from './App.config';
 import { exists, refreshFetch } from './App.fn';
 import reducer from './reducers';
-import { UpdateSystemUser } from './actions';
+import { UpdateSystemUser, updateMessages } from './actions';
 
 import LoginForm from './components/Login';
 import ConnectionsList from './components/Connections';
@@ -31,6 +31,7 @@ type AppState = {
   user: User|false,
   token: string|false,
   peer: Peer|false,
+  messages: Messages,
   connections: Connections,
   selectedUser: User|false
 }
@@ -52,6 +53,7 @@ class App extends Component<any, AppState> {
       user: false,
       token: false,
       peer: false,
+      messages: {},
       connections: {},
       selectedUser: false
     }
@@ -63,14 +65,13 @@ class App extends Component<any, AppState> {
     this.db.version(1).stores({
       messages: '++id, sent, seen, timestamp, from, to, text, image, attachment'
     });
-    //this.db.open();
 
     this.init();
 
     this.unsubscribe = this.store.subscribe(() => {
       
       const { system, chat } = this.store.getState();
-
+      console.log('STORE UPDATE');
       // re init if just logging in
       if (!this.state.isLoggedIn && system.isLoggedIn) {
         if (!this.state.peer || this.state.peer.destroyed) this.init();
@@ -84,7 +85,8 @@ class App extends Component<any, AppState> {
         isLoggedIn: system.isLoggedIn, 
         user: system.user, 
         token: system.token,
-        selectedUser: chat.selectedUser
+        selectedUser: chat.selectedUser,
+        messages: chat.messages
       });      
 
     });
@@ -119,6 +121,7 @@ class App extends Component<any, AppState> {
       // message receiver
       conn.on('data', (data) => {
         console.log(data);
+        this.store.dispatch(updateMessages(data.from, data));
         this.db.table('messages').add(data);
       });
       
@@ -186,7 +189,7 @@ class App extends Component<any, AppState> {
   
   render() {
     
-    const { isLoading, isLoggedIn, user, peer, token, connections, selectedUser } = this.state; 
+    const { isLoading, isLoggedIn, user, peer, token, connections, selectedUser, messages } = this.state; 
     
     if (isLoading) return (<div>Loading...</div>);
     else return (
@@ -207,15 +210,14 @@ class App extends Component<any, AppState> {
                 <Box className='chat-area-header'></Box>
                 <Box className='chat-area-main'>
                   <MessagesDisplay 
-                    messages={[]}
+                    messages={exists(messages[selectedUser.username]) ? messages[selectedUser.username] : []}
                     localUsername={user.username}
                     remoteUsername={selectedUser.username}
-                    lastMessage={{}}
+                    lastMessage={exists(messages[selectedUser.username]) ? messages[selectedUser.username][messages[selectedUser.username].length-1] : {}}
                   />
                 </Box>
                 <Box className='chat-area-footer'>
                   <Messenger
-                    key={`connectto${selectedUser}`}
                     peer={peer}
                     systemUser={user} 
                     selectedUser={selectedUser} 

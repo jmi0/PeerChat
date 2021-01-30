@@ -3,19 +3,15 @@ import moment from 'moment'
 import { ListItem, Grid } from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import { connect } from 'react-redux';
+import { Message } from '../App.config';
 
-interface Message {
-  message: { username: string, message: string},
-  from: string,
-  timestamp: string,
-  seen: Boolean
-}
 
 export type MessagesProps = {
   messages: Message[],
   localUsername: string,
   remoteUsername: string,
-  lastMessage: Message|Object
+  lastMessage: Message|Object,
+  dispatch: any
 }
 
 /************************************************************************
@@ -62,7 +58,7 @@ class MessagesDisplay extends Component<MessagesProps> {
                   <span className='messageDisplayName'>{message.from}</span>
                   <span className='messageDisplayTS'>{moment(message.timestamp).format('M/D/YY h:mm a')}</span>
                 </div>
-                <div className='messageDisplayMSG'>{message.message.message}</div>  
+                <div className='messageDisplayMSG'>{message.text}</div>  
               </Grid>
             </Grid>
           </ListItem>

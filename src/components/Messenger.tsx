@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react'
-import { updateOnline } from '../actions';
+import { updateMessages } from '../actions';
 import { connect } from 'react-redux';
 import { Message, User } from '../App.config';
 import { exists } from '../App.fn'
@@ -21,7 +21,8 @@ type MessengerProps = {
   peer: Peer,
   selectedUser: User,
   systemUser: User,
-  db: Dexie
+  db: Dexie,
+  dispatch: any
 }
 
 
@@ -37,7 +38,7 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
 
 
   useEffect(() => {
-
+    console.log(props.selectedUser)
     let conn: DataConnection = props.peer.connect(props.selectedUser.peerID, {serialization: 'json'});
 
     conn.on('open', () => {
@@ -64,55 +65,41 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
       // unmounting
       document.removeEventListener('click', handleEmojiPickerBlur, false);
       if (connection) connection.close();
+      
     }
 
-  }, []);
+  }, [props.selectedUser]);
 
-  
-  const handleSendButton = (event: React.MouseEvent) => {
-    sendMessage({
-      sent: true,
-      seen: false,
+
+  const createMessage = (text='', image:{blob: Blob, type: string}|false=false, attachment:{blob: Blob, type: string}|false=false, sent=false, seen=false) : Message => {
+    return {
+      sent: sent,
+      seen: seen,
       timestamp: moment().format('YYYY-MM-DD HH:mm:ss'),
       from: props.systemUser.username,
       to: props.selectedUser.username,
       text: text,
-      image: false,
-      attachment: false
-    });
+      image: image,
+      attachment: attachment
+    };
+  }
+
+  
+  const handleSendButton = (event: React.MouseEvent) => {
+    sendMessage(createMessage(text));
   }
 
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.keyCode === 13) {
       (event.target as HTMLInputElement).blur();
-      
       // send
-      sendMessage({
-        sent: true,
-        seen: false,
-        timestamp: moment().format('YYYY-MM-DD HH:mm:ss'),
-        from: props.systemUser.username,
-        to: props.selectedUser.username,
-        text: text,
-        image: false,
-        attachment: false
-      });
-      
+      sendMessage(createMessage(text));
     }
   }
 
   const sendThumbsUp = (event: React.MouseEvent) => {
-    sendMessage({
-      sent: false,
-      seen: false,
-      timestamp: moment().format('YYYY-MM-DD HH:mm:ss'),
-      from: props.systemUser.username,
-      to: props.selectedUser.username,
-      text: '👍',
-      image: false,
-      attachment: false
-    });                                                                     
+    sendMessage(createMessage('👍'));                                                                   
   }
 
 
@@ -143,7 +130,9 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
       message.sent = true;
       connection.send({message: message});
     }
+    props.dispatch(updateMessages(props.selectedUser.username, message));
     props.db.table('messages').add(message);
+
     setText('');
   }
 
@@ -157,7 +146,7 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
         <IconButton onClick={() => {fileInputRef.current?.click();}}><AttachFileOutlinedIcon /><input ref={fileInputRef} style={{display:'none'}} type={"file"} /></IconButton>
         <span ref={emojiPickerRef}>
           <IconButton onClick={toggleEmojiPicker}><EmojiEmotionsOutlinedIcon /></IconButton>
-          {emojiPickerOpen ? <Picker onSelect={handleEmojiPicker} />:<></>}
+          <Picker style={{display: (emojiPickerOpen ? 'block' : 'none')}} onSelect={handleEmojiPicker} />
         </span>
         <IconButton onClick={sendThumbsUp}><ThumbUpAltOutlinedIcon /></IconButton>
         <IconButton color="primary" id='send-icon' onClick={handleSendButton}><SendSharpIcon /></IconButton>
