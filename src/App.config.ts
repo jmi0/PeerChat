@@ -26,7 +26,8 @@ export interface Message {
     image: Blob|false
     attachment: Blob|false
     id?: number,
-    groupkey?: string
+    username?: string,
+    remoteUsername?: string
 }
 
 export interface Messages {
@@ -63,6 +64,7 @@ export const UPDATE_OFFLINE_STATE = 'UPDATE_OFFLINE_STATE'
 export const UPDATE_SYSTEM_USER = 'UPDATE_SYSTEM_USER'
 export const UPDATE_SYSTEM_PEER = 'UPDATE_SYSTEM_PEER'
 export const UPDATE_SELECTED_USER = 'UPDATE_SELECTED_USER'
+export const UPDATE_BULK_MESSAGES = 'UPDATE_BULK_MESSAGES'
   
   
 interface AddConnectionAction {
@@ -117,12 +119,19 @@ interface UpdateSelectedUserAction {
     user: User|false
 }
 
+interface UpdateBulkMessagesAction {
+    type: typeof UPDATE_BULK_MESSAGES,
+    key: string,
+    messages: Message[]
+}
+
 
 
 export type ActionTypes = 
     AddConnectionAction | UpdateOnlineAction | 
     UpdateMessagesAction | UpdateTokenAction | 
     UpdateLoginAction | UpdateOfflineAction | 
-    UpdateSystemUser | UpdateSystemPeer | UpdateSelectedUserAction
+    UpdateSystemUser | UpdateSystemPeer | 
+    UpdateSelectedUserAction | UpdateBulkMessagesAction
 
 

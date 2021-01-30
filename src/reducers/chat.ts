@@ -1,4 +1,4 @@
-import { ChatStoreState, ActionTypes, ADD_CONNECTION, UPDATE_ONLINE, UPDATE_MESSAGES, UPDATE_SELECTED_USER } from '../App.config'
+import { ChatStoreState, ActionTypes, ADD_CONNECTION, UPDATE_ONLINE, UPDATE_MESSAGES, UPDATE_SELECTED_USER, UPDATE_BULK_MESSAGES } from '../App.config'
 
 
 const initialState: ChatStoreState = {
@@ -36,6 +36,13 @@ export function chat (
               [...state.messages[action.key], action.message] : 
               [action.message]
           )
+        }
+      }
+    case UPDATE_BULK_MESSAGES:
+      return {
+        ...state,
+        messages: {
+          [action.key]: action.messages
         }
       }
 

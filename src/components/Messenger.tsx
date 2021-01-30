@@ -49,8 +49,12 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
     });
 
     conn.on('data', (data) => {
+      data.message.username = data.message.to;
+      data.message.remoteUserame = data.message.from;
       props.db.table('messages').put(data.message).then((id) => {
         props.dispatch(updateMessages(data.message.from, data.message));
+      }).catch((err) => {
+        console.log(err);
       });
     });
   
@@ -84,8 +88,7 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
       to: props.selectedUser.username,
       text: text,
       image: image,
-      attachment: attachment,
-      groupkey: `${props.selectedUser.username}${props.systemUser.username}`
+      attachment: attachment
     };
   }
 
@@ -136,9 +139,10 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
     // send
     if (connection && connection?.open) {
       message.sent = true;
-
       connection.send({message: message});
     }
+    message.username = props.systemUser.username;
+    message.remoteUsername = props.selectedUser.username;
     props.db.table('messages').put(message).then((id) => {
       props.dispatch(updateMessages(props.selectedUser.username, message));
     });

@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react'
-import { updateOnline, UpdateSelectedUser } from '../actions';
+import { UpdateBulkMessages, UpdateSelectedUser } from '../actions';
 import { connect } from 'react-redux';
 import { List, ListItem, ListItemText, ListItemIcon, Badge } from '@material-ui/core';
 import CommentIcon from '@material-ui/icons/Comment';
 import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
-import { Connections, User } from '../App.config';
+import { Connections, User, Message } from '../App.config';
 import Peer from 'peerjs';
 import { refreshFetch, exists } from '../App.fn';
+import Dexie from 'dexie'
 
 type ConnectionsProps = {
   user: User,
   connections: Connections
   token: string,
+  db: Dexie,
   dispatch: any
 }
 
@@ -55,7 +57,18 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
   }, [token]);
 
   const handleSelectedPeerChange = (event: React.MouseEvent, peer: User) => {
-    props.dispatch(UpdateSelectedUser(peer));
+    console.log(props.user.username, peer.username);
+    props.db.table('messages').where('[username+remoteUsername]').equals([props.user.username, peer.username]).sortBy('timestamp')
+    .then(messages => {
+      console.log(messages);
+      props.dispatch(UpdateBulkMessages(peer.username, messages));
+      props.dispatch(UpdateSelectedUser(peer));
+    })
+    .catch((err) => {
+      console.log(err);
+    });
+    
+    
   }
  
   return (
