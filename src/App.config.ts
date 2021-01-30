@@ -23,8 +23,8 @@ export interface Message {
     from: string,
     to: string,
     text: string|false,
-    image: {blob: Blob, type: string}|false
-    attachment: {blob: Blob, type: string}|false
+    image: Blob|false
+    attachment: Blob|false
     id?: number,
     groupkey?: string
 }

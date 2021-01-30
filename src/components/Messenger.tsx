@@ -34,6 +34,8 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
 
   const [ connection, setConnection ] = useState<DataConnection|false>(false);
   const [ text, setText ] = useState<string>('');
+  const [ image, setImage ] = useState<Blob|false>(false);
+  const [ attachment, setAttachement ] = useState<Blob|false>(false);
   const [ emojiPickerOpen, setEmojiPickerOpen ] = useState<boolean>(false);
 
 
@@ -73,7 +75,7 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
   }, [props.selectedUser]);
 
 
-  const createMessage = (text='', image:{blob: Blob, type: string}|false=false, attachment:{blob: Blob, type: string}|false=false, sent=false, seen=false) : Message => {
+  const createMessage = (text='', image:Blob|false=false, attachment:Blob|false=false, sent=false, seen=false) : Message => {
     return {
       sent: sent,
       seen: seen,
@@ -110,6 +112,9 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
     setText((event.target as HTMLInputElement).value);
   }
 
+  const handleImage = (event: any) => {
+    setImage(event.currentTarget.files[0]);
+  };
 
   const handleEmojiPickerBlur = (event: any) => {
     if (emojiPickerRef.current && !emojiPickerRef.current?.contains(event.target)) setEmojiPickerOpen(false);
@@ -144,9 +149,10 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
 
   return (
     <Box id='text-send-container'>
+      {image ? <div><img width={'60px'} src={URL.createObjectURL(image)}></img></div> : <></>}
       <div id='message-textarea-container'><textarea placeholder='Type message here...' value={text} onChange={handleMessageChange} onKeyDown={handleKeyDown} rows={2}></textarea></div>
       <div id='message-btn-container'>
-        <IconButton onClick={() => {imageInputRef.current?.click();}}><ImageOutlinedIcon /><input ref={imageInputRef} style={{display:'none'}} type={"file"} accept={'.jpg,.jpeg,.png,.gif'} /></IconButton> 
+        <IconButton onClick={() => {imageInputRef.current?.click();}}><ImageOutlinedIcon /><input ref={imageInputRef} style={{display:'none'}} type={"file"} accept={'.jpg,.jpeg,.png,.gif'} onChange={handleImage} /></IconButton> 
         <IconButton onClick={() => {fileInputRef.current?.click();}}><AttachFileOutlinedIcon /><input ref={fileInputRef} style={{display:'none'}} type={"file"} /></IconButton>
         <span ref={emojiPickerRef}>
           <IconButton onClick={toggleEmojiPicker}><EmojiEmotionsOutlinedIcon /></IconButton>
