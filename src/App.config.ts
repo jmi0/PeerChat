@@ -25,6 +25,8 @@ export interface Message {
     text: string|false,
     image: {blob: Blob, type: string}|false
     attachment: {blob: Blob, type: string}|false
+    id?: number,
+    groupkey?: string
 }
 
 export interface Messages {

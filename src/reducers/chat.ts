@@ -30,10 +30,9 @@ export function chat (
     case UPDATE_MESSAGES:
       return {
         ...state,
-        messages:{
-          ...state.messages,
+        messages: {
           [action.key]: (
-            state.messages[action.key] ? 
+            typeof state.messages[action.key] !== 'undefined' ? 
               [...state.messages[action.key], action.message] : 
               [action.message]
           )

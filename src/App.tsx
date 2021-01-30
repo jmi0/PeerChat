@@ -63,7 +63,7 @@ class App extends Component<any, AppState> {
   componentDidMount() {
     
     this.db.version(1).stores({
-      messages: '++id, sent, seen, timestamp, from, to, text, image, attachment'
+      messages: '++id, sent, seen, timestamp, from, to, text, image, attachment, groupkey'
     });
 
     this.init();
@@ -71,7 +71,7 @@ class App extends Component<any, AppState> {
     this.unsubscribe = this.store.subscribe(() => {
       
       const { system, chat } = this.store.getState();
-      console.log('STORE UPDATE');
+      
       // re init if just logging in
       if (!this.state.isLoggedIn && system.isLoggedIn) {
         if (!this.state.peer || this.state.peer.destroyed) this.init();
@@ -80,7 +80,7 @@ class App extends Component<any, AppState> {
       if (this.state.isLoggedIn && !system.isLoggedIn) {
         if (this.state.peer) this.state.peer?.destroy();
       }
-
+      
       this.setState({ 
         isLoggedIn: system.isLoggedIn, 
         user: system.user, 
@@ -120,9 +120,9 @@ class App extends Component<any, AppState> {
     peer.on('connection', (conn) => {
       // message receiver
       conn.on('data', (data) => {
-        console.log(data);
-        this.store.dispatch(updateMessages(data.from, data));
-        this.db.table('messages').add(data);
+        this.db.table('messages').add(data.message).then((id) => {
+          this.store.dispatch(updateMessages(data.message.from, data.message));
+        });
       });
       
       // connection receiver
@@ -214,6 +214,7 @@ class App extends Component<any, AppState> {
                     localUsername={user.username}
                     remoteUsername={selectedUser.username}
                     lastMessage={exists(messages[selectedUser.username]) ? messages[selectedUser.username][messages[selectedUser.username].length-1] : {}}
+                    db={this.db}
                   />
                 </Box>
                 <Box className='chat-area-footer'>

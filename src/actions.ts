@@ -18,6 +18,7 @@ export function updateOnline(newOnline: {[key: string]: User}): ActionTypes {
 }
 
 export function updateMessages(key: string, message: Message): ActionTypes {
+  console.log(key, message);
   return {
     type: UPDATE_MESSAGES,
     key: key,

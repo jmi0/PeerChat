@@ -38,7 +38,7 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
 
 
   useEffect(() => {
-    console.log(props.selectedUser)
+    
     let conn: DataConnection = props.peer.connect(props.selectedUser.peerID, {serialization: 'json'});
 
     conn.on('open', () => {
@@ -47,7 +47,9 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
     });
 
     conn.on('data', (data) => {
-      console.log(data);
+      props.db.table('messages').put(data.message).then((id) => {
+        props.dispatch(updateMessages(data.message.from, data.message));
+      });
     });
   
     conn.on('error', function(err) {
@@ -80,7 +82,8 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
       to: props.selectedUser.username,
       text: text,
       image: image,
-      attachment: attachment
+      attachment: attachment,
+      groupkey: `${props.selectedUser.username}${props.systemUser.username}`
     };
   }
 
@@ -128,11 +131,12 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
     // send
     if (connection && connection?.open) {
       message.sent = true;
+
       connection.send({message: message});
     }
-    props.dispatch(updateMessages(props.selectedUser.username, message));
-    props.db.table('messages').add(message);
-
+    props.db.table('messages').put(message).then((id) => {
+      props.dispatch(updateMessages(props.selectedUser.username, message));
+    });
     setText('');
   }
 

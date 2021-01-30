@@ -4,6 +4,8 @@ import { ListItem, Grid } from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import { connect } from 'react-redux';
 import { Message } from '../App.config';
+import Dexie from 'dexie';
+import { updateMessages } from '../actions';
 
 
 export type MessagesProps = {
@@ -11,20 +13,39 @@ export type MessagesProps = {
   localUsername: string,
   remoteUsername: string,
   lastMessage: Message|Object,
+  db: Dexie,
   dispatch: any
+}
+
+export type MessagesState = {
+  messages: Message[]
 }
 
 /************************************************************************
  * 
  */
-class MessagesDisplay extends Component<MessagesProps> {
+class MessagesDisplay extends Component<MessagesProps, MessagesState> {
 
   private chatWindowRef : React.RefObject<HTMLDivElement>|null  = React.createRef();
 
-  componentDidMount() {
-    this.scrollToBottom('auto');
+  constructor(props: MessagesProps) {
+    super(props);
+    this.state = {
+      messages: this.props.messages
+    }
   }
 
+  componentDidMount() {
+    /*
+    this.props.db.table('messages').where('groupkey').equals(`${this.props.remoteUsername}${this.props.localUsername}`).sortBy('timestamp').then((messages: Message[]) => {
+      this.setState({messages: messages});
+    }).finally(() => {
+      this.scrollToBottom('auto');
+    });
+    */
+   this.scrollToBottom('auto');
+  }
+  /*
   shouldComponentUpdate (nextProps: MessagesProps) {
     // optimization so we only rerender if a message is added
     return (
@@ -32,7 +53,7 @@ class MessagesDisplay extends Component<MessagesProps> {
       (this.props.remoteUsername !== nextProps.remoteUsername)
     );
   }
-
+  */
   componentDidUpdate() {
     this.scrollToBottom('smooth');
   }
@@ -45,10 +66,10 @@ class MessagesDisplay extends Component<MessagesProps> {
 
 
   render() {
-    
+    const { messages } = this.state;
     return (
       <>
-      {this.props.messages.map((message, index) => {
+      {this.props.messages.map((message: Message, index: number) => {
         return (
           <ListItem dense key={`${JSON.stringify(message)}-${index}`}>
             <Grid container justify="flex-start" direction="row">
