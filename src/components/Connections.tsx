@@ -58,7 +58,7 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
 
   const handleSelectedPeerChange = (event: React.MouseEvent, peer: User) => {
     console.log(props.user.username, peer.username);
-    props.db.table('messages').where('[username+remoteUsername]').equals([props.user.username, peer.username]).sortBy('timestamp')
+    props.db.table('messages').where('groupkey').equals(`${props.user.username}${peer.username}`).sortBy('timestamp')
     .then(messages => {
       console.log(messages);
       props.dispatch(UpdateBulkMessages(peer.username, messages));

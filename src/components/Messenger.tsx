@@ -32,7 +32,7 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
 
-  const [ connection, setConnection ] = useState<DataConnection|false>(false);
+  const [ connection, setConnection ] = useState<DataConnection>();
   const [ text, setText ] = useState<string>('');
   const [ image, setImage ] = useState<Blob|false>(false);
   const [ attachment, setAttachement ] = useState<Blob|false>(false);
@@ -40,17 +40,17 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
 
 
   useEffect(() => {
+ 
     
     let conn: DataConnection = props.peer.connect(props.selectedUser.peerID, {serialization: 'json'});
-
+    
     conn.on('open', () => {
       console.log(`Connected to ${props.selectedUser.username}`);
       setConnection(conn);
     });
 
     conn.on('data', (data) => {
-      data.message.username = data.message.to;
-      data.message.remoteUserame = data.message.from;
+      data.message.groupkey = `${data.message.to}${data.message.from}`;
       props.db.table('messages').put(data.message).then((id) => {
         props.dispatch(updateMessages(data.message.from, data.message));
       }).catch((err) => {
@@ -66,7 +66,10 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
       console.log(`Disconnected from ${props.selectedUser.username}`);
     });
     
-    
+    conn.on('close', () => {
+      console.log(`Connection closed from ${props.selectedUser.username}`);
+    });
+  
     document.addEventListener("click", handleEmojiPickerBlur, false);
 
     return () => {
@@ -141,8 +144,7 @@ const Messenger: React.FC<MessengerProps> = (props: MessengerProps) => {
       message.sent = true;
       connection.send({message: message});
     }
-    message.username = props.systemUser.username;
-    message.remoteUsername = props.selectedUser.username;
+    message.groupkey = `${props.systemUser.username}${props.selectedUser.username}`;
     props.db.table('messages').put(message).then((id) => {
       props.dispatch(updateMessages(props.selectedUser.username, message));
     });

@@ -63,7 +63,7 @@ class App extends Component<any, AppState> {
   componentDidMount() {
     
     this.db.version(1).stores({
-      messages: '++id, sent, seen, timestamp, from, to, text, image, attachment, [username+remoteUsername]'
+      messages: '++id, sent, seen, timestamp, from, to, text, image, attachment, groupkey'
     });
 
     this.init();
@@ -120,8 +120,7 @@ class App extends Component<any, AppState> {
     peer.on('connection', (conn) => {
       // message receiver
       conn.on('data', (data) => {
-        data.message.username = data.message.to;
-        data.message.remoteUserame = data.message.from;
+        data.message.groupkey = `${data.message.to}${data.message.from}`;
         this.db.table('messages').add(data.message).then((id) => {
           this.store.dispatch(updateMessages(data.message.from, data.message));
         }).catch((err) => {

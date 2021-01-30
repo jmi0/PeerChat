@@ -26,8 +26,7 @@ export interface Message {
     image: Blob|false
     attachment: Blob|false
     id?: number,
-    username?: string,
-    remoteUsername?: string
+    groupkey?: string
 }
 
 export interface Messages {
