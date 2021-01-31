@@ -11,7 +11,7 @@ import reducer from './reducers';
 import { UpdateSystemUser, updateMessages } from './actions';
 
 import LoginForm from './components/Login';
-import ConnectionsList from './components/Connections';
+import DiscoveryList from './components/Discovery';
 import Messenger from './components/Messenger';
 import PeerBar from './components/PeerBar';
 import MessagesDisplay from './components/Messages'
@@ -32,6 +32,7 @@ type AppState = {
   token: string|false,
   peer: Peer|false,
   messages: Messages,
+  online: User[],
   connections: Connections,
   selectedUser: User|false
 }
@@ -54,6 +55,7 @@ class App extends Component<any, AppState> {
       token: false,
       peer: false,
       messages: {},
+      online: [],
       connections: {},
       selectedUser: false
     }
@@ -120,7 +122,7 @@ class App extends Component<any, AppState> {
     peer.on('connection', (conn) => {
       // message receiver
       conn.on('data', (data) => {
-        data.message.groupkey = `${data.message.to}${data.message.from}`;
+        data.message.groupkey = `${data.message.to}-${data.message.from}`;
         this.db.table('messages').add(data.message).then((id) => {
           this.store.dispatch(updateMessages(data.message.from, data.message));
         }).catch((err) => {
@@ -205,7 +207,7 @@ class App extends Component<any, AppState> {
             </Box>
             <Box className='wrapper'>
               <Box className={'conversation-area'}>
-                <ConnectionsList connections={connections} token={token} user={user} db={this.db} />
+                <DiscoveryList connections={connections} token={token} user={user} db={this.db} />
               </Box>
               <Box className='chat-area'>
               { selectedUser ? 
@@ -217,14 +219,14 @@ class App extends Component<any, AppState> {
                     localUsername={user.username}
                     remoteUsername={selectedUser.username}
                     lastMessage={exists(messages[selectedUser.username]) ? messages[selectedUser.username][messages[selectedUser.username].length-1] : {}}
-                    db={this.db}
                   />
                 </Box>
                 <Box className='chat-area-footer'>
                   <Messenger
+                    key={`connectto${selectedUser.username}`}
                     peer={peer}
                     systemUser={user} 
-                    selectedUser={selectedUser} 
+                    selectedUser={selectedUser}
                     db={this.db}
                   />
                 </Box> 

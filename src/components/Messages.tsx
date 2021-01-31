@@ -13,7 +13,6 @@ export type MessagesProps = {
   localUsername: string,
   remoteUsername: string,
   lastMessage: Message|Object,
-  db: Dexie,
   dispatch: any
 }
 
@@ -36,24 +35,9 @@ class MessagesDisplay extends Component<MessagesProps, MessagesState> {
   }
 
   componentDidMount() {
-    /*
-    this.props.db.table('messages').where('groupkey').equals(`${this.props.remoteUsername}${this.props.localUsername}`).sortBy('timestamp').then((messages: Message[]) => {
-      this.setState({messages: messages});
-    }).finally(() => {
-      this.scrollToBottom('auto');
-    });
-    */
    this.scrollToBottom('auto');
   }
-  /*
-  shouldComponentUpdate (nextProps: MessagesProps) {
-    // optimization so we only rerender if a message is added
-    return (
-      (this.props.lastMessage !== nextProps.lastMessage) || 
-      (this.props.remoteUsername !== nextProps.remoteUsername)
-    );
-  }
-  */
+  
   componentDidUpdate() {
     this.scrollToBottom('smooth');
   }
@@ -79,7 +63,11 @@ class MessagesDisplay extends Component<MessagesProps, MessagesState> {
                   <span className='messageDisplayName'>{message.from}</span>
                   <span className='messageDisplayTS'>{moment(message.timestamp).format('M/D/YY h:mm a')}</span>
                 </div>
-                <div className='messageDisplayMSG'>{message.text}</div>  
+                <div className='messageDisplayMSG'>
+                  <div>{message.image ? <img width={'100%'} src={message.image}></img> : <></>}</div>
+                  <div>{message.attachment ? <div><a href={message.attachment}>attachment</a></div> : <div></div>}</div>
+                  <div>{message.text}</div>
+                </div>  
               </Grid>
             </Grid>
           </ListItem>

@@ -23,8 +23,8 @@ export interface Message {
     from: string,
     to: string,
     text: string|false,
-    image: Blob|false
-    attachment: Blob|false
+    image: string|false
+    attachment: string|false
     id?: number,
     groupkey?: string
 }
@@ -64,6 +64,7 @@ export const UPDATE_SYSTEM_USER = 'UPDATE_SYSTEM_USER'
 export const UPDATE_SYSTEM_PEER = 'UPDATE_SYSTEM_PEER'
 export const UPDATE_SELECTED_USER = 'UPDATE_SELECTED_USER'
 export const UPDATE_BULK_MESSAGES = 'UPDATE_BULK_MESSAGES'
+export const USER_LOGOUT = 'USER_LOGOUT'
   
   
 interface AddConnectionAction {
@@ -124,6 +125,10 @@ interface UpdateBulkMessagesAction {
     messages: Message[]
 }
 
+interface UserLogoutAction {
+    type: typeof USER_LOGOUT
+}
+
 
 
 export type ActionTypes = 
@@ -131,6 +136,7 @@ export type ActionTypes =
     UpdateMessagesAction | UpdateTokenAction | 
     UpdateLoginAction | UpdateOfflineAction | 
     UpdateSystemUser | UpdateSystemPeer | 
-    UpdateSelectedUserAction | UpdateBulkMessagesAction
+    UpdateSelectedUserAction | UpdateBulkMessagesAction |
+    UserLogoutAction
 
 

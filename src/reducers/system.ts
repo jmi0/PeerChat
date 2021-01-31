@@ -5,7 +5,8 @@ import {
   UPDATE_LOGIN_STATE, 
   UPDATE_OFFLINE_STATE, 
   UPDATE_SYSTEM_USER,
-  UPDATE_SYSTEM_PEER
+  UPDATE_SYSTEM_PEER,
+  USER_LOGOUT
 } from '../App.config'
 
 
@@ -36,6 +37,8 @@ export function system (
     case UPDATE_SYSTEM_USER:
       return {...state, user: action.user, isLoggedIn: action.isLoggedIn, offline: action.offline, token: action.token }
     
+    case USER_LOGOUT:
+      return initialState;
     
     default:
       

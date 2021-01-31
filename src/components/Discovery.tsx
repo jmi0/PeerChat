@@ -8,7 +8,7 @@ import { Connections, User } from '../App.config';
 import { refreshFetch, exists } from '../App.fn';
 import Dexie from 'dexie'
 
-type ConnectionsProps = {
+type DiscoveryProps = {
   user: User,
   connections: Connections
   token: string,
@@ -16,7 +16,7 @@ type ConnectionsProps = {
   dispatch: any
 }
 
-const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) => {
+const DiscoveryList: React.FC<DiscoveryProps> = (props: DiscoveryProps) => {
   
   const [ token, setToken ] = useState(props.token);
   const [ online, setOnline ] = useState<User[]>([]);
@@ -75,22 +75,12 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
 
             if (peer.username === props.user.username) return;
 
-            var unreadCount = 0;
-            var hasMessages = false;
-            
             return (
               <ListItem key={JSON.stringify(peer)} button selected={'' === peer.username} onClick={(event) => handleSelectedPeerChange(event, peer)}>
-              {(exists(props.connections[peer.username])) ? 
-                <>
-                <ListItemIcon>
-                  <FiberManualRecordIcon fontSize='small' style={{color: 'green'}} />
-                </ListItemIcon>
                 <ListItemText primary={peer.username} />
-                {hasMessages ? <Badge badgeContent={unreadCount} color="secondary"><CommentIcon fontSize='small' color='primary' /></Badge> : ''} 
-                </>: <ListItemText primary={peer.username} />
-              }
               </ListItem>
             )
+
           })}
         </>
       }
@@ -99,5 +89,5 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
 
 }
 
-export default connect()(ConnectionsList);
+export default connect()(DiscoveryList);
 

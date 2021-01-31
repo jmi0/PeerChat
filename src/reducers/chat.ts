@@ -1,4 +1,4 @@
-import { ChatStoreState, ActionTypes, ADD_CONNECTION, UPDATE_ONLINE, UPDATE_MESSAGES, UPDATE_SELECTED_USER, UPDATE_BULK_MESSAGES } from '../App.config'
+import { ChatStoreState, ActionTypes, ADD_CONNECTION, UPDATE_ONLINE, UPDATE_MESSAGES, UPDATE_SELECTED_USER, UPDATE_BULK_MESSAGES, USER_LOGOUT } from '../App.config'
 
 
 const initialState: ChatStoreState = {
@@ -51,6 +51,9 @@ export function chat (
           ...state,
           selectedUser: action.user
         }
+      
+      case USER_LOGOUT:
+        return initialState;
 
     default:
       return state

@@ -8,7 +8,7 @@ import MenuIcon from '@material-ui/icons/Menu';
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import Loader from 'react-loader-spinner'
 
-import { UpdateSystemUser } from '../actions';
+import { UserLogout } from '../actions';
 
 
 type PeerBarProps = {
@@ -29,7 +29,7 @@ const PeerBar: React.FC<PeerBarProps> = (props: PeerBarProps) => {
     .catch(err => {
       console.error(err);
     }).finally(() => {
-      props.dispatch(UpdateSystemUser(false, false, false, false));
+      props.dispatch(UserLogout());
     });
   }
 
