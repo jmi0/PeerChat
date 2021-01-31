@@ -4,6 +4,7 @@ import { ListItem, Grid } from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import { connect } from 'react-redux';
 import { Message } from '../App.config';
+import { dataURItoBlob } from '../App.fn'
 import Dexie from 'dexie';
 import { updateMessages } from '../actions';
 
@@ -54,6 +55,9 @@ class MessagesDisplay extends Component<MessagesProps, MessagesState> {
     return (
       <>
       {this.props.messages.map((message: Message, index: number) => {
+        let attachment: false|Blob|string = message.attachment;
+        if (attachment) attachment = dataURItoBlob(attachment);
+        
         return (
           <ListItem dense key={`${JSON.stringify(message)}-${index}`}>
             <Grid container justify="flex-start" direction="row">
@@ -65,7 +69,7 @@ class MessagesDisplay extends Component<MessagesProps, MessagesState> {
                 </div>
                 <div className='messageDisplayMSG'>
                   <div>{message.image ? <img width={'100%'} src={message.image}></img> : <></>}</div>
-                  <div>{message.attachment ? <div><a href={message.attachment}>attachment</a></div> : <div></div>}</div>
+                  <div>{typeof attachment === 'object' ? <div><a target='_blank' href={URL.createObjectURL(attachment)}>attachment</a> ({attachment.type}) ({attachment.size} bytes)</div> : <div></div>}</div>
                   <div>{message.text}</div>
                 </div>  
               </Grid>

@@ -2,7 +2,7 @@ import React, { useEffect, useState, useRef, Component } from 'react'
 import { updateMessages } from '../actions';
 import { connect } from 'react-redux';
 import { Message, User } from '../App.config';
-import { exists } from '../App.fn'
+import { exists, dataURItoBlob } from '../App.fn'
 import Peer, { DataConnection } from 'peerjs';
 import SendSharpIcon from '@material-ui/icons/SendSharp';
 import ImageOutlinedIcon from '@material-ui/icons/ImageOutlined';
@@ -68,7 +68,7 @@ class Messenger extends Component<MessengerProps, MessengerState> {
   }
 
   setUpConnection() {
-
+    
     let conn: DataConnection = this.props.peer.connect(this.props.selectedUser.peerID, {serialization: 'json'});
     
     conn.on('open', () => {
@@ -134,10 +134,14 @@ class Messenger extends Component<MessengerProps, MessengerState> {
     this.setState({ text: (event.target as HTMLInputElement).value });
   }
 
-  handleFile = (event: any) => {   
+  handleFile = (event: any) => {
+    
     const reader = new FileReader();
     const name = event.target.name;
     const file = event.target.files[0];
+
+    if (exists(file.size) && file.size > 400000) return;
+    
     reader.onloadend = () => {
       if (typeof reader.result === 'string') {
         if (name === 'image') this.setState({ image: reader.result });
@@ -145,6 +149,7 @@ class Messenger extends Component<MessengerProps, MessengerState> {
       }
     }
     reader.readAsDataURL(file);
+    
   };
 
   handleEmojiPickerBlur = (event: any) => {

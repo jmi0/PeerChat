@@ -95,7 +95,6 @@ class App extends Component<any, AppState> {
 
   }
   
-
   componentWillUnmount() {
     if (this.state.peer) this.state.peer.destroy();
     this.unsubscribe();
@@ -115,25 +114,27 @@ class App extends Component<any, AppState> {
       console.log(`Peer id is ${peerid}`);
       // associate peer id to username on server side
       this.updateUserPeerID(peerid, token);
-
     });
 
     // listen for connections
     peer.on('connection', (conn) => {
+
       // message receiver
       conn.on('data', (data) => {
         data.message.groupkey = `${data.message.to}-${data.message.from}`;
         this.db.table('messages').add(data.message).then((id) => {
-          this.store.dispatch(updateMessages(data.message.from, data.message));
+          console.log(`Message added to IndexedDB`);
         }).catch((err) => {
-          console.log(err);
+          console.error(`Could not add message to IndexedDB: ${err}`);
+        }).finally(() => {
+          this.store.dispatch(updateMessages(data.message.from, data.message));
         });
-      });
-      
+      })
+
       // connection receiver
       conn.on('open', () => {
         // connected
-        console.log('Connected',conn);
+        console.log('Connected', conn);
       });
 
     });
