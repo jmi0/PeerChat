@@ -117,7 +117,11 @@ app.get('/peers', validateToken, (req, res) => {
   // get peers that are currently online
   users.find({ peerID: { $in: Object.keys(peers) }}, { username: 1, peerID: 1, _id: 0}, function (err, docs) {
     if (err) res.json({error:1});
-    else res.json(docs);
+    else {
+      let peers = {};
+      docs.forEach((doc) => { peers[doc.username] = doc; });
+      res.json(peers);
+    }
   });
 });
 

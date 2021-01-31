@@ -10,7 +10,8 @@ import Dexie from 'dexie'
 
 type ConnectionsProps = {
   user: User,
-  connections: Connections
+  connections: Connections,
+  online: Connections,
   token: string,
   db: Dexie,
   dispatch: any
@@ -18,44 +19,19 @@ type ConnectionsProps = {
 
 const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) => {
   
-  const [ token, setToken ] = useState(props.token);
-  const [ online, setOnline ] = useState<User[]>([]);
+  
 
   useEffect(() => {
     
-    let discoveryInterval: number;
 
-    const getRemotePeers = () => {
-    
-      let headers = new Headers();
-      headers.append('Content-Type', 'application/json');
-      headers.append('Authorization', `Bearer ${token}`);
-      refreshFetch('/peers', 'GET', headers, null)
-      .then((result: any) => {
-        
-        // if token set then just update token
-        if (exists(result.token)) setToken(result.token);
-        else {
-          setOnline(result);
-          props.dispatch(updateOnline(result));
-        }
-      })
-      .catch((err) => {
-        console.log(err);
-      });
   
-    }
-
-    discoveryInterval = window.setInterval(() => {
-      getRemotePeers();
-    }, 1000);
 
     return () => {
       // token update
-      clearInterval(discoveryInterval);
+      
     }
 
-  }, [token]);
+  }, []);
 
   const handleSelectedPeerChange = (event: React.MouseEvent, peer: User) => {
     props.db.table('messages').where('groupkey').equals(`${props.user.username}-${peer.username}`).sortBy('timestamp')
@@ -67,33 +43,30 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
   }
  
   return (
-    <List key={JSON.stringify(online)} disablePadding>
-      {!(online.length-1) ? 
-        <ListItem key={'nopeersavailable'} disabled>No Peers Available</ListItem> :
-        <>
-          {online.map((peer: User) => {
+    <List key={JSON.stringify(Object.keys(props.connections))} disablePadding>
+      
+          {Object.keys(props.connections).map((username: string, index: number) => {
 
-            if (peer.username === props.user.username) return;
+            if (props.connections[username].username === props.user.username) return;
 
             var unreadCount = 0;
             var hasMessages = false;
             
             return (
-              <ListItem key={JSON.stringify(peer)} button selected={'' === peer.username} onClick={(event) => handleSelectedPeerChange(event, peer)}>
-              {(exists(props.connections[peer.username])) ? 
+              <ListItem key={`${JSON.stringify(props.connections[username])}-connection-${index}`} button selected={'' === props.connections[username].username} onClick={(event) => handleSelectedPeerChange(event, props.connections[username])}>
+              {(exists(props.connections[props.connections[username].username])) ? 
                 <>
                 <ListItemIcon>
                   <FiberManualRecordIcon fontSize='small' style={{color: 'green'}} />
                 </ListItemIcon>
-                <ListItemText primary={peer.username} />
+                <ListItemText primary={props.connections[username].username} />
                 {hasMessages ? <Badge badgeContent={unreadCount} color="secondary"><CommentIcon fontSize='small' color='primary' /></Badge> : ''} 
-                </>: <ListItemText primary={peer.username} />
+                </> : <ListItemText primary={props.connections[username].username} />
               }
               </ListItem>
             )
           })}
-        </>
-      }
+       
     </List>
   );
 

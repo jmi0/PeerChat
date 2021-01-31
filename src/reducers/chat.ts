@@ -1,4 +1,4 @@
-import { ChatStoreState, ActionTypes, ADD_CONNECTION, UPDATE_ONLINE, UPDATE_MESSAGES, UPDATE_SELECTED_USER, UPDATE_BULK_MESSAGES, USER_LOGOUT } from '../App.config'
+import { ChatStoreState, ActionTypes, ADD_CONNECTION, UPDATE_ONLINE, UPDATE_MESSAGES, UPDATE_SELECTED_USER, UPDATE_BULK_MESSAGES, USER_LOGOUT, UPDATE_CONNECTIONS } from '../App.config'
 
 
 const initialState: ChatStoreState = {
@@ -15,15 +15,6 @@ export function chat (
 
   switch (action.type) {
 
-    case ADD_CONNECTION:
-      return {
-        ...state, 
-        connections: {
-          ...state.connections,
-          [action.key]: action.connection
-        }
-      }
-
     case UPDATE_ONLINE:
       return {...state, online: action.payload}
 
@@ -38,6 +29,7 @@ export function chat (
           )
         }
       }
+
     case UPDATE_BULK_MESSAGES:
       return {
         ...state,
@@ -46,17 +38,27 @@ export function chat (
         }
       }
 
-      case UPDATE_SELECTED_USER:
-        return {
-          ...state,
-          selectedUser: action.user
-        }
+    case UPDATE_SELECTED_USER:
+      return {
+        ...state,
+        selectedUser: action.user
+      }
       
-      case USER_LOGOUT:
-        return initialState;
+    case USER_LOGOUT:
+      return initialState;
 
+    case UPDATE_CONNECTIONS:
+      return {
+        ...state,
+        connections: {
+          ...state.connections,
+          [action.connection.username]: action.connection
+        }
+      }
+        
     default:
       return state
   
   }
+
 }

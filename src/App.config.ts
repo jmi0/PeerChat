@@ -8,7 +8,7 @@ export default APP_CONFIG;
 
 
 export interface Connections {
-    [key: string]: DataConnection
+    [key: string]: User
 }
 
 export interface User {
@@ -48,13 +48,14 @@ export interface SystemState {
 }
   
 export interface ChatStoreState {
-    online: {[key: string]: User},
+    online: Connections,
     connections: Connections,
     messages: Messages,
     selectedUser: User|false
 }
   
 export const ADD_CONNECTION = 'UPDATE_CONNECTIONS'
+export const UPDATE_CONNECTIONS = 'UPDATE_CONNECTIONS'
 export const UPDATE_ONLINE = 'UPDATE_ONLINE'
 export const UPDATE_MESSAGES = 'UPDATE_MESSAGES'
 export const UPDATE_TOKEN = 'UPDATE_TOKEN'
@@ -73,9 +74,14 @@ interface AddConnectionAction {
     connection: any
 }
 
+interface UpdateConnectionsAction {
+    type: typeof UPDATE_CONNECTIONS,
+    connection: User
+}
+
 interface UpdateOnlineAction {
     type: typeof UPDATE_ONLINE
-    payload: {[key: string]: User}
+    payload: Connections
 }
 
 interface UpdateMessagesAction {
@@ -137,6 +143,6 @@ export type ActionTypes =
     UpdateLoginAction | UpdateOfflineAction | 
     UpdateSystemUser | UpdateSystemPeer | 
     UpdateSelectedUserAction | UpdateBulkMessagesAction |
-    UserLogoutAction
+    UserLogoutAction | UpdateConnectionsAction
 
 

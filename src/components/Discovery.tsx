@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { UpdateBulkMessages, updateOnline, UpdateSelectedUser } from '../actions';
+import { UpdateBulkMessages, UpdateConnections, updateOnline, UpdateSelectedUser } from '../actions';
 import { connect } from 'react-redux';
 import { List, ListItem, ListItemText, ListItemIcon, Badge } from '@material-ui/core';
 import CommentIcon from '@material-ui/icons/Comment';
@@ -10,7 +10,6 @@ import Dexie from 'dexie'
 
 type DiscoveryProps = {
   user: User,
-  connections: Connections
   token: string,
   db: Dexie,
   dispatch: any
@@ -19,10 +18,10 @@ type DiscoveryProps = {
 const DiscoveryList: React.FC<DiscoveryProps> = (props: DiscoveryProps) => {
   
   const [ token, setToken ] = useState(props.token);
-  const [ online, setOnline ] = useState<User[]>([]);
+  const [ online, setOnline ] = useState<{[key: string]: User}>({});
 
   useEffect(() => {
-    
+
     let discoveryInterval: number;
 
     const getRemotePeers = () => {
@@ -42,9 +41,11 @@ const DiscoveryList: React.FC<DiscoveryProps> = (props: DiscoveryProps) => {
       })
       .catch((err) => {
         console.log(err);
-      });
+      })
   
     }
+
+    getRemotePeers();
 
     discoveryInterval = window.setInterval(() => {
       getRemotePeers();
@@ -62,28 +63,27 @@ const DiscoveryList: React.FC<DiscoveryProps> = (props: DiscoveryProps) => {
     .then(messages => {
       props.dispatch(UpdateBulkMessages(peer.username, messages));
       props.dispatch(UpdateSelectedUser(peer));
+      props.dispatch(UpdateConnections(peer));
     })
     .catch((err) => { console.log(err); });
   }
  
   return (
-    <List key={JSON.stringify(online)} disablePadding>
-      {!(online.length-1) ? 
-        <ListItem key={'nopeersavailable'} disabled>No Peers Available</ListItem> :
-        <>
-          {online.map((peer: User) => {
-
-            if (peer.username === props.user.username) return;
-
-            return (
-              <ListItem key={JSON.stringify(peer)} button selected={'' === peer.username} onClick={(event) => handleSelectedPeerChange(event, peer)}>
-                <ListItemText primary={peer.username} />
-              </ListItem>
-            )
-
-          })}
-        </>
-      }
+    <List key={JSON.stringify(Object.keys(online))} disablePadding>
+      <ListItem disabled>
+        {!(Object.keys(online).length-1) ? 
+        <ListItemText primary={'No Peers Available'} /> :
+        <ListItemText primary={'Available Peers'} /> 
+        }
+      </ListItem>
+      {Object.keys(online).map((username: string) => {
+        if (online[username].username === props.user.username) return;
+        return (
+          <ListItem key={JSON.stringify(online[username])} button selected={'' === online[username].username} onClick={(event) => handleSelectedPeerChange(event, online[username])}>
+            <ListItemText primary={online[username].username} />
+          </ListItem>
+        )
+      })}
     </List>
   );
 

@@ -12,6 +12,7 @@ import { UpdateSystemUser, updateMessages } from './actions';
 
 import LoginForm from './components/Login';
 import DiscoveryList from './components/Discovery';
+import ConnectionsList from './components/Connections';
 import Messenger from './components/Messenger';
 import PeerBar from './components/PeerBar';
 import MessagesDisplay from './components/Messages'
@@ -32,7 +33,7 @@ type AppState = {
   token: string|false,
   peer: Peer|false,
   messages: Messages,
-  online: User[],
+  online: Connections,
   connections: Connections,
   selectedUser: User|false
 }
@@ -55,7 +56,7 @@ class App extends Component<any, AppState> {
       token: false,
       peer: false,
       messages: {},
-      online: [],
+      online: {},
       connections: {},
       selectedUser: false
     }
@@ -88,7 +89,9 @@ class App extends Component<any, AppState> {
         user: system.user, 
         token: system.token,
         selectedUser: chat.selectedUser,
-        messages: chat.messages
+        messages: chat.messages,
+        connections: chat.connections,
+        online: chat.online
       });      
 
     });
@@ -195,7 +198,7 @@ class App extends Component<any, AppState> {
   
   render() {
     
-    const { isLoading, isLoggedIn, user, peer, token, connections, selectedUser, messages } = this.state; 
+    const { isLoading, isLoggedIn, user, peer, token, connections, online, selectedUser, messages } = this.state; 
     
     if (isLoading) return (<div>Loading...</div>);
     else return (
@@ -208,7 +211,8 @@ class App extends Component<any, AppState> {
             </Box>
             <Box className='wrapper'>
               <Box className={'conversation-area'}>
-                <DiscoveryList connections={connections} token={token} user={user} db={this.db} />
+                <ConnectionsList connections={connections} online={online} token={token} user={user} db={this.db} />
+                <DiscoveryList token={token} user={user} db={this.db} />
               </Box>
               <Box className='chat-area'>
               { selectedUser ? 
