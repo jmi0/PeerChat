@@ -69,7 +69,7 @@ const DiscoveryList: React.FC<DiscoveryProps> = (props: DiscoveryProps) => {
   }
  
   return (
-    <List key={JSON.stringify(Object.keys(online))} disablePadding>
+    <List key={JSON.stringify(Object.keys(online))} disablePadding dense>
       <ListItem disabled>
         {!(Object.keys(online).length-1) ? 
         <ListItemText primary={'No Peers Available'} /> :

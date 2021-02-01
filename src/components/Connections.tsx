@@ -1,15 +1,25 @@
 import React, { useEffect, useState } from 'react'
 import { UpdateBulkMessages, updateOnline, UpdateSelectedUser } from '../actions';
 import { connect } from 'react-redux';
-import { List, ListItem, ListItemText, ListItemIcon, Badge } from '@material-ui/core';
+import { List, ListItem, ListItemText, ListItemIcon, ListItemAvatar, Avatar, Badge } from '@material-ui/core';
 import CommentIcon from '@material-ui/icons/Comment';
-import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
+import { makeStyles } from "@material-ui/core/styles";
 import { Connections, User } from '../App.config';
 import { refreshFetch, exists } from '../App.fn';
 import Dexie from 'dexie'
 
+const useStyles = makeStyles({
+  onlineBadge: {
+    backgroundColor: "green",
+    margin: 0,
+  }
+});
+
+
+
 type ConnectionsProps = {
   user: User,
+  selectedUser: User|false,
   connections: Connections,
   online: Connections,
   token: string,
@@ -19,6 +29,8 @@ type ConnectionsProps = {
 
 const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) => {
   
+  const classes = useStyles();
+
   useEffect(() => {
     
     if (Object.keys(props.connections).length) {
@@ -32,7 +44,7 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
     }
 
     return () => {
-      // token update
+      
       
     }
 
@@ -58,11 +70,16 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
             var hasMessages = false;
             
             return (
-              <ListItem key={`${JSON.stringify(props.connections[username])}-connection-${index}`} button selected={'' === props.connections[username].username} onClick={(event) => handleSelectedPeerChange(event, props.connections[username])}>
+              <ListItem key={`${JSON.stringify(props.connections[username])}-connection-${index}`} button selected={(props.selectedUser ? props.selectedUser.username : '') === props.connections[username].username} onClick={(event) => handleSelectedPeerChange(event, props.connections[username])}>
               {(exists(props.connections[props.connections[username].username])) ? 
                 <>
                 <ListItemIcon>
-                  <FiberManualRecordIcon fontSize='small' style={{color: 'green'}} />
+                  <ListItemAvatar>
+                    {exists(props.online[username]) ? 
+                       <Badge color={'secondary'} overlap="circle" classes={{badge: classes.onlineBadge}} variant="dot"><Avatar>{username.charAt(0)}</Avatar></Badge>: 
+                       <Avatar>{username.charAt(0)}</Avatar>
+                    }
+                  </ListItemAvatar>
                 </ListItemIcon>
                 <ListItemText primary={props.connections[username].username} />
                 {hasMessages ? <Badge badgeContent={unreadCount} color="secondary"><CommentIcon fontSize='small' color='primary' /></Badge> : ''} 

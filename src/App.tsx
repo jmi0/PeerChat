@@ -8,14 +8,15 @@ import Dexie from 'dexie';
 import { User, Connections, SystemState, ChatStoreState, Messages } from './App.config';
 import { exists, refreshFetch } from './App.fn';
 import reducer from './reducers';
-import { UpdateSystemUser, updateMessages, UpdateBulkConnections } from './actions';
+import { UpdateSystemUser, updateMessages, UpdateBulkConnections, UpdateConnections } from './actions';
 
 import LoginForm from './components/Login';
 import DiscoveryList from './components/Discovery';
 import ConnectionsList from './components/Connections';
 import Messenger from './components/Messenger';
 import PeerBar from './components/PeerBar';
-import MessagesDisplay from './components/Messages'
+import MessagesDisplay from './components/Messages';
+import ChatHeader from './components/ChatHeader'
 
 import { Box } from '@material-ui/core';
 import "./style/App.scss";
@@ -132,6 +133,7 @@ class App extends Component<any, AppState> {
           console.error(`Could not add message to IndexedDB: ${err}`);
         }).finally(() => {
           this.store.dispatch(updateMessages(data.message.from, data.message));
+          if (!exists(this.state.connections[data.message.from])) this.store.dispatch(UpdateConnections({username: data.message.from, peerID: conn.peer}));
         });
       })
 
@@ -221,13 +223,15 @@ class App extends Component<any, AppState> {
             </Box>
             <Box className='wrapper'>
               <Box className={'conversation-area'}>
-                <ConnectionsList connections={connections} online={online} token={token} user={user} db={this.db} />
+                <ConnectionsList selectedUser={selectedUser} connections={connections} online={online} token={token} user={user} db={this.db} />
                 <DiscoveryList token={token} user={user} db={this.db} />
               </Box>
               <Box className='chat-area'>
               { selectedUser ? 
                 <>
-                <Box className='chat-area-header'></Box>
+                <Box className='chat-area-header'>
+                  <ChatHeader isOnline={exists(online[selectedUser.username])} selectedUser={selectedUser} />
+                </Box>
                 <Box className='chat-area-main'>
                   <MessagesDisplay 
                     messages={exists(messages[selectedUser.username]) ? messages[selectedUser.username] : []}

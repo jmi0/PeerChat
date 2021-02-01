@@ -29,14 +29,19 @@ class MessagesDisplay extends Component<MessagesProps, MessagesState> {
   private chatWindowRef : React.RefObject<HTMLDivElement>|null  = React.createRef();
 
   constructor(props: MessagesProps) {
+
     super(props);
+    
     this.state = {
-      messages: this.props.messages
+      messages: []
     }
+  
   }
 
   componentDidMount() {
-   this.scrollToBottom('auto');
+    this.setState({ messages: this.props.messages }, () => {
+      this.scrollToBottom('auto');
+    });
   }
   
   componentDidUpdate() {
