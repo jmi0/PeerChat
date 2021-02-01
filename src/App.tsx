@@ -8,7 +8,7 @@ import Dexie from 'dexie';
 import { User, Connections, SystemState, ChatStoreState, Messages } from './App.config';
 import { exists, refreshFetch } from './App.fn';
 import reducer from './reducers';
-import { UpdateSystemUser, updateMessages } from './actions';
+import { UpdateSystemUser, updateMessages, UpdateBulkConnections } from './actions';
 
 import LoginForm from './components/Login';
 import DiscoveryList from './components/Discovery';
@@ -66,7 +66,8 @@ class App extends Component<any, AppState> {
   componentDidMount() {
     
     this.db.version(1).stores({
-      messages: '++id, sent, seen, timestamp, from, to, text, image, attachment, groupkey'
+      messages: '++id, sent, seen, timestamp, from, to, text, image, attachment, groupkey',
+      user_connections: '&username, connections',
     });
 
     this.init();
@@ -178,6 +179,7 @@ class App extends Component<any, AppState> {
     .then(res => res.json())
     .then((result) => {
       if (exists(result.username)) {
+
         this.setState({ peer: this.setUpPeer(result.token)}, () => {
           this.store.dispatch(UpdateSystemUser(
             {username: result.username, peerID: ''}, 
@@ -186,6 +188,11 @@ class App extends Component<any, AppState> {
             result.token
           ));
         });
+
+        this.db.table('user_connections').where('username').equals(result.username)
+        .first((user_connections) => {
+          this.store.dispatch(UpdateBulkConnections(JSON.parse(user_connections.connections)));
+        }).catch((err) => { console.log(err); });
         
       }
     }, (error) => {
@@ -200,6 +207,9 @@ class App extends Component<any, AppState> {
     
     const { isLoading, isLoggedIn, user, peer, token, connections, online, selectedUser, messages } = this.state; 
     
+    let selectedUserPeerID: string|false = false;
+    if (selectedUser) selectedUserPeerID = (exists(online[selectedUser.username]) ? online[selectedUser.username].peerID : false);
+
     if (isLoading) return (<div>Loading...</div>);
     else return (
       <Box className="App">
@@ -228,7 +238,8 @@ class App extends Component<any, AppState> {
                 </Box>
                 <Box className='chat-area-footer'>
                   <Messenger
-                    key={`connectto${selectedUser.username}`}
+                    key={`connectto${selectedUser.username}${selectedUserPeerID}`}
+                    remotePeerID={selectedUserPeerID}
                     peer={peer}
                     systemUser={user} 
                     selectedUser={selectedUser}

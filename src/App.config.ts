@@ -66,6 +66,7 @@ export const UPDATE_SYSTEM_PEER = 'UPDATE_SYSTEM_PEER'
 export const UPDATE_SELECTED_USER = 'UPDATE_SELECTED_USER'
 export const UPDATE_BULK_MESSAGES = 'UPDATE_BULK_MESSAGES'
 export const USER_LOGOUT = 'USER_LOGOUT'
+export const UPDATE_BULK_CONNECTIONS = 'UPDATE_BULK_CONNECTIONS'
   
   
 interface AddConnectionAction {
@@ -77,6 +78,11 @@ interface AddConnectionAction {
 interface UpdateConnectionsAction {
     type: typeof UPDATE_CONNECTIONS,
     connection: User
+}
+
+interface UpdateBulkConnectionsAction {
+    type: typeof UPDATE_BULK_CONNECTIONS,
+    connections: Connections
 }
 
 interface UpdateOnlineAction {
@@ -143,6 +149,6 @@ export type ActionTypes =
     UpdateLoginAction | UpdateOfflineAction | 
     UpdateSystemUser | UpdateSystemPeer | 
     UpdateSelectedUserAction | UpdateBulkMessagesAction |
-    UserLogoutAction | UpdateConnectionsAction
+    UserLogoutAction | UpdateConnectionsAction | UpdateBulkConnectionsAction
 
 

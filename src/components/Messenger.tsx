@@ -16,9 +16,9 @@ import moment from 'moment';
 import Dexie from 'dexie'
 
 
-
 type MessengerProps = {
   peer: Peer,
+  remotePeerID: string|false,
   selectedUser: User,
   systemUser: User,
   db: Dexie,
@@ -69,7 +69,9 @@ class Messenger extends Component<MessengerProps, MessengerState> {
 
   setUpConnection() {
     
-    let conn: DataConnection = this.props.peer.connect(this.props.selectedUser.peerID, {serialization: 'json'});
+    if (!this.props.remotePeerID) return;
+    
+    let conn: DataConnection = this.props.peer.connect(this.props.remotePeerID, {serialization: 'json'});
     
     conn.on('open', () => {
       console.log(`Connected to ${this.props.selectedUser.username}`);

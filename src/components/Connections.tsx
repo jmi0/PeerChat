@@ -19,19 +19,24 @@ type ConnectionsProps = {
 
 const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) => {
   
-  
-
   useEffect(() => {
     
-
-  
+    if (Object.keys(props.connections).length) {
+      props.db.table('user_connections').update(props.user.username, {connections: JSON.stringify(props.connections)})
+      .then(function (updated) {
+        if (updated) console.log (`${props.user.username} was updated in user_connections.`);
+        else props.db.table('user_connections').put({username: props.user.username, connections: JSON.stringify(props.connections)})
+        .then((id) => { console.log(`Created entry in user_connections: ${id}`); })
+        .catch((err) => { console.log(err);})
+      });
+    }
 
     return () => {
       // token update
       
     }
 
-  }, []);
+  }, [props.connections]);
 
   const handleSelectedPeerChange = (event: React.MouseEvent, peer: User) => {
     props.db.table('messages').where('groupkey').equals(`${props.user.username}-${peer.username}`).sortBy('timestamp')
