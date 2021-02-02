@@ -6,7 +6,7 @@ import { connect } from 'react-redux';
 import { Message } from '../App.config';
 import { dataURItoBlob } from '../App.fn'
 import Dexie from 'dexie';
-import { updateMessages } from '../actions';
+import { UpdateBulkMessages } from '../actions';
 
 
 export type MessagesProps = {
@@ -14,6 +14,7 @@ export type MessagesProps = {
   localUsername: string,
   remoteUsername: string,
   lastMessage: Message|Object,
+  db: Dexie,
   dispatch: any
 }
 
@@ -45,6 +46,7 @@ class MessagesDisplay extends Component<MessagesProps, MessagesState> {
   }
   
   componentDidUpdate() {
+    console.log('update');
     this.scrollToBottom('smooth');
   }
 
@@ -53,15 +55,6 @@ class MessagesDisplay extends Component<MessagesProps, MessagesState> {
       this.chatWindowRef.current.scrollIntoView({ behavior: behavior });
     }
   };
-
-  updateSeenState = (messages: Message[]) : Message[] => {
-    messages.map((message) => {
-      if (!message.seen) message.seen = true;
-      return message;
-    });
-    return messages;
-  }
-
 
   render() {
     const { messages } = this.state;

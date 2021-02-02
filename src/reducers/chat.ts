@@ -37,6 +37,7 @@ export function chat (
       return {
         ...state,
         messages: {
+          ...state.messages,
           [action.key]: action.messages
         }
       }

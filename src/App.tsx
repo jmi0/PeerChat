@@ -193,7 +193,8 @@ class App extends Component<any, AppState> {
 
         this.db.table('user_connections').where('username').equals(result.username)
         .first((user_connections) => {
-          this.store.dispatch(UpdateBulkConnections(JSON.parse(user_connections.connections)));
+          if (typeof user_connections !== 'undefined') 
+            this.store.dispatch(UpdateBulkConnections(JSON.parse(user_connections.connections)));
         }).catch((err) => { console.log(err); });
         
       }
@@ -223,7 +224,7 @@ class App extends Component<any, AppState> {
             </Box>
             <Box className='wrapper'>
               <Box className={'conversation-area'}>
-                <ConnectionsList selectedUser={selectedUser} connections={connections} online={online} token={token} user={user} db={this.db} />
+                <ConnectionsList messages={messages} selectedUser={selectedUser} connections={connections} online={online} token={token} user={user} db={this.db} />
                 <DiscoveryList token={token} user={user} db={this.db} />
               </Box>
               <Box className='chat-area'>
@@ -234,6 +235,7 @@ class App extends Component<any, AppState> {
                 </Box>
                 <Box className='chat-area-main'>
                   <MessagesDisplay 
+                    db={this.db}
                     messages={exists(messages[selectedUser.username]) ? messages[selectedUser.username] : []}
                     localUsername={user.username}
                     remoteUsername={selectedUser.username}
