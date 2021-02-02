@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { List, ListItem, ListItemText, ListItemIcon, ListItemAvatar, Avatar, Badge } from '@material-ui/core';
 import CommentIcon from '@material-ui/icons/Comment';
 import { makeStyles } from "@material-ui/core/styles";
-import { Connections, User } from '../App.config';
+import { Connections, User, Message } from '../App.config';
 import { refreshFetch, exists } from '../App.fn';
 import Dexie from 'dexie'
 
@@ -71,7 +71,7 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
             
             return (
               <ListItem key={`${JSON.stringify(props.connections[username])}-connection-${index}`} button selected={(props.selectedUser ? props.selectedUser.username : '') === props.connections[username].username} onClick={(event) => handleSelectedPeerChange(event, props.connections[username])}>
-              {(exists(props.connections[props.connections[username].username])) ? 
+              {(exists(props.connections[username])) ? 
                 <>
                 <ListItemIcon>
                   <ListItemAvatar>

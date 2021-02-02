@@ -54,6 +54,14 @@ class MessagesDisplay extends Component<MessagesProps, MessagesState> {
     }
   };
 
+  updateSeenState = (messages: Message[]) : Message[] => {
+    messages.map((message) => {
+      if (!message.seen) message.seen = true;
+      return message;
+    });
+    return messages;
+  }
+
 
   render() {
     const { messages } = this.state;

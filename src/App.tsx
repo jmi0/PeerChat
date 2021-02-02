@@ -5,7 +5,7 @@ import Peer, { DataConnection } from 'peerjs';
 import Dexie from 'dexie';
 
 
-import { User, Connections, SystemState, ChatStoreState, Messages } from './App.config';
+import { User, Connections, SystemState, ChatStoreState, Messages, Message } from './App.config';
 import { exists, refreshFetch } from './App.fn';
 import reducer from './reducers';
 import { UpdateSystemUser, updateMessages, UpdateBulkConnections, UpdateConnections } from './actions';
