@@ -80,6 +80,7 @@ class Messenger extends Component<MessengerProps, MessengerState> {
 
     conn.on('data', (data) => {
       data.message.groupkey = `${data.message.to}-${data.message.from}`;
+      if (this.props.selectedUser.username === data.message.from) data.message.seen = true;
       this.props.db.table('messages').put(data.message).then((id) => {
         this.props.dispatch(updateMessages(data.message.from, data.message));
       }).catch((err) => {

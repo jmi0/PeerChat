@@ -1,4 +1,6 @@
-import { ChatStoreState, ActionTypes, ADD_CONNECTION, UPDATE_ONLINE, UPDATE_MESSAGES, UPDATE_SELECTED_USER, UPDATE_BULK_MESSAGES, USER_LOGOUT, UPDATE_CONNECTIONS, UPDATE_BULK_CONNECTIONS } from '../App.config'
+import { ActionEject } from 'material-ui/svg-icons'
+import { ChatStoreState, ActionTypes, ADD_CONNECTION, UPDATE_ONLINE, UPDATE_MESSAGES, UPDATE_SELECTED_USER, UPDATE_BULK_MESSAGES, USER_LOGOUT, UPDATE_CONNECTIONS, UPDATE_BULK_CONNECTIONS, UPDATE_MESSAGE_SEEN } from '../App.config'
+import Messages from '../components/Messages'
 
 
 const initialState: ChatStoreState = {
@@ -59,6 +61,19 @@ export function chat (
           [action.connection.username]: action.connection
         }
       }
+    
+    case UPDATE_MESSAGE_SEEN:
+      return {
+        ...state, 
+        messages: {
+          ...state.messages,
+          [action.key]: state.messages[action.key].map((message) => {
+            if (action.timestamp > message.timestamp) return {...message, seen: true}
+            return message;
+          })
+        }     
+      }
+      
         
     default:
       return state

@@ -127,6 +127,7 @@ class App extends Component<any, AppState> {
       // message receiver
       conn.on('data', (data) => {
         data.message.groupkey = `${data.message.to}-${data.message.from}`;
+        if (this.state.selectedUser && this.state.selectedUser.username === data.message.from) data.message.seen = true;
         this.db.table('messages').add(data.message).then((id) => {
           console.log(`Message added to IndexedDB`);
         }).catch((err) => {
@@ -224,7 +225,7 @@ class App extends Component<any, AppState> {
             </Box>
             <Box className='wrapper'>
               <Box className={'conversation-area'}>
-                <ConnectionsList messages={messages} selectedUser={selectedUser} connections={connections} online={online} token={token} user={user} db={this.db} />
+                <ConnectionsList key={`${JSON.stringify(messages)}`} messages={messages} selectedUser={selectedUser} connections={connections} online={online} token={token} user={user} db={this.db} />
                 <DiscoveryList token={token} user={user} db={this.db} />
               </Box>
               <Box className='chat-area'>
@@ -239,7 +240,7 @@ class App extends Component<any, AppState> {
                     messages={exists(messages[selectedUser.username]) ? messages[selectedUser.username] : []}
                     localUsername={user.username}
                     remoteUsername={selectedUser.username}
-                    lastMessage={exists(messages[selectedUser.username]) ? messages[selectedUser.username][messages[selectedUser.username].length-1] : {}}
+                    lastMessage={exists(messages[selectedUser.username]) ? messages[selectedUser.username][messages[selectedUser.username].length-1] : false}
                   />
                 </Box>
                 <Box className='chat-area-footer'>

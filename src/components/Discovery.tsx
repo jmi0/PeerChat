@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react'
 import { UpdateBulkMessages, UpdateConnections, updateOnline, UpdateSelectedUser } from '../actions';
 import { connect } from 'react-redux';
-import { List, ListItem, ListItemText, ListItemIcon, Badge } from '@material-ui/core';
-import CommentIcon from '@material-ui/icons/Comment';
-import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
+import { List, ListItem, ListItemText } from '@material-ui/core';
 import { Connections, User } from '../App.config';
 import { refreshFetch, exists } from '../App.fn';
 import Dexie from 'dexie'

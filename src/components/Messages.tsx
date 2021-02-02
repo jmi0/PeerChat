@@ -4,6 +4,7 @@ import { ListItem, Grid } from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import { connect } from 'react-redux';
 import { Message } from '../App.config';
+import { exists } from '../App.fn'
 import { dataURItoBlob } from '../App.fn'
 import Dexie from 'dexie';
 import { UpdateBulkMessages } from '../actions';
@@ -13,7 +14,7 @@ export type MessagesProps = {
   messages: Message[],
   localUsername: string,
   remoteUsername: string,
-  lastMessage: Message|Object,
+  lastMessage: Message|false,
   db: Dexie,
   dispatch: any
 }
@@ -48,6 +49,14 @@ class MessagesDisplay extends Component<MessagesProps, MessagesState> {
   componentDidUpdate() {
     console.log('update');
     this.scrollToBottom('smooth');
+  }
+
+  shouldComponentUpdate(nextProps: MessagesProps, nextState: MessagesState) {
+    if (this.props.remoteUsername !== nextProps.remoteUsername) return true;
+    if (nextProps.messages.length === 0) return false;
+    if (this.props.messages.length === 0) return false;
+    if (this.props.messages.length !== nextProps.messages.length) return true;
+    else return false;
   }
 
   scrollToBottom = (behavior: 'auto'|'smooth') => {

@@ -67,8 +67,9 @@ export const UPDATE_SELECTED_USER = 'UPDATE_SELECTED_USER'
 export const UPDATE_BULK_MESSAGES = 'UPDATE_BULK_MESSAGES'
 export const USER_LOGOUT = 'USER_LOGOUT'
 export const UPDATE_BULK_CONNECTIONS = 'UPDATE_BULK_CONNECTIONS'
+export const UPDATE_MESSAGE_SEEN = 'UPDATE_MESSAGE_SEEN'
   
-  
+
 interface AddConnectionAction {
     type: typeof ADD_CONNECTION
     key: string,
@@ -141,6 +142,12 @@ interface UserLogoutAction {
     type: typeof USER_LOGOUT
 }
 
+interface UpdateMessageSeenAction {
+    type: typeof UPDATE_MESSAGE_SEEN
+    key: string
+    timestamp: string
+}
+
 
 
 export type ActionTypes = 
@@ -149,6 +156,6 @@ export type ActionTypes =
     UpdateLoginAction | UpdateOfflineAction | 
     UpdateSystemUser | UpdateSystemPeer | 
     UpdateSelectedUserAction | UpdateBulkMessagesAction |
-    UserLogoutAction | UpdateConnectionsAction | UpdateBulkConnectionsAction
+    UserLogoutAction | UpdateConnectionsAction | UpdateBulkConnectionsAction | UpdateMessageSeenAction
 
 
