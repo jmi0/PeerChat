@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef, Component } from 'react'
 import { updateMessages } from '../actions';
 import { connect } from 'react-redux';
-import { Message, User } from '../App.config';
+import { Message, User, UserProfile } from '../App.config';
 import { exists, dataURItoBlob } from '../App.fn'
 import Peer, { DataConnection } from 'peerjs';
 import SendSharpIcon from '@material-ui/icons/SendSharp';
@@ -21,6 +21,7 @@ type MessengerProps = {
   remotePeerID: string|false,
   selectedUser: User,
   systemUser: User,
+  userProfile: UserProfile|false,
   db: Dexie,
   dispatch: any
 }
@@ -75,6 +76,9 @@ class Messenger extends Component<MessengerProps, MessengerState> {
     
     conn.on('open', () => {
       console.log(`Connected to ${this.props.selectedUser.username}`);
+      // atttempt to send user profile on connection to give recipient additonal information on user
+      if (this.props.userProfile) conn.send({user_profile: this.props.userProfile});
+      
       this.setState({connection: conn});
     });
 

@@ -1,5 +1,5 @@
 import { ActionEject } from 'material-ui/svg-icons'
-import { ChatStoreState, ActionTypes, ADD_CONNECTION, UPDATE_ONLINE, UPDATE_MESSAGES, UPDATE_SELECTED_USER, UPDATE_BULK_MESSAGES, USER_LOGOUT, UPDATE_CONNECTIONS, UPDATE_BULK_CONNECTIONS, UPDATE_MESSAGE_SEEN } from '../App.config'
+import { ChatStoreState, ActionTypes, ADD_CONNECTION, UPDATE_ONLINE, UPDATE_MESSAGES, UPDATE_SELECTED_USER, UPDATE_BULK_MESSAGES, USER_LOGOUT, UPDATE_CONNECTIONS, UPDATE_BULK_CONNECTIONS, UPDATE_MESSAGE_SEEN, UPDATE_USER_PROFILES } from '../App.config'
 import Messages from '../components/Messages'
 
 
@@ -7,7 +7,8 @@ const initialState: ChatStoreState = {
   online: {},
   connections: {},
   messages: {},
-  selectedUser: false
+  selectedUser: false,
+  userProfiles: {},
 }
 
 export function chat (
@@ -33,6 +34,15 @@ export function chat (
               [...state.messages[action.key], action.message] : 
               [action.message]
           )
+        }
+      }
+    
+    case UPDATE_USER_PROFILES:
+      return {
+        ...state,
+        userProfiles: {
+          ...state.userProfiles,
+          [action.user_profile.username]: action.user_profile
         }
       }
 

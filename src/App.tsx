@@ -5,16 +5,16 @@ import Peer, { DataConnection } from 'peerjs';
 import Dexie from 'dexie';
 
 
-import { User, Connections, SystemState, ChatStoreState, Messages, Message } from './App.config';
+import { User, Connections, SystemState, ChatStoreState, Messages, Message, UserProfiles } from './App.config';
 import { exists, refreshFetch } from './App.fn';
 import reducer from './reducers';
-import { UpdateSystemUser, updateMessages, UpdateBulkConnections, UpdateConnections } from './actions';
+import { UpdateSystemUser, updateMessages, UpdateBulkConnections, UpdateConnections, UpdateUserProfiles } from './actions';
 
 import LoginForm from './components/Login';
 import DiscoveryList from './components/Discovery';
 import ConnectionsList from './components/Connections';
 import Messenger from './components/Messenger';
-import PeerBar from './components/PeerBar';
+import AppHeader from './components/AppHeader';
 import MessagesDisplay from './components/Messages';
 import ChatHeader from './components/ChatHeader'
 
@@ -36,7 +36,8 @@ type AppState = {
   messages: Messages,
   online: Connections,
   connections: Connections,
-  selectedUser: User|false
+  selectedUser: User|false,
+  userProfiles: UserProfiles
 }
 
 
@@ -59,7 +60,8 @@ class App extends Component<any, AppState> {
       messages: {},
       online: {},
       connections: {},
-      selectedUser: false
+      selectedUser: false,
+      userProfiles: {}
     }
 
   }
@@ -67,7 +69,8 @@ class App extends Component<any, AppState> {
   componentDidMount() {
     
     this.db.version(1).stores({
-      messages: '++id, sent, seen, timestamp, from, to, text, image, attachment, groupkey',
+      messages: '++id, sent, seen, timestamp, from, to, text, groupkey',
+      user_profiles: '&username, firstname, lastname, bio, message',
       user_connections: '&username, connections',
     });
 
@@ -93,7 +96,8 @@ class App extends Component<any, AppState> {
         selectedUser: chat.selectedUser,
         messages: chat.messages,
         connections: chat.connections,
-        online: chat.online
+        online: chat.online,
+        userProfiles: chat.userProfiles
       });      
 
     });
@@ -126,16 +130,26 @@ class App extends Component<any, AppState> {
 
       // message receiver
       conn.on('data', (data) => {
-        data.message.groupkey = `${data.message.to}-${data.message.from}`;
-        if (this.state.selectedUser && this.state.selectedUser.username === data.message.from) data.message.seen = true;
-        this.db.table('messages').add(data.message).then((id) => {
-          console.log(`Message added to IndexedDB`);
-        }).catch((err) => {
-          console.error(`Could not add message to IndexedDB: ${err}`);
-        }).finally(() => {
-          this.store.dispatch(updateMessages(data.message.from, data.message));
-          if (!exists(this.state.connections[data.message.from])) this.store.dispatch(UpdateConnections({username: data.message.from, peerID: conn.peer}));
-        });
+        if (exists(data.message)) {
+          // handle message
+          data.message.groupkey = `${data.message.to}-${data.message.from}`;
+          if (this.state.selectedUser && this.state.selectedUser.username === data.message.from) data.message.seen = true;
+          this.db.table('messages').add(data.message)
+          .then((id) => { console.log(`Message added to IndexedDB`); })
+          .catch((err) => { console.error(`Could not add message to IndexedDB: ${err}`); })
+          .finally(() => {
+            this.store.dispatch(updateMessages(data.message.from, data.message));
+            if (!exists(this.state.connections[data.message.from])) this.store.dispatch(UpdateConnections({username: data.message.from, peerID: conn.peer}));
+          });
+        }
+        else if (exists(data.user_profile)) {
+          // handle user profile
+          this.db.table('user_profiles').add(data.user_profile)
+          .then((id) => { console.log(`Updated user profile for ${data.user_profile} in IndexedDB`) })
+          .catch((err) => { console.log(`Could not store user profile ${err}`); })
+          .finally(() => { this.store.dispatch(UpdateUserProfiles(data.user_profile)); });
+        }
+       
       })
 
       // connection receiver
@@ -197,6 +211,19 @@ class App extends Component<any, AppState> {
           if (typeof user_connections !== 'undefined') 
             this.store.dispatch(UpdateBulkConnections(JSON.parse(user_connections.connections)));
         }).catch((err) => { console.log(err); });
+
+        this.db.table('user_profiles').where('username').equals(result.username)
+        .first((user_profile) => {
+          if (typeof user_profile !== 'undefined') this.store.dispatch(UpdateUserProfiles(user_profile));
+          else {
+            // create empty profile
+            this.db.table('user_profiles').put({username: result.username})
+            .then((id) => {
+              this.store.dispatch(UpdateUserProfiles({username: result.username}));
+            })
+            .catch((err) => { console.log(`Could create empty profile: ${err}`); })
+          }
+        }).catch((err) => { console.log(err); });
         
       }
     }, (error) => {
@@ -209,7 +236,7 @@ class App extends Component<any, AppState> {
   
   render() {
     
-    const { isLoading, isLoggedIn, user, peer, token, connections, online, selectedUser, messages } = this.state; 
+    const { isLoading, isLoggedIn, user, peer, token, connections, online, selectedUser, messages, userProfiles } = this.state; 
     
     let selectedUserPeerID: string|false = false;
     if (selectedUser) selectedUserPeerID = (exists(online[selectedUser.username]) ? online[selectedUser.username].peerID : false);
@@ -221,7 +248,7 @@ class App extends Component<any, AppState> {
           {!isLoggedIn || !token || !user || !peer ? <LoginForm /> : 
           <>
             <Box className='header'>
-              <PeerBar token={token} peer={peer} />
+              <AppHeader token={token} peer={peer} />
             </Box>
             <Box className='wrapper'>
               <Box className={'conversation-area'}>
@@ -249,6 +276,7 @@ class App extends Component<any, AppState> {
                     peer={peer}
                     systemUser={user} 
                     selectedUser={selectedUser}
+                    userProfile={(exists(userProfiles[user.username]) ? userProfiles[user.username] : false)}
                     db={this.db}
                   />
                 </Box> 

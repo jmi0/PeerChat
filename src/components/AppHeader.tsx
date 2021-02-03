@@ -31,7 +31,7 @@ type PeerBarProps = {
 }
 
 
-const PeerBar: React.FC<PeerBarProps> = (props: PeerBarProps) => {
+const AppHeader: React.FC<PeerBarProps> = (props: PeerBarProps) => {
 
   const [anchorEl, setAnchorEl] = React.useState<any>(null);
   const profileMenuRef = React.useRef();
@@ -85,4 +85,4 @@ const PeerBar: React.FC<PeerBarProps> = (props: PeerBarProps) => {
 
 }
 
-export default connect()(PeerBar);
+export default connect()(AppHeader);

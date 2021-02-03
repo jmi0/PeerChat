@@ -16,6 +16,15 @@ export interface User {
     peerID: string
 }
 
+export interface UserProfile {
+    username: string,
+    firstname?: string,
+    lastname?: string,
+    profilepic?: string,
+    bio?: string,
+    message?: string
+}
+
 export interface Message {
     sent: boolean,
     seen: boolean,
@@ -31,6 +40,10 @@ export interface Message {
 
 export interface Messages {
     [key: string]: Message[]
+}
+
+export interface UserProfiles {
+    [key: string]: UserProfile
 }
 
 
@@ -51,7 +64,8 @@ export interface ChatStoreState {
     online: Connections,
     connections: Connections,
     messages: Messages,
-    selectedUser: User|false
+    selectedUser: User|false,
+    userProfiles: UserProfiles
 }
   
 export const ADD_CONNECTION = 'UPDATE_CONNECTIONS'
@@ -68,6 +82,7 @@ export const UPDATE_BULK_MESSAGES = 'UPDATE_BULK_MESSAGES'
 export const USER_LOGOUT = 'USER_LOGOUT'
 export const UPDATE_BULK_CONNECTIONS = 'UPDATE_BULK_CONNECTIONS'
 export const UPDATE_MESSAGE_SEEN = 'UPDATE_MESSAGE_SEEN'
+export const UPDATE_USER_PROFILES = 'UPDATE_USER_PROFILES'
   
 
 interface AddConnectionAction {
@@ -148,6 +163,11 @@ interface UpdateMessageSeenAction {
     timestamp: string
 }
 
+interface UpdateUserProfilesAction {
+    type: typeof UPDATE_USER_PROFILES,
+    user_profile: UserProfile
+}
+
 
 
 export type ActionTypes = 
@@ -156,6 +176,8 @@ export type ActionTypes =
     UpdateLoginAction | UpdateOfflineAction | 
     UpdateSystemUser | UpdateSystemPeer | 
     UpdateSelectedUserAction | UpdateBulkMessagesAction |
-    UserLogoutAction | UpdateConnectionsAction | UpdateBulkConnectionsAction | UpdateMessageSeenAction
+    UserLogoutAction | UpdateConnectionsAction | 
+    UpdateBulkConnectionsAction | UpdateMessageSeenAction | 
+    UpdateUserProfilesAction
 
 
