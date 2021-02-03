@@ -24,6 +24,7 @@ import './style/Chat.scss';
 
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import Loader from 'react-loader-spinner'
+import { profile } from 'console';
 
 
 
@@ -69,7 +70,7 @@ class App extends Component<any, AppState> {
   componentDidMount() {
     
     this.db.version(1).stores({
-      messages: '++id, sent, seen, timestamp, from, to, text, groupkey',
+      messages: '++id, seen, timestamp, from, to, sent, text, groupkey',
       user_profiles: '&username, firstname, lastname, bio, message',
       user_connections: '&username, connections',
     });
@@ -144,10 +145,29 @@ class App extends Component<any, AppState> {
         }
         else if (exists(data.user_profile)) {
           // handle user profile
-          this.db.table('user_profiles').add(data.user_profile)
-          .then((id) => { console.log(`Updated user profile for ${data.user_profile} in IndexedDB`) })
+          this.db.table('user_profiles').put(data.user_profile)
+          .then((id) => { console.log(`Updated user profile for ${data.user_profile.username} in IndexedDB`) })
           .catch((err) => { console.log(`Could not store user profile ${err}`); })
           .finally(() => { this.store.dispatch(UpdateUserProfiles(data.user_profile)); });
+
+          // send any unsent messages back to this user
+          if (this.state.user) {
+            
+            this.db.table('messages').where('from').equals(`${this.state.user.username}`).sortBy('timestamp')
+            .then(messages => {
+              messages.forEach((message) => {
+                if (message.seen) return;
+                if (message.to !== data.user_profile.username) return;
+                conn.send({message: message});
+                this.db.table('messages').update(message.id, {sent: true}).then((updated) => {
+                  if (!updated) console.log(`Could not update sent state of ${message.id}`);
+                })
+              });
+            })
+            .catch((err) => { console.error(err); });
+            
+          }
+          
         }
        
       })
