@@ -240,7 +240,6 @@ class App extends Component<any, AppState> {
                     messages={exists(messages[selectedUser.username]) ? messages[selectedUser.username] : []}
                     localUsername={user.username}
                     remoteUsername={selectedUser.username}
-                    lastMessage={exists(messages[selectedUser.username]) ? messages[selectedUser.username][messages[selectedUser.username].length-1] : false}
                   />
                 </Box>
                 <Box className='chat-area-footer'>

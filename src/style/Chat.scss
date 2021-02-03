@@ -52,6 +52,17 @@ html {
 .conversation-area {
   width: 340px;
   flex-shrink: 0;
+
+  .lastMessagePreview {
+    font-size: .9em;
+    overflow: hidden;
+    white-space: nowrap;
+    padding-left: 15px;
+    padding-right: 15px;
+    max-width: 50%;
+    opacity: .4;
+    font-style: italic;
+  }
 }
 
 .chat-area {

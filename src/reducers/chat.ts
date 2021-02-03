@@ -27,6 +27,7 @@ export function chat (
       return {
         ...state,
         messages: {
+          ...state.messages,
           [action.key]: (
             typeof state.messages[action.key] !== 'undefined' ? 
               [...state.messages[action.key], action.message] : 

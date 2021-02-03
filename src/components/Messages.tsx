@@ -14,7 +14,6 @@ export type MessagesProps = {
   messages: Message[],
   localUsername: string,
   remoteUsername: string,
-  lastMessage: Message|false,
   db: Dexie,
   dispatch: any
 }
@@ -47,14 +46,11 @@ class MessagesDisplay extends Component<MessagesProps, MessagesState> {
   }
   
   componentDidUpdate() {
-    console.log('update');
     this.scrollToBottom('smooth');
   }
 
   shouldComponentUpdate(nextProps: MessagesProps, nextState: MessagesState) {
     if (this.props.remoteUsername !== nextProps.remoteUsername) return true;
-    if (nextProps.messages.length === 0) return false;
-    if (this.props.messages.length === 0) return false;
     if (this.props.messages.length !== nextProps.messages.length) return true;
     else return false;
   }
