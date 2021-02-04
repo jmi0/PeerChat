@@ -156,7 +156,7 @@ class App extends Component<any, AppState> {
             this.db.table('messages').where('from').equals(`${this.state.user.username}`).sortBy('timestamp')
             .then(messages => {
               messages.forEach((message) => {
-                if (message.seen) return;
+                if (message.sent) return;
                 if (message.to !== data.user_profile.username) return;
                 conn.send({message: message});
                 this.db.table('messages').update(message.id, {sent: true}).then((updated) => {
