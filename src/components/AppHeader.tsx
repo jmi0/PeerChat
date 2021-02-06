@@ -4,8 +4,10 @@ import Peer, { DataConnection } from 'peerjs';
 
 import ConnectionsList from './Connections';
 import OnlineList from './Online';
+import ProfileForm from './ProfileForm'
+import SettingsForm from './SettingsForm'
 
-import { Button, AppBar, Toolbar, IconButton, Typography, MenuItem, Menu, Drawer } from '@material-ui/core';
+import { Button, AppBar, Toolbar, IconButton, Typography, MenuItem, Menu, Drawer, Box, TextField} from '@material-ui/core';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import SettingsIcon from '@material-ui/icons/Settings';
 import { makeStyles } from '@material-ui/core/styles';
@@ -27,6 +29,12 @@ const useStyles = makeStyles((theme) => ({
   title: {
     
   },
+  drawerBox: {
+    width: '340px'
+  },
+  drawerPadding: {
+    padding: '10px'
+  }
 }));
 
 type PeerBarProps = {
@@ -131,28 +139,35 @@ const AppHeader: React.FC<PeerBarProps> = (props: PeerBarProps) => {
           </IconButton>
         </Toolbar>
         <Drawer anchor={'left'} open={connectionsDrawerOpen} onClose={closeDrawers}>
-          <ConnectionsList 
-            key={`${JSON.stringify(props.messages)}`} 
-            messages={props.messages} 
-            selectedUser={props.selectedUser} 
-            connections={props.connections} 
-            online={props.online} 
-            token={props.token} 
-            user={props.user} 
-            db={props.db} 
-          />
-          <OnlineList 
-            online={props.online} 
-            user={props.user} 
-            db={props.db} 
-          />
+          <Box className={classes.drawerBox}>
+            <ConnectionsList 
+              key={`${JSON.stringify(props.messages)}`} 
+              messages={props.messages} 
+              selectedUser={props.selectedUser} 
+              connections={props.connections} 
+              online={props.online} 
+              token={props.token} 
+              user={props.user} 
+              db={props.db} 
+            />
+            <OnlineList 
+              online={props.online} 
+              user={props.user} 
+              db={props.db} 
+            />
+          </Box>
         </Drawer>
         <Drawer anchor={'right'} open={profileDrawerOpen} onClose={closeDrawers}>
-          <Button color="inherit" onClick={logout} >Logout</Button>
-          <div>profile form</div>
+          <Box className={`${classes.drawerBox} ${classes.drawerPadding}`}>
+            <ProfileForm />
+            <hr />
+            <Button color="inherit" onClick={logout} >Logout</Button>
+          </Box>
         </Drawer>
         <Drawer anchor={'right'} open={settingsDrawerOpen} onClose={closeDrawers}>
-          <div>setting form</div>
+          <Box className={`${classes.drawerBox} ${classes.drawerPadding}`}>
+            <SettingsForm />
+          </Box>
         </Drawer>
       </AppBar> 
     </div>     
