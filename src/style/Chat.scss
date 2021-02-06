@@ -180,12 +180,17 @@ html {
  }
 }
 
-
+.connectionsDrawerButton {
+  display: none !important;
+}
 
 @media (max-width: 780px) {
- .conversation-area {
-  display: none;
- }
+  .conversation-area {
+    display: none;
+  }
+  .connectionsDrawerButton {
+    display: inline-flex !important;
+  }
 }
 
 

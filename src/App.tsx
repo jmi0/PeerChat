@@ -8,10 +8,10 @@ import Dexie from 'dexie';
 import { User, Connections, SystemState, ChatStoreState, Messages, Message, UserProfiles } from './App.config';
 import { exists, refreshFetch } from './App.fn';
 import reducer from './reducers';
-import { UpdateSystemUser, updateMessages, UpdateBulkConnections, UpdateConnections, UpdateUserProfiles } from './actions';
+import { updateOnline, UpdateSystemUser, updateMessages, UpdateBulkConnections, UpdateConnections, UpdateUserProfiles, updateToken } from './actions';
 
 import LoginForm from './components/Login';
-import DiscoveryList from './components/Discovery';
+import OnlineList from './components/Online';
 import ConnectionsList from './components/Connections';
 import Messenger from './components/Messenger';
 import AppHeader from './components/AppHeader';
@@ -44,6 +44,7 @@ type AppState = {
 
 class App extends Component<any, AppState> {
 
+  discoveryInterval: number = 0;
   store = configureStore({reducer: reducer});
   db: Dexie = new Dexie('p2pchat');
   unsubscribe: any;
@@ -103,12 +104,35 @@ class App extends Component<any, AppState> {
 
     });
 
+    this.getRemotePeers();
+    this.discoveryInterval = window.setInterval(() => {
+      this.getRemotePeers();
+    }, 1000);
+
   }
   
   componentWillUnmount() {
     if (this.state.peer) this.state.peer.destroy();
+    clearInterval(this.discoveryInterval);
     this.unsubscribe();
     this.db.close();
+  }
+
+  getRemotePeers() {
+    
+    let headers = new Headers();
+    headers.append('Content-Type', 'application/json');
+    headers.append('Authorization', `Bearer ${this.state.token}`);
+    refreshFetch('/peers', 'GET', headers, null)
+    .then((result: any) => {
+      // if token set then just update token
+      if (exists(result.token)) this.store.dispatch(updateToken(result.token));
+      else this.store.dispatch(updateOnline(result));
+    })
+    .catch((err) => {
+      console.log(err);
+    })
+
   }
 
   setUpPeer(token: string) : Peer {
@@ -268,18 +292,43 @@ class App extends Component<any, AppState> {
           {!isLoggedIn || !token || !user || !peer ? <LoginForm /> : 
           <>
             <Box className='header'>
-              <AppHeader token={token} peer={peer} />
+              <AppHeader 
+                token={token} 
+                peer={peer} 
+                messages={messages} 
+                selectedUser={selectedUser} 
+                connections={connections} 
+                online={online} 
+                user={user} 
+                db={this.db} 
+              />
             </Box>
             <Box className='wrapper'>
               <Box className={'conversation-area'}>
-                <ConnectionsList key={`${JSON.stringify(messages)}`} messages={messages} selectedUser={selectedUser} connections={connections} online={online} token={token} user={user} db={this.db} />
-                <DiscoveryList token={token} user={user} db={this.db} />
+                <ConnectionsList 
+                  key={`${JSON.stringify(messages)}`} 
+                  messages={messages} 
+                  selectedUser={selectedUser} 
+                  connections={connections} 
+                  online={online} 
+                  token={token} 
+                  user={user} 
+                  db={this.db} 
+                />
+                <OnlineList 
+                  online={online} 
+                  user={user} 
+                  db={this.db} 
+                />
               </Box>
               <Box className='chat-area'>
               { selectedUser ? 
                 <>
                 <Box className='chat-area-header'>
-                  <ChatHeader isOnline={exists(online[selectedUser.username])} selectedUser={selectedUser} />
+                  <ChatHeader 
+                    isOnline={exists(online[selectedUser.username])} 
+                    selectedUser={selectedUser} 
+                  />
                 </Box>
                 <Box className='chat-area-main'>
                   <MessagesDisplay 
