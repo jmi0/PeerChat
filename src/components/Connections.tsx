@@ -4,7 +4,7 @@ import { connect } from 'react-redux';
 import { Box, List, ListItem, ListItemText, ListItemIcon, ListItemAvatar, Avatar, Badge } from '@material-ui/core';
 import CommentIcon from '@material-ui/icons/Comment';
 import { makeStyles } from "@material-ui/core/styles";
-import { Connections, User, Messages, Message } from '../App.config';
+import { Connections, User, Messages, Message, UserProfiles } from '../App.config';
 import { refreshFetch, exists } from '../App.fn';
 import Dexie from 'dexie'
 import moment from 'moment'
@@ -20,6 +20,7 @@ const useStyles = makeStyles({
 type ConnectionsProps = {
   user: User,
   selectedUser: User|false,
+  userProfiles: UserProfiles,
   connections: Connections,
   online: Connections,
   messages: Messages,
@@ -74,6 +75,14 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
     })));
     props.dispatch(UpdateSelectedUser(peer));
   }
+
+  const getAvatar = (username: string) => {
+    let avatar = <Avatar>{username.charAt(0)}</Avatar>;
+    if (!exists(props.userProfiles[username])) return avatar;
+    if (typeof props.userProfiles[username].profilepic !== 'string') return avatar;
+    if (props.userProfiles[username].profilepic === '') return avatar;
+    return (<Avatar><img width={'100%'} src={props.userProfiles[username].profilepic}></img></Avatar>);
+  }
   
   
   return (
@@ -107,8 +116,8 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
               <ListItemIcon>
                 <ListItemAvatar>
                   {exists(props.online[username]) ? 
-                    <Badge color={'secondary'} overlap="circle" classes={{badge: classes.onlineBadge}} variant="dot"><Avatar>{username.charAt(0)}</Avatar></Badge>: 
-                      <Avatar>{username.charAt(0)}</Avatar>
+                    <Badge color={'secondary'} overlap="circle" classes={{badge: classes.onlineBadge}} variant="dot">{getAvatar(username)}</Badge>: 
+                    <>{getAvatar(username)}</>
                   }
                 </ListItemAvatar>
               </ListItemIcon>

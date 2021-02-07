@@ -1,4 +1,4 @@
-import { User, UserProfile, Connections, Message, ADD_CONNECTION, UPDATE_ONLINE, ActionTypes, UPDATE_MESSAGES, UPDATE_LOGIN_STATE, UPDATE_TOKEN, UPDATE_OFFLINE_STATE, UPDATE_SYSTEM_USER, UPDATE_SELECTED_USER, UPDATE_BULK_MESSAGES, USER_LOGOUT, UPDATE_CONNECTIONS, UPDATE_BULK_CONNECTIONS, UPDATE_MESSAGE_SEEN, UPDATE_USER_PROFILES } from './App.config'
+import { User, UserProfile, UserProfiles, Connections, Message, ADD_CONNECTION, UPDATE_ONLINE, ActionTypes, UPDATE_MESSAGES, UPDATE_LOGIN_STATE, UPDATE_TOKEN, UPDATE_OFFLINE_STATE, UPDATE_SYSTEM_USER, UPDATE_SELECTED_USER, UPDATE_BULK_MESSAGES, USER_LOGOUT, UPDATE_CONNECTIONS, UPDATE_BULK_CONNECTIONS, UPDATE_MESSAGE_SEEN, UPDATE_USER_PROFILES, UPDATE_BULK_USER_PROFILES } from './App.config'
 import Peer, { DataConnection } from 'peerjs'
 
 
@@ -107,5 +107,13 @@ export function UpdateUserProfiles(user_profile: UserProfile): ActionTypes {
     user_profile: user_profile
   }
 }
+
+export function UpdateBulkUserProfiles(user_profiles: UserProfiles): ActionTypes {
+  return {
+    type: UPDATE_BULK_USER_PROFILES,
+    user_profiles: user_profiles
+  }
+}
+
 
 

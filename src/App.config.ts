@@ -22,7 +22,7 @@ export interface UserProfile {
     lastname?: string,
     profilepic?: string,
     bio?: string,
-    message?: string
+    headline?: string
 }
 
 export interface Message {
@@ -83,7 +83,8 @@ export const USER_LOGOUT = 'USER_LOGOUT'
 export const UPDATE_BULK_CONNECTIONS = 'UPDATE_BULK_CONNECTIONS'
 export const UPDATE_MESSAGE_SEEN = 'UPDATE_MESSAGE_SEEN'
 export const UPDATE_USER_PROFILES = 'UPDATE_USER_PROFILES'
-  
+export const UPDATE_BULK_USER_PROFILES = 'UPDATE_BULK_USER_PROFILES'
+
 
 interface AddConnectionAction {
     type: typeof ADD_CONNECTION
@@ -168,6 +169,11 @@ interface UpdateUserProfilesAction {
     user_profile: UserProfile
 }
 
+interface UpdateBulkUserProfilesAction {
+    type: typeof UPDATE_BULK_USER_PROFILES,
+    user_profiles: UserProfiles
+}
+
 
 
 export type ActionTypes = 
@@ -178,6 +184,6 @@ export type ActionTypes =
     UpdateSelectedUserAction | UpdateBulkMessagesAction |
     UserLogoutAction | UpdateConnectionsAction | 
     UpdateBulkConnectionsAction | UpdateMessageSeenAction | 
-    UpdateUserProfilesAction
+    UpdateUserProfilesAction | UpdateBulkUserProfilesAction
 
 

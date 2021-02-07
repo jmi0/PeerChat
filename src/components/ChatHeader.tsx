@@ -1,7 +1,7 @@
 import React from 'react';
 import { connect } from 'react-redux';
 
-import { User } from '../App.config'
+import { User, UserProfile } from '../App.config'
 import { exists } from '../App.fn';
 import { Avatar, Badge, Box, Typography } from '@material-ui/core';
 import { makeStyles } from "@material-ui/core/styles";
@@ -10,6 +10,7 @@ import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import Loader from 'react-loader-spinner'
 import { start } from 'repl';
+import { profile } from 'console';
 
 const useStyles = makeStyles({
   onlineBadge: {
@@ -19,7 +20,8 @@ const useStyles = makeStyles({
 });
 
 type ChatHeaderProps = {
-  selectedUser: User|false,
+  selectedUser: User,
+  selectedUserProfile: UserProfile|false
   isOnline: boolean,
   dispatch: any
 }
@@ -29,14 +31,21 @@ const ChatHeader: React.FC<ChatHeaderProps> = (props: ChatHeaderProps) => {
 
   const classes = useStyles();
 
+  const getAvatar = () => {
+    let profilepic : string = '';
+    if (props.selectedUserProfile && typeof props.selectedUserProfile.profilepic === 'string') profilepic = props.selectedUserProfile.profilepic;
+    if (profilepic.length) return (<Avatar><img width={'100%'} src={profilepic}></img></Avatar>);
+    else return (<Avatar>{props.selectedUser.username.charAt(0)}</Avatar>);
+  }
+
   return (
     <>
     {props.selectedUser ? 
       <Box display={"flex"} alignItems={"flex-start"}>
         <Box>
         {props.isOnline ? 
-          <Badge overlap="circle" classes={{badge: classes.onlineBadge}} variant="dot"><Avatar>{props.selectedUser.username.charAt(0)}</Avatar></Badge>: 
-          <Avatar>{props.selectedUser.username.charAt(0)}</Avatar>
+          <Badge overlap="circle" classes={{badge: classes.onlineBadge}} variant="dot">{getAvatar()}</Badge> : 
+          <>{getAvatar()}</>
         }
         </Box>
         <Box pl={2} ><Typography variant={'h5'}>{props.selectedUser.username}</Typography><Box fontSize={12}>{props.isOnline ? 'Online' : 'Offline'}</Box></Box>

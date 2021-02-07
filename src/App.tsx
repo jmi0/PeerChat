@@ -5,10 +5,10 @@ import Peer, { DataConnection } from 'peerjs';
 import Dexie from 'dexie';
 
 
-import { User, Connections, SystemState, ChatStoreState, Messages, Message, UserProfiles } from './App.config';
+import { User, Connections, SystemState, ChatStoreState, Messages, Message, UserProfiles, UserProfile } from './App.config';
 import { exists, refreshFetch } from './App.fn';
 import reducer from './reducers';
-import { updateOnline, UpdateSystemUser, updateMessages, UpdateBulkConnections, UpdateConnections, UpdateUserProfiles, updateToken } from './actions';
+import { UpdateBulkUserProfiles, updateOnline, UpdateSystemUser, updateMessages, UpdateBulkConnections, UpdateConnections, UpdateUserProfiles, updateToken } from './actions';
 
 import LoginForm from './components/Login';
 import OnlineList from './components/Online';
@@ -72,7 +72,7 @@ class App extends Component<any, AppState> {
     
     this.db.version(1).stores({
       messages: '++id, seen, timestamp, from, to, sent, text, groupkey',
-      user_profiles: '&username, firstname, lastname, bio, message',
+      user_profiles: '&username, firstname, lastname, bio, headline',
       user_connections: '&username, connections',
     });
 
@@ -255,19 +255,24 @@ class App extends Component<any, AppState> {
           if (typeof user_connections !== 'undefined') 
             this.store.dispatch(UpdateBulkConnections(JSON.parse(user_connections.connections)));
         }).catch((err) => { console.log(err); });
-
-        this.db.table('user_profiles').where('username').equals(result.username)
-        .first((user_profile) => {
-          if (typeof user_profile !== 'undefined') this.store.dispatch(UpdateUserProfiles(user_profile));
+        
+        this.db.table('user_profiles').toArray()
+        .then((user_profiles: Array<UserProfile>) => {
+          if (user_profiles.length) 
+            user_profiles.forEach((user_profile: UserProfile) => {
+              this.store.dispatch(UpdateUserProfiles(user_profile));
+            });
           else {
             // create empty profile
             this.db.table('user_profiles').put({username: result.username})
             .then((id) => {
               this.store.dispatch(UpdateUserProfiles({username: result.username}));
             })
-            .catch((err) => { console.log(`Could create empty profile: ${err}`); })
+            .catch((err) => { console.log(`Could create empty profile: ${err}`); });
           }
         }).catch((err) => { console.log(err); });
+
+
         
       }
     }, (error) => {
@@ -292,7 +297,8 @@ class App extends Component<any, AppState> {
           {!isLoggedIn || !token || !user || !peer ? <LoginForm /> : 
           <>
             <Box className='header'>
-              <AppHeader 
+              <AppHeader
+                userProfiles={userProfiles}
                 token={token} 
                 peer={peer} 
                 messages={messages} 
@@ -307,6 +313,7 @@ class App extends Component<any, AppState> {
               <Box className={'conversation-area'}>
                 <ConnectionsList 
                   key={`${JSON.stringify(messages)}`} 
+                  userProfiles={userProfiles}
                   messages={messages} 
                   selectedUser={selectedUser} 
                   connections={connections} 
@@ -328,6 +335,7 @@ class App extends Component<any, AppState> {
                   <ChatHeader 
                     isOnline={exists(online[selectedUser.username])} 
                     selectedUser={selectedUser} 
+                    selectedUserProfile={exists(userProfiles[selectedUser.username]) ? userProfiles[selectedUser.username]: false}
                   />
                 </Box>
                 <Box className='chat-area-main'>

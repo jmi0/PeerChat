@@ -12,10 +12,11 @@ import AccountCircle from '@material-ui/icons/AccountCircle';
 import SettingsIcon from '@material-ui/icons/Settings';
 import { makeStyles } from '@material-ui/core/styles';
 import MenuIcon from '@material-ui/icons/Menu';
+import CloseIcon from '@material-ui/icons/Close';
 
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import Loader from 'react-loader-spinner'
-import { User, Connections, Messages } from '../App.config'
+import { User, Connections, Messages, UserProfiles } from '../App.config'
 import { UserLogout } from '../actions';
 import Dexie from 'dexie'
 
@@ -33,7 +34,10 @@ const useStyles = makeStyles((theme) => ({
     width: '340px'
   },
   drawerPadding: {
-    padding: '10px'
+    padding: '0px 10px 0px 10px'
+  },
+  right: {
+    float: 'right'
   }
 }));
 
@@ -41,6 +45,7 @@ type PeerBarProps = {
   token: string,
   peer: Peer,
   user: User,
+  userProfiles: UserProfiles,
   selectedUser: User|false,
   connections: Connections,
   online: Connections,
@@ -142,6 +147,7 @@ const AppHeader: React.FC<PeerBarProps> = (props: PeerBarProps) => {
           <Box className={classes.drawerBox}>
             <ConnectionsList 
               key={`${JSON.stringify(props.messages)}`} 
+              userProfiles={props.userProfiles}
               messages={props.messages} 
               selectedUser={props.selectedUser} 
               connections={props.connections} 
@@ -158,13 +164,15 @@ const AppHeader: React.FC<PeerBarProps> = (props: PeerBarProps) => {
           </Box>
         </Drawer>
         <Drawer anchor={'right'} open={profileDrawerOpen} onClose={closeDrawers}>
+          <Box><IconButton className={classes.right} onClick={closeDrawers}><CloseIcon /></IconButton></Box>
           <Box className={`${classes.drawerBox} ${classes.drawerPadding}`}>
-            <ProfileForm />
+            <ProfileForm user={props.user} profile={props.userProfiles[props.user.username]} db={props.db} />
             <hr />
-            <Button color="inherit" onClick={logout} >Logout</Button>
+            <Button color="inherit" className={classes.right} onClick={logout} >Logout</Button>
           </Box>
         </Drawer>
         <Drawer anchor={'right'} open={settingsDrawerOpen} onClose={closeDrawers}>
+          <Box><IconButton className={classes.right} onClick={closeDrawers}><CloseIcon /></IconButton></Box>
           <Box className={`${classes.drawerBox} ${classes.drawerPadding}`}>
             <SettingsForm />
           </Box>
