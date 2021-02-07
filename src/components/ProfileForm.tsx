@@ -4,6 +4,7 @@ import { User, UserProfile } from '../App.config'
 import { connect } from 'react-redux';
 import { exists } from '../App.fn'
 import { Avatar, Box, TextField, Button, Typography, IconButton, FormControlLabel, FormLabel, FormHelperText } from '@material-ui/core';
+import Alert from '@material-ui/lab/Alert';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 import Dexie from 'dexie'
 
@@ -21,6 +22,8 @@ const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
   const [ headline, setHeadline ] = useState<string>(typeof props.profile.headline === 'string' ? props.profile.headline : '');
   const [ bio, setBio ] = useState<string>(typeof props.profile.bio === 'string' ? props.profile.bio : '');
   const [ image, setImage ] = useState<string>(typeof props.profile.profilepic === 'string' ? props.profile.profilepic : '');
+  const [ formSubmitted, setFormSubmitted ] = useState<boolean>(false);
+  const [ submissionError, setSubmissionError ] = useState<string|false>(false);
 
   const imageInputRef: React.RefObject<HTMLInputElement> = React.createRef();
 
@@ -29,11 +32,18 @@ const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
     let user_profile = {username: props.user.username, firstname: firstname, lastname: lastname, headline: headline, bio: bio, profilepic: image}
     props.db.table('user_profiles').put(user_profile)
     .then((id) => { console.log(`Updated user profile for ${user_profile.username} in IndexedDB`) })
-    .catch((err) => { console.log(`Could not store user profile ${err}`); })
-    .finally(() => { props.dispatch(UpdateUserProfiles(user_profile)); });
+    .catch((err) => { 
+      setSubmissionError(`Something went wrong. ${err.message}`);
+      console.log(`Could not store user profile ${err}`); 
+    })
+    .finally(() => {
+      setFormSubmitted(true);
+      props.dispatch(UpdateUserProfiles(user_profile));
+    });
   };
 
   const handleFormFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFormSubmitted(false);
     if (event.target.name === 'first') setFirstName(event.target.value);
     else if (event.target.name === 'last') setLastName(event.target.value);
     else if (event.target.name === 'headline') setHeadline(event.target.value);
@@ -60,6 +70,15 @@ const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
     <Box>
       <Typography variant="h6">Profile</Typography>
       <FormHelperText>This information is saved locally and will be shared with peers only once you have connected.</FormHelperText>
+      {formSubmitted ? 
+        <Box pb={1} pt={1}>
+          {submissionError ? 
+          <Alert severity="error">{submissionError}</Alert> : 
+          <Alert severity="success">Profile Updated</Alert>
+          }
+        </Box> : 
+        <></>
+      }
       <form onSubmit={submitProfileForm}>
         <Box pt={2} >
           <TextField value={firstname} name="first" label="First Name" type="text" onChange={handleFormFieldChange} />
