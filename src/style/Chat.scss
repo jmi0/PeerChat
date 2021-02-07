@@ -100,10 +100,11 @@ html {
 .chat-area {
   -ms-overflow-style: none;  /* IE and Edge */
   scrollbar-width: none;  /* Firefox */
+  
 }
 
 .chat-area {
-  display: flex;
+  //display: flex;
   flex-direction: column;
   overflow: auto;
   &-header {
@@ -137,6 +138,11 @@ html {
     .emoji-mart-bar {
       display: none;
     }
+  }
+
+  .chat-area-width {
+    max-width: 800px;
+    margin: auto;
   }
 }
 

@@ -59,8 +59,11 @@ class Messenger extends Component<MessengerProps, MessengerState> {
     document.addEventListener("click", this.handleEmojiPickerBlur, false);
   }
 
-  componentDidUpdate() {
-
+  componentDidUpdate(prevProps: MessengerProps) {
+    if (JSON.stringify(prevProps.userProfile) !== JSON.stringify(this.props.userProfile)) {
+      if (this.state.connection) this.state.connection.send({user_profile: this.props.userProfile});
+    }
+      
   }
 
   componentWillUnmount() {

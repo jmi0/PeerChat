@@ -73,7 +73,8 @@ class App extends Component<any, AppState> {
     this.db.version(1).stores({
       messages: '++id, seen, timestamp, from, to, sent, text, groupkey',
       user_profiles: '&username, firstname, lastname, bio, headline',
-      user_connections: '&username, connections',
+      user_connections: '&username',
+      user_settings: '&username'
     });
 
     this.init();
@@ -338,7 +339,7 @@ class App extends Component<any, AppState> {
                     selectedUserProfile={exists(userProfiles[selectedUser.username]) ? userProfiles[selectedUser.username]: false}
                   />
                 </Box>
-                <Box className='chat-area-main'>
+                <Box className='chat-area-main chat-area-width'>
                   <MessagesDisplay 
                     db={this.db}
                     messages={exists(messages[selectedUser.username]) ? messages[selectedUser.username] : []}
@@ -346,7 +347,7 @@ class App extends Component<any, AppState> {
                     remoteUsername={selectedUser.username}
                   />
                 </Box>
-                <Box className='chat-area-footer'>
+                <Box className='chat-area-footer chat-area-width'>
                   <Messenger
                     key={`connectto${selectedUser.username}${selectedUserPeerID}`}
                     remotePeerID={selectedUserPeerID}

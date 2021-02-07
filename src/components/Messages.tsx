@@ -19,7 +19,7 @@ export type MessagesProps = {
 }
 
 export type MessagesState = {
-  messages: Message[]
+  
 }
 
 /************************************************************************
@@ -34,22 +34,20 @@ class MessagesDisplay extends Component<MessagesProps, MessagesState> {
     super(props);
     
     this.state = {
-      messages: []
+      
     }
   
   }
 
   componentDidMount() {
-    this.setState({ messages: this.props.messages }, () => {
-      this.scrollToBottom('auto');
-    });
+    this.scrollToBottom('auto');
   }
   
   componentDidUpdate() {
     this.scrollToBottom('smooth');
   }
 
-  shouldComponentUpdate(nextProps: MessagesProps, nextState: MessagesState) {
+  shouldComponentUpdate(nextProps: MessagesProps) {
     if (this.props.remoteUsername !== nextProps.remoteUsername) return true;
     if (this.props.messages.length !== nextProps.messages.length) return true;
     else return false;
@@ -62,7 +60,7 @@ class MessagesDisplay extends Component<MessagesProps, MessagesState> {
   };
 
   render() {
-    const { messages } = this.state;
+
     return (
       <>
       {this.props.messages.map((message: Message, index: number) => {
@@ -79,7 +77,7 @@ class MessagesDisplay extends Component<MessagesProps, MessagesState> {
                   <span className='messageDisplayTS'>{moment(message.timestamp).format('M/D/YY h:mm a')}</span>
                 </div>
                 <div className='messageDisplayMSG'>
-                  <div>{message.image ? <img width={'100%'} src={message.image}></img> : <></>}</div>
+                  <div>{message.image ? <img style={{margin: 'auto', display: 'block', width: '99%', maxWidth: '250px'}} src={message.image}></img> : <></>}</div>
                   <div>{typeof attachment === 'object' ? <div><a target='_blank' href={URL.createObjectURL(attachment)}>attachment</a> ({attachment.type}) ({attachment.size} bytes)</div> : <div></div>}</div>
                   <div>{message.text}</div>
                 </div>  
