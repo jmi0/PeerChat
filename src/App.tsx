@@ -5,10 +5,10 @@ import Peer, { DataConnection } from 'peerjs';
 import Dexie from 'dexie';
 
 
-import { User, Connections, SystemState, ChatStoreState, Messages, Message, UserProfiles, UserProfile } from './App.config';
+import { User, Connections, SystemState, ChatStoreState, Messages, Message, UserProfiles, UserProfile, UserSettings } from './App.config';
 import { exists, refreshFetch } from './App.fn';
 import reducer from './reducers';
-import { UpdateBulkUserProfiles, updateOnline, UpdateSystemUser, updateMessages, UpdateBulkConnections, UpdateConnections, UpdateUserProfiles, updateToken } from './actions';
+import { UpdateBulkUserProfiles, updateOnline, UpdateSystemUser, updateMessages, UpdateBulkConnections, UpdateConnections, UpdateUserProfiles, updateToken, UpdateUserSettings } from './actions';
 
 import LoginForm from './components/Login';
 import OnlineList from './components/Online';
@@ -38,7 +38,8 @@ type AppState = {
   online: Connections,
   connections: Connections,
   selectedUser: User|false,
-  userProfiles: UserProfiles
+  userProfiles: UserProfiles,
+  userSettings: UserSettings|false
 }
 
 
@@ -63,7 +64,8 @@ class App extends Component<any, AppState> {
       online: {},
       connections: {},
       selectedUser: false,
-      userProfiles: {}
+      userProfiles: {},
+      userSettings: false
     }
 
   }
@@ -100,8 +102,9 @@ class App extends Component<any, AppState> {
         messages: chat.messages,
         connections: chat.connections,
         online: chat.online,
-        userProfiles: chat.userProfiles
-      });      
+        userProfiles: chat.userProfiles,
+        userSettings: system.userSettings
+      });
 
     });
 
@@ -273,7 +276,23 @@ class App extends Component<any, AppState> {
           }
         }).catch((err) => { console.log(err); });
 
-
+        this.db.table('user_settings').where('username').equals(result.username)
+        .first((user_settings) => {
+          if (typeof user_settings !== 'undefined') this.store.dispatch(UpdateUserSettings(user_settings));
+          else {
+            this.db.table('user_settings').put({username: result.username})
+            .then((id) => { console.log(`Created user settings ${id} for ${result.username}`); })
+            .catch((err) => { console.log(err); })
+            .finally(() => {
+              this.store.dispatch(UpdateUserSettings({
+                username: result.username, 
+                allowOffline: false,
+                deleteMessagesOnLogout: false
+              }));
+            })
+          }
+        })
+        .catch((err) => { console.log(err);})
         
       }
     }, (error) => {
@@ -286,7 +305,7 @@ class App extends Component<any, AppState> {
   
   render() {
     
-    const { isLoading, isLoggedIn, user, peer, token, connections, online, selectedUser, messages, userProfiles } = this.state; 
+    const { isLoading, isLoggedIn, user, peer, token, connections, online, selectedUser, messages, userProfiles, userSettings } = this.state; 
     
     let selectedUserPeerID: string|false = false;
     if (selectedUser) selectedUserPeerID = (exists(online[selectedUser.username]) ? online[selectedUser.username].peerID : false);
@@ -306,7 +325,8 @@ class App extends Component<any, AppState> {
                 selectedUser={selectedUser} 
                 connections={connections} 
                 online={online} 
-                user={user} 
+                user={user}
+                userSettings={userSettings}
                 db={this.db} 
               />
             </Box>

@@ -6,7 +6,8 @@ import {
   UPDATE_OFFLINE_STATE, 
   UPDATE_SYSTEM_USER,
   UPDATE_SYSTEM_PEER,
-  USER_LOGOUT
+  USER_LOGOUT,
+  UPDATE_USER_SETTINGS
 } from '../App.config'
 
 
@@ -15,7 +16,8 @@ const initialState: SystemState = {
   user: false,
   isLoggedIn: false,
   token: false,
-  offline: false
+  offline: false,
+  userSettings: false
 }
 
 export function system (
@@ -36,6 +38,9 @@ export function system (
 
     case UPDATE_SYSTEM_USER:
       return {...state, user: action.user, isLoggedIn: action.isLoggedIn, offline: action.offline, token: action.token }
+    
+    case UPDATE_USER_SETTINGS:
+      return {...state, userSettings: action.user_settings }
     
     case USER_LOGOUT:
       return initialState;

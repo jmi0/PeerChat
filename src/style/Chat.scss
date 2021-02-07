@@ -104,7 +104,7 @@ html {
 }
 
 .chat-area {
-  //display: flex;
+  display: flex;
   flex-direction: column;
   overflow: auto;
   &-header {
@@ -141,8 +141,8 @@ html {
   }
 
   .chat-area-width {
-    max-width: 800px;
-    margin: auto;
+    //max-width: 800px;
+    //margin: auto;
   }
 }
 

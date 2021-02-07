@@ -25,6 +25,12 @@ export interface UserProfile {
     headline?: string
 }
 
+export interface UserSettings {
+    username: string,
+    allowOffline: boolean,
+    deleteMessagesOnLogout: boolean
+}
+
 export interface Message {
     sent: boolean,
     seen: boolean,
@@ -57,7 +63,8 @@ export interface SystemState {
     user: User|false,
     isLoggedIn: boolean,
     token: string|false
-    offline: boolean
+    offline: boolean,
+    userSettings: UserSettings|false
 }
   
 export interface ChatStoreState {
@@ -84,7 +91,7 @@ export const UPDATE_BULK_CONNECTIONS = 'UPDATE_BULK_CONNECTIONS'
 export const UPDATE_MESSAGE_SEEN = 'UPDATE_MESSAGE_SEEN'
 export const UPDATE_USER_PROFILES = 'UPDATE_USER_PROFILES'
 export const UPDATE_BULK_USER_PROFILES = 'UPDATE_BULK_USER_PROFILES'
-
+export const UPDATE_USER_SETTINGS = 'UPDATE_USER_SETTINGS'
 
 interface AddConnectionAction {
     type: typeof ADD_CONNECTION
@@ -174,6 +181,11 @@ interface UpdateBulkUserProfilesAction {
     user_profiles: UserProfiles
 }
 
+interface UpdateUserSettingsAction {
+    type: typeof UPDATE_USER_SETTINGS,
+    user_settings: UserSettings
+}
+
 
 
 export type ActionTypes = 
@@ -184,6 +196,6 @@ export type ActionTypes =
     UpdateSelectedUserAction | UpdateBulkMessagesAction |
     UserLogoutAction | UpdateConnectionsAction | 
     UpdateBulkConnectionsAction | UpdateMessageSeenAction | 
-    UpdateUserProfilesAction | UpdateBulkUserProfilesAction
+    UpdateUserProfilesAction | UpdateBulkUserProfilesAction | UpdateUserSettingsAction
 
 

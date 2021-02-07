@@ -16,7 +16,7 @@ import CloseIcon from '@material-ui/icons/Close';
 
 import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
 import Loader from 'react-loader-spinner'
-import { User, Connections, Messages, UserProfiles } from '../App.config'
+import { User, Connections, Messages, UserProfiles, UserSettings } from '../App.config'
 import { UserLogout } from '../actions';
 import Dexie from 'dexie'
 
@@ -45,6 +45,7 @@ type PeerBarProps = {
   token: string,
   peer: Peer,
   user: User,
+  userSettings: UserSettings|false,
   userProfiles: UserProfiles,
   selectedUser: User|false,
   connections: Connections,
@@ -174,7 +175,7 @@ const AppHeader: React.FC<PeerBarProps> = (props: PeerBarProps) => {
         <Drawer anchor={'right'} open={settingsDrawerOpen} onClose={closeDrawers}>
           <Box><IconButton className={classes.right} onClick={closeDrawers}><CloseIcon /></IconButton></Box>
           <Box className={`${classes.drawerBox} ${classes.drawerPadding}`}>
-            <SettingsForm />
+            <SettingsForm user={props.user} userSettings={props.userSettings} db={props.db} />
           </Box>
         </Drawer>
       </AppBar> 
