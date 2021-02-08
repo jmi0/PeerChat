@@ -123,6 +123,7 @@ html {
   }
   &-main {
     flex-grow: 1;
+    width: 100%;
   }
   .peer-title {
     margin: 0;
@@ -141,8 +142,8 @@ html {
   }
 
   .chat-area-width {
-    //max-width: 800px;
-    //margin: auto;
+    max-width: 800px;
+    margin: auto;
   }
 }
 
