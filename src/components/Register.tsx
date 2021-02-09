@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react'
-import { UpdateSystemUser } from '../actions';
+import React, { useState } from 'react'
 import { connect } from 'react-redux';
 import { Container, Box, TextField, Button } from '@material-ui/core';
 
@@ -54,6 +53,8 @@ const RegisterForm: React.FC = (props: any) => {
   
   return (
     <Container>
+      <h2>Register</h2>
+      <hr />
       <Box m={2}>
         <form onSubmit={submitLogin}>
           <Box pt={2} >
@@ -69,6 +70,7 @@ const RegisterForm: React.FC = (props: any) => {
             <Button type='submit' size="large" variant="contained" color="primary">Register</Button>
           </Box>
         </form>
+        <Box mt={2}><small>Click <a href='/login'>here</a> to login</small></Box>
       </Box>
     </Container>
   );

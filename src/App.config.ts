@@ -1,9 +1,12 @@
-import Peer, { DataConnection } from 'peerjs' // used for ChatState type
+import Peer from 'peerjs' // used for ChatState type
 
 
 const APP_CONFIG = {
+
     CLIENT_KEY: 'AfxKcLYZTn9SWcDZL',
+
 };
+
 export default APP_CONFIG;
 
 
@@ -54,11 +57,6 @@ export interface UserProfiles {
 
 
 
-
-
-/***********************************************************
- * Redux specific
- */
 export interface SystemState {
     user: User|false,
     isLoggedIn: boolean,
@@ -185,7 +183,6 @@ interface UpdateUserSettingsAction {
     type: typeof UPDATE_USER_SETTINGS,
     user_settings: UserSettings
 }
-
 
 
 export type ActionTypes = 

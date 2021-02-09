@@ -1,12 +1,15 @@
-import React, { useState, useEffect } from 'react'
-import { UpdateSystemUser, UpdateUserProfiles } from '../actions';
-import { User, UserProfile } from '../App.config'
+import React, { useState } from 'react'
+import Dexie from 'dexie'
 import { connect } from 'react-redux';
+
 import { exists } from '../App.fn'
-import { Avatar, Box, TextField, Button, Typography, IconButton, FormControlLabel, FormLabel, FormHelperText } from '@material-ui/core';
+import { UpdateUserProfiles } from '../actions';
+import { User, UserProfile } from '../App.config'
+
+import { Avatar, Box, TextField, Button, Typography, IconButton, FormControlLabel, FormHelperText } from '@material-ui/core';
 import Alert from '@material-ui/lab/Alert';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
-import Dexie from 'dexie'
+
 
 type ProfileFormProps = {
   user: User,

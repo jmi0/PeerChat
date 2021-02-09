@@ -19,10 +19,12 @@ const refreshFetch = (url: string, method: string, headers: Headers, body: strin
   });
 }
 
+
 const exists = (v: any) => {
   if (typeof v !== 'undefined') return true;
   else return false;
 }
+
 
 const dataURItoBlob = (dataURI: string) => {
   // convert base64/URLEncoded data component to raw binary data held in a string
@@ -42,6 +44,7 @@ const dataURItoBlob = (dataURI: string) => {
   }
   return new Blob([ia], {type:mimeString});
 };
+
 
 export {
   refreshFetch,

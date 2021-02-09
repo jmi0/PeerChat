@@ -5,11 +5,9 @@ import {
   UPDATE_LOGIN_STATE, 
   UPDATE_OFFLINE_STATE, 
   UPDATE_SYSTEM_USER,
-  UPDATE_SYSTEM_PEER,
   USER_LOGOUT,
   UPDATE_USER_SETTINGS
 } from '../App.config'
-
 
 
 const initialState: SystemState = {

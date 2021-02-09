@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react'
-import { UpdateSystemUser, UpdateUserSettings } from '../actions';
+import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import { Container, Box, TextField, Button, Typography, FormControl, FormLabel, FormGroup, FormControlLabel, Switch } from '@material-ui/core';
-import { makeStyles } from "@material-ui/core/styles";
-import { UserSettings, User } from '../App.config';
 import Dexie from 'dexie';
+
+import { UpdateUserSettings } from '../actions';
+import { UserSettings, User } from '../App.config';
+
+import { Box, Typography, FormControl, FormGroup, FormControlLabel, Switch } from '@material-ui/core';
+import { makeStyles } from "@material-ui/core/styles";
+
 
 const useStyles = makeStyles({
   switchLabel: {

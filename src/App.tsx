@@ -1,20 +1,14 @@
-import React, { useState, useEffect, Component } from 'react';
+import React, { Component } from 'react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
-import Peer, { DataConnection } from 'peerjs';
+import Peer from 'peerjs';
 import Dexie from 'dexie';
+import { BrowserRouter as Router, Switch, Route, Redirect } from "react-router-dom";
 
-import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Redirect
-} from "react-router-dom";
-
-import { User, Connections, SystemState, ChatStoreState, Messages, Message, UserProfiles, UserProfile, UserSettings } from './App.config';
+import { User, Connections, Messages, UserProfiles, UserProfile, UserSettings } from './App.config';
 import { exists, refreshFetch } from './App.fn';
 import reducer from './reducers';
-import { UpdateBulkUserProfiles, updateOnline, UpdateSystemUser, updateMessages, UpdateBulkConnections, UpdateConnections, UpdateUserProfiles, updateToken, UpdateUserSettings } from './actions';
+import { updateOnline, UpdateSystemUser, updateMessages, UpdateBulkConnections, UpdateConnections, UpdateUserProfiles, updateToken, UpdateUserSettings } from './actions';
 
 import LoginForm from './components/Login';
 import OnlineList from './components/Online';
@@ -28,11 +22,6 @@ import RegisterForm from './components/Register'
 import { Box } from '@material-ui/core';
 import "./style/App.scss";
 import './style/Chat.scss';
-
-import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
-import Loader from 'react-loader-spinner'
-import { profile } from 'console';
-
 
 
 type AppState = {
@@ -101,7 +90,7 @@ class App extends Component<any, AppState> {
         if (this.state.peer) this.state.peer?.destroy();
       }
       
-      this.setState({ 
+      this.setState({
         isLoggedIn: system.isLoggedIn, 
         user: system.user, 
         token: system.token,

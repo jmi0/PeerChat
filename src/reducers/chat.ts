@@ -1,6 +1,18 @@
-import { ActionEject } from 'material-ui/svg-icons'
-import { ChatStoreState, ActionTypes, ADD_CONNECTION, UPDATE_ONLINE, UPDATE_MESSAGES, UPDATE_SELECTED_USER, UPDATE_BULK_MESSAGES, USER_LOGOUT, UPDATE_CONNECTIONS, UPDATE_BULK_CONNECTIONS, UPDATE_MESSAGE_SEEN, UPDATE_USER_PROFILES, UPDATE_BULK_USER_PROFILES } from '../App.config'
-import Messages from '../components/Messages'
+import { 
+  ChatStoreState, 
+  ActionTypes, 
+  UPDATE_ONLINE, 
+  UPDATE_MESSAGES, 
+  UPDATE_SELECTED_USER, 
+  UPDATE_BULK_MESSAGES, 
+  USER_LOGOUT, 
+  UPDATE_CONNECTIONS, 
+  UPDATE_BULK_CONNECTIONS, 
+  UPDATE_MESSAGE_SEEN, 
+  UPDATE_USER_PROFILES, 
+  UPDATE_BULK_USER_PROFILES 
+} from '../App.config'
+
 
 
 const initialState: ChatStoreState = {

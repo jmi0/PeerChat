@@ -1,16 +1,16 @@
 import React, { Component } from 'react'
 import moment from 'moment'
+import Dexie from 'dexie';
+import { connect } from 'react-redux';
+
+import { Message } from '../App.config';
+import { dataURItoBlob } from '../App.fn'
+
 import { ListItem, Grid } from '@material-ui/core';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
-import { connect } from 'react-redux';
-import { Message } from '../App.config';
-import { exists } from '../App.fn'
-import { dataURItoBlob } from '../App.fn'
-import Dexie from 'dexie';
-import { UpdateBulkMessages } from '../actions';
 
 
-export type MessagesProps = {
+type MessagesProps = {
   messages: Message[],
   localUsername: string,
   remoteUsername: string,
@@ -18,24 +18,16 @@ export type MessagesProps = {
   dispatch: any
 }
 
-export type MessagesState = {
-  
-}
-
 /************************************************************************
  * 
  */
-class MessagesDisplay extends Component<MessagesProps, MessagesState> {
+class MessagesDisplay extends Component<MessagesProps> {
 
   private chatWindowRef : React.RefObject<HTMLDivElement>|null  = React.createRef();
 
   constructor(props: MessagesProps) {
 
     super(props);
-    
-    this.state = {
-      
-    }
   
   }
 

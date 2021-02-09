@@ -2,15 +2,10 @@ import React from 'react';
 import { connect } from 'react-redux';
 
 import { User, UserProfile } from '../App.config'
-import { exists } from '../App.fn';
+
 import { Avatar, Badge, Box, Typography } from '@material-ui/core';
 import { makeStyles } from "@material-ui/core/styles";
-import FiberManualRecordIcon from '@material-ui/icons/FiberManualRecord';
 
-import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
-import Loader from 'react-loader-spinner'
-import { start } from 'repl';
-import { profile } from 'console';
 
 const useStyles = makeStyles({
   onlineBadge: {

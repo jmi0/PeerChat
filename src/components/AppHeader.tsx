@@ -1,35 +1,30 @@
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import Peer, { DataConnection } from 'peerjs';
+import Peer from 'peerjs';
+import Dexie from 'dexie'
 
 import ConnectionsList from './Connections';
 import OnlineList from './Online';
 import ProfileForm from './ProfileForm'
 import SettingsForm from './SettingsForm'
+import { User, Connections, Messages, UserProfiles, UserSettings } from '../App.config'
+import { UserLogout } from '../actions';
 
-import { Button, AppBar, Toolbar, IconButton, Typography, MenuItem, Menu, Drawer, Box, TextField} from '@material-ui/core';
+import { Button, AppBar, Toolbar, IconButton, Typography, Drawer, Box } from '@material-ui/core';
+import { makeStyles } from '@material-ui/core/styles';
 import AccountCircle from '@material-ui/icons/AccountCircle';
 import SettingsIcon from '@material-ui/icons/Settings';
-import { makeStyles } from '@material-ui/core/styles';
 import MenuIcon from '@material-ui/icons/Menu';
 import CloseIcon from '@material-ui/icons/Close';
 
-import "react-loader-spinner/dist/loader/css/react-spinner-loader.css"
-import Loader from 'react-loader-spinner'
-import { User, Connections, Messages, UserProfiles, UserSettings } from '../App.config'
-import { UserLogout } from '../actions';
-import Dexie from 'dexie'
+
 
 const useStyles = makeStyles((theme) => ({
   grow: {
     flexGrow: 1,
   },
-  menuButton: {
-    
-  },
-  title: {
-    
-  },
+  menuButton: {},
+  title: {},
   drawerBox: {
     width: '340px'
   },

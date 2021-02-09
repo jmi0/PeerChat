@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react'
-import { UpdateSystemUser } from '../actions';
+import React, { useState } from 'react'
 import { connect } from 'react-redux';
 import { Container, Box, TextField, Button } from '@material-ui/core';
 
@@ -32,15 +31,7 @@ const LoginForm: React.FC = (props: any) => {
     .then(response => response.json())
     .then(result => {
       if (typeof result.success !== 'undefined') {
-        //props.dispatch(UpdateSystemUser(
-          //{username: result.username, peerID: ''}, 
-          //true, 
-          //false, 
-          //result.token
-        //));
         window.location.href = '/';
-        
-        
       } else {
         //TODO
         // form handling (bad login)
@@ -58,6 +49,8 @@ const LoginForm: React.FC = (props: any) => {
   
   return (
     <Container>
+      <h2>Login</h2>
+      <hr />
       <Box m={2}>
         <form onSubmit={submitLogin}>
           <Box pt={2} >
@@ -70,7 +63,8 @@ const LoginForm: React.FC = (props: any) => {
             <Button type='submit' size="large" variant="contained" color="primary">Login</Button>
           </Box>
         </form>
-      </Box>
+        <Box mt={2}><small>Click <a href='/signup'>here</a> to register</small></Box>
+      </Box>  
     </Container>
   );
 

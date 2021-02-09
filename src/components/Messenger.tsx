@@ -1,9 +1,14 @@
-import React, { useEffect, useState, useRef, Component } from 'react'
-import { updateMessages } from '../actions';
+import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import { Message, User, UserProfile } from '../App.config';
-import { exists, dataURItoBlob } from '../App.fn'
 import Peer, { DataConnection } from 'peerjs';
+import { Picker } from 'emoji-mart'
+import moment from 'moment';
+import Dexie from 'dexie'
+
+import { updateMessages } from '../actions';
+import { Message, User, UserProfile } from '../App.config';
+import { exists } from '../App.fn'
+
 import SendSharpIcon from '@material-ui/icons/SendSharp';
 import ImageOutlinedIcon from '@material-ui/icons/ImageOutlined';
 import AttachFileOutlinedIcon from '@material-ui/icons/AttachFileOutlined';
@@ -11,9 +16,6 @@ import EmojiEmotionsOutlinedIcon from '@material-ui/icons/EmojiEmotionsOutlined'
 import ThumbUpAltOutlinedIcon from '@material-ui/icons/ThumbUpAltOutlined';
 import { Box, IconButton } from '@material-ui/core';
 import 'emoji-mart/css/emoji-mart.css'
-import { Picker } from 'emoji-mart'
-import moment from 'moment';
-import Dexie from 'dexie'
 
 
 type MessengerProps = {

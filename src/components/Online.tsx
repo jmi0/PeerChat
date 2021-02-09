@@ -1,10 +1,12 @@
-import React, { useEffect, useState } from 'react'
-import { UpdateBulkMessages, UpdateConnections, updateOnline, UpdateSelectedUser } from '../actions';
+import React from 'react'
 import { connect } from 'react-redux';
-import { List, ListItem, ListItemText } from '@material-ui/core';
+import Dexie from 'dexie';
+
 import { Connections, User } from '../App.config';
-import { refreshFetch, exists } from '../App.fn';
-import Dexie from 'dexie'
+import { UpdateBulkMessages, UpdateConnections, UpdateSelectedUser } from '../actions';
+
+import { List, ListItem, ListItemText } from '@material-ui/core';
+
 
 type OnlineListProps = {
   user: User,

@@ -1,13 +1,15 @@
-import React, { useEffect, useState } from 'react'
-import { UpdateBulkMessages, UpdateMessageSeen, UpdateSelectedUser } from '../actions';
+import React, { useEffect } from 'react'
 import { connect } from 'react-redux';
+import Dexie from 'dexie'
+
+import { Connections, User, Messages, Message, UserProfiles } from '../App.config';
+import { exists } from '../App.fn';
+import { UpdateBulkMessages, UpdateSelectedUser } from '../actions';
+
 import { Box, List, ListItem, ListItemText, ListItemIcon, ListItemAvatar, Avatar, Badge } from '@material-ui/core';
 import CommentIcon from '@material-ui/icons/Comment';
 import { makeStyles } from "@material-ui/core/styles";
-import { Connections, User, Messages, Message, UserProfiles } from '../App.config';
-import { refreshFetch, exists } from '../App.fn';
-import Dexie from 'dexie'
-import moment from 'moment'
+
 
 const useStyles = makeStyles({
   onlineBadge: {
@@ -108,7 +110,7 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
         if (exists(props.messages[username] && props.messages[username].length)) {
           let lastMessage = props.messages[username]
         }
-            
+        
         return (
           <ListItem key={`${JSON.stringify(props.connections[username])}-connection-${index}`} button selected={(props.selectedUser ? props.selectedUser.username : '') === props.connections[username].username} onClick={(event) => handleSelectedPeerChange(event, props.connections[username])}>
             {(exists(props.connections[username])) ? 
