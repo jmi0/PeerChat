@@ -4,6 +4,12 @@ import { configureStore } from '@reduxjs/toolkit';
 import Peer, { DataConnection } from 'peerjs';
 import Dexie from 'dexie';
 
+import {
+  BrowserRouter as Router,
+  Switch,
+  Route,
+  Redirect
+} from "react-router-dom";
 
 import { User, Connections, SystemState, ChatStoreState, Messages, Message, UserProfiles, UserProfile, UserSettings } from './App.config';
 import { exists, refreshFetch } from './App.fn';
@@ -17,6 +23,7 @@ import Messenger from './components/Messenger';
 import AppHeader from './components/AppHeader';
 import MessagesDisplay from './components/Messages';
 import ChatHeader from './components/ChatHeader'
+import RegisterForm from './components/Register'
 
 import { Box } from '@material-ui/core';
 import "./style/App.scss";
@@ -259,7 +266,7 @@ class App extends Component<any, AppState> {
           if (typeof user_connections !== 'undefined') 
             this.store.dispatch(UpdateBulkConnections(JSON.parse(user_connections.connections)));
         }).catch((err) => { console.log(err); });
-        
+
         this.db.table('user_profiles').toArray()
         .then((user_profiles: Array<UserProfile>) => {
           if (user_profiles.length) 
@@ -275,6 +282,18 @@ class App extends Component<any, AppState> {
             .catch((err) => { console.log(`Could create empty profile: ${err}`); });
           }
         }).catch((err) => { console.log(err); });
+
+        this.db.table('user_profiles').where('username').equals(result.username)
+        .first((user_profile) => {
+          if (typeof user_profile !== 'undefined') this.store.dispatch(UpdateUserProfiles(user_profile));
+          else this.db.table('user_profiles').put({username: result.username})
+            .then((id) => {
+              console.log(`Created user profile for ${result.username}`);
+              this.store.dispatch(UpdateUserProfiles({username: result.username}));
+            })
+            .catch((err) => { console.log(err) });
+        })
+        .catch((err) => { console.log(err); })
 
         this.db.table('user_settings').where('username').equals(result.username)
         .first((user_settings) => {
@@ -314,76 +333,89 @@ class App extends Component<any, AppState> {
     else return (
       <Box className="App">
         <Provider store={this.store} >
-          {!isLoggedIn || !token || !user || !peer ? <LoginForm /> : 
-          <>
-            <Box className='header'>
-              <AppHeader
-                userProfiles={userProfiles}
-                token={token} 
-                peer={peer} 
-                messages={messages} 
-                selectedUser={selectedUser} 
-                connections={connections} 
-                online={online} 
-                user={user}
-                userSettings={userSettings}
-                db={this.db} 
-              />
-            </Box>
-            <Box className='wrapper'>
-              <Box className={'conversation-area'}>
-                <ConnectionsList 
-                  key={`${JSON.stringify(messages)}`} 
-                  userProfiles={userProfiles}
-                  messages={messages} 
-                  selectedUser={selectedUser} 
-                  connections={connections} 
-                  online={online} 
-                  token={token} 
-                  user={user} 
-                  db={this.db} 
-                />
-                <OnlineList 
-                  online={online} 
-                  user={user} 
-                  db={this.db} 
-                />
-              </Box>
-              <Box className='chat-area'>
-              { selectedUser ? 
+          <Router>
+            <Switch>
+              <Route path="/login">
+                {isLoggedIn ? <Redirect to="/" /> : <LoginForm />}
+              </Route>
+              <Route path="/signup">
+                {isLoggedIn ? <Redirect to="/" /> : <RegisterForm />}
+              </Route>
+              <Route exact path="/">
+                {!isLoggedIn || !token || !user || !peer ? <Redirect to="/login" /> : 
                 <>
-                <Box className='chat-area-header'>
-                  <ChatHeader 
-                    isOnline={exists(online[selectedUser.username])} 
-                    selectedUser={selectedUser} 
-                    selectedUserProfile={exists(userProfiles[selectedUser.username]) ? userProfiles[selectedUser.username]: false}
-                  />
-                </Box>
-                <Box className='chat-area-main chat-area-width'>
-                  <MessagesDisplay 
-                    db={this.db}
-                    messages={exists(messages[selectedUser.username]) ? messages[selectedUser.username] : []}
-                    localUsername={user.username}
-                    remoteUsername={selectedUser.username}
-                  />
-                </Box>
-                <Box className='chat-area-footer chat-area-width'>
-                  <Messenger
-                    key={`connectto${selectedUser.username}${selectedUserPeerID}`}
-                    remotePeerID={selectedUserPeerID}
-                    peer={peer}
-                    systemUser={user} 
-                    selectedUser={selectedUser}
-                    userProfile={(exists(userProfiles[user.username]) ? userProfiles[user.username] : false)}
-                    db={this.db}
-                  />
-                </Box> 
+                  <Box className='header'>
+                    <AppHeader
+                      userProfiles={userProfiles}
+                      token={token} 
+                      peer={peer} 
+                      messages={messages} 
+                      selectedUser={selectedUser} 
+                      connections={connections} 
+                      online={online} 
+                      user={user}
+                      userSettings={userSettings}
+                      db={this.db} 
+                    />
+                  </Box>
+                  <Box className='wrapper'>
+                    <Box className={'conversation-area'}>
+                      <ConnectionsList 
+                        key={`${JSON.stringify(messages)}`} 
+                        userProfiles={userProfiles}
+                        messages={messages} 
+                        selectedUser={selectedUser} 
+                        connections={connections} 
+                        online={online} 
+                        token={token} 
+                        user={user} 
+                        db={this.db} 
+                      />
+                      <OnlineList 
+                        online={online} 
+                        user={user} 
+                        db={this.db} 
+                      />
+                    </Box>
+                    <Box className='chat-area'>
+                    { selectedUser ? 
+                      <>
+                      <Box className='chat-area-header'>
+                        <ChatHeader 
+                          isOnline={exists(online[selectedUser.username])} 
+                          selectedUser={selectedUser} 
+                          selectedUserProfile={exists(userProfiles[selectedUser.username]) ? userProfiles[selectedUser.username]: false}
+                        />
+                      </Box>
+                      <Box className='chat-area-main chat-area-width'>
+                        <MessagesDisplay 
+                          db={this.db}
+                          messages={exists(messages[selectedUser.username]) ? messages[selectedUser.username] : []}
+                          localUsername={user.username}
+                          remoteUsername={selectedUser.username}
+                        />
+                      </Box>
+                      <Box className='chat-area-footer chat-area-width'>
+                        <Messenger
+                          key={`connectto${selectedUser.username}${selectedUserPeerID}`}
+                          remotePeerID={selectedUserPeerID}
+                          peer={peer}
+                          systemUser={user} 
+                          selectedUser={selectedUser}
+                          userProfile={(exists(userProfiles[user.username]) ? userProfiles[user.username] : false)}
+                          db={this.db}
+                        />
+                      </Box> 
+                      </>
+                    : <></>}
+                    </Box>
+                  </Box>
                 </>
-              : <></>}
-              </Box>
-            </Box>
-          </>
-          }
+                }
+              </Route>          
+              <Route path="*"><Redirect to="/" /></Route> 
+            </Switch>
+          </Router>
         </Provider>
       </Box>
     );

@@ -16,7 +16,6 @@ type ProfileFormProps = {
 }
 
 const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
-  
   const [ firstname, setFirstName ] = useState<string>(typeof props.profile.firstname === 'string' ? props.profile.firstname : '');
   const [ lastname, setLastName ] = useState<string>(typeof props.profile.lastname === 'string' ? props.profile.lastname : '');
   const [ headline, setHeadline ] = useState<string>(typeof props.profile.headline === 'string' ? props.profile.headline : '');

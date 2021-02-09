@@ -8,18 +8,21 @@ const RegisterForm: React.FC = (props: any) => {
   
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [repeatPassword, setRepeatPassword] = useState<string>('');
 
   const handleFormFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.name === 'username') setUsername(event.target.value);
     else if (event.target.name === 'password') setPassword(event.target.value);
+    else if (event.target.name === 'repeatpassword') setRepeatPassword(event.target.value);
   }
   
   const submitLogin = (e: React.SyntheticEvent) => {
-    login(username, password);
+    if (password !== repeatPassword) console.log('dont submit');
+    signup(username, password);
     e.preventDefault();
   };
 
-  const login = (username: string, password: string) => {
+  const signup = (username: string, password: string) => {
     
     fetch('/signup', { 
       method: 'POST', 
@@ -32,12 +35,7 @@ const RegisterForm: React.FC = (props: any) => {
     .then(response => response.json())
     .then(result => {
       if (typeof result.success !== 'undefined') {
-        props.dispatch(UpdateSystemUser(
-          {username: result.username, peerID: ''}, 
-          true, 
-          false, 
-          result.token
-        ));
+        window.location.href = '/';
         
       } else {
         //TODO
@@ -65,7 +63,10 @@ const RegisterForm: React.FC = (props: any) => {
             <TextField required value={password} name="password" onChange={handleFormFieldChange} variant="outlined" label="password" type="password" />
           </Box>
           <Box pt={2}>
-            <Button type='submit' size="large" variant="contained" color="primary">Login</Button>
+            <TextField required value={repeatPassword} name="repeatpassword" onChange={handleFormFieldChange} variant="outlined" label="retype password" type="password" />
+          </Box>
+          <Box pt={2}>
+            <Button type='submit' size="large" variant="contained" color="primary">Register</Button>
           </Box>
         </form>
       </Box>

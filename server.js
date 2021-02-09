@@ -107,9 +107,27 @@ app.post('/login', (req, res) => {
   });
 });
 
+
 app.post('/logout', (req, res) => {
   res.clearCookie('refresh_token');
   res.json({success:1});
+});
+
+
+app.post('/signup', (req, res) => {
+  const { username, password } = req.body;
+  users.insert({username: username, passwordHash: crypto.SHA256(password).toString(crypto.enc.Base64), peerID: '', refreshToken: crypto.SHA256(`${username}${password}${JWT_SECRET}${moment().format('YYYY-MM-DD HH:mm:ss')}`).toString(crypto.enc.Base64), lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
+    if (err) res.json({error: err});
+    else {
+      jwt.sign({ username: username }, JWT_SECRET, { expiresIn: 30 }, function(err, token) {
+        if (err) res.json({error: err});
+        else {
+          res.cookie('refresh_token', crypto.SHA256(`${username}${password}${JWT_SECRET}${moment().format('YYYY-MM-DD HH:mm:ss')}`).toString(crypto.enc.Base64));
+          res.json({success: 1, username: username, token: token });
+        }
+      });
+    }
+  });
 });
 
 
@@ -162,11 +180,6 @@ app.post('/refreshtoken', (req, res) => {
 
 
 
-
-
-app.post('/register', (req, res) => {
-
-});
 
 
 // listen on PORT

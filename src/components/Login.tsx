@@ -32,12 +32,14 @@ const LoginForm: React.FC = (props: any) => {
     .then(response => response.json())
     .then(result => {
       if (typeof result.success !== 'undefined') {
-        props.dispatch(UpdateSystemUser(
-          {username: result.username, peerID: ''}, 
-          true, 
-          false, 
-          result.token
-        ));
+        //props.dispatch(UpdateSystemUser(
+          //{username: result.username, peerID: ''}, 
+          //true, 
+          //false, 
+          //result.token
+        //));
+        window.location.href = '/';
+        
         
       } else {
         //TODO
