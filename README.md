@@ -2,8 +2,6 @@
 
 ## P2P chat PWA with client side data persistence.
 
----
-
 ### Features:
 - Persistent conversations and connections (client side) 
 - Multimedia messaging: images, attachments, emojis
