@@ -1,6 +1,18 @@
-# p2p-chat
+# PeerChat
 
-### A highly portable peer to peer chat application with end to end encryption relying on client side persistence.
+## P2P chat PWA with client side data persistence.
+
+---
+
+### Features:
+- Persistent conversations and connections (client side) 
+- Multimedia messaging: images, attachments, emojis
+- Offline messaging (messages are transmitted as soon as recipient peer is back online)
+- End to end encryption of messages
+- User profiles
+- Microsoft Teams-like UI
+- Mobile and offline first design
+- JWT authentication
 
 ---
 
