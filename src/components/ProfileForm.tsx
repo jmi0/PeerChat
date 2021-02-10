@@ -55,7 +55,6 @@ const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
   const handleProfilePic = (event: any) => {
     
     const reader = new FileReader();
-    const name = event.target.name;
     const file = event.target.files[0];
 
     if (exists(file.size) && file.size > 400000) return;
@@ -107,8 +106,8 @@ const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
             label='Profile Pic'
             control={<IconButton onClick={() => {imageInputRef.current?.click();}}><AccountCircleIcon /><input name='image' ref={imageInputRef} style={{display:'none'}} type={"file"} accept={'.jpg,.jpeg,.png,.gif'} onChange={handleProfilePic} /></IconButton>}
           />
-          <FormHelperText>Click Account Circle icon to select an image</FormHelperText>
-          {image.length ? <Avatar><img src={image} style={{width: '100%'}}></img></Avatar> : <></>}
+          <FormHelperText>Click icon above to update avatar image</FormHelperText>
+          {image.length ? <Avatar><img alt={`avatar`} src={image} style={{width: '100%'}}></img></Avatar> : <></>}
         </Box>
         <Box pt={2} pb={2}>
           <Button type='submit' size="small" variant="contained" color="primary">Save</Button>

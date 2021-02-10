@@ -199,7 +199,7 @@ class Messenger extends Component<MessengerProps, MessengerState> {
     const { image, text, emojiPickerOpen } = this.state;
     return (
       <Box id='text-send-container'>
-        {image ? <div><img width={'60px'} src={image}></img></div> : <></>}
+        {image ? <div><img alt={`preview`} width={'60px'} src={image}></img></div> : <></>}
         <div id='message-textarea-container'><textarea placeholder='Type message here...' value={text} onChange={this.handleMessageChange} onKeyDown={this.handleKeyDown} rows={2}></textarea></div>
         <div id='message-btn-container'>
           <IconButton onClick={() => {this.imageInputRef.current?.click();}}><ImageOutlinedIcon /><input name='image' ref={this.imageInputRef} style={{display:'none'}} type={"file"} accept={'.jpg,.jpeg,.png,.gif'} onChange={this.handleFile} /></IconButton> 

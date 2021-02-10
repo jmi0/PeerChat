@@ -8,6 +8,7 @@ import OnlineList from './Online';
 import ProfileForm from './ProfileForm'
 import SettingsForm from './SettingsForm'
 import { User, Connections, Messages, UserProfiles, UserSettings } from '../App.config'
+import { exists } from '../App.fn'
 import { UserLogout } from '../actions';
 
 import { Button, AppBar, Toolbar, IconButton, Typography, Drawer, Box } from '@material-ui/core';
@@ -72,6 +73,9 @@ const AppHeader: React.FC<PeerBarProps> = (props: PeerBarProps) => {
       console.error(err);
     }).finally(() => {
       props.dispatch(UserLogout());
+      if (props.userSettings && exists(props.userSettings.deleteMessagesOnLogout) && props.userSettings.deleteMessagesOnLogout) {
+        props.db.table('messages').clear();
+      }
     });
   }
 

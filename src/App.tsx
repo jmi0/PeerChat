@@ -1,3 +1,10 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-09 23:10:24 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-09 23:10:56
+ */
+
 import React, { Component } from 'react';
 import { Provider } from 'react-redux';
 import { configureStore } from '@reduxjs/toolkit';
@@ -41,9 +48,13 @@ type AppState = {
 
 class App extends Component<any, AppState> {
 
+  // interval class var to handle peer discovery 
   discoveryInterval: number = 0;
+  // setup redux store
   store = configureStore({reducer: reducer});
+  // set up dexie
   db: Dexie = new Dexie('p2pchat');
+  // class var to assign redux subscribe
   unsubscribe: any;
 
   constructor(props: any) {
@@ -66,8 +77,10 @@ class App extends Component<any, AppState> {
 
   }
   
+
   componentDidMount() {
     
+    // dexies indexes
     this.db.version(1).stores({
       messages: '++id, seen, timestamp, from, to, sent, text, groupkey',
       user_profiles: '&username, firstname, lastname, bio, headline',
@@ -75,8 +88,12 @@ class App extends Component<any, AppState> {
       user_settings: '&username'
     });
 
+    
+    // Attempts JWT token refresh and initializes session with user data from indexedDB
     this.init();
 
+
+    // subscribe to redux changes and update App state
     this.unsubscribe = this.store.subscribe(() => {
       
       const { system, chat } = this.store.getState();
@@ -90,6 +107,7 @@ class App extends Component<any, AppState> {
         if (this.state.peer) this.state.peer?.destroy();
       }
       
+      // update app state on each redux store dispatch
       this.setState({
         isLoggedIn: system.isLoggedIn, 
         user: system.user, 
@@ -104,37 +122,53 @@ class App extends Component<any, AppState> {
 
     });
 
+    // get available peers from server
     this.getRemotePeers();
+
     this.discoveryInterval = window.setInterval(() => {
+      // update available/online peers every second
       this.getRemotePeers();
     }, 1000);
 
   }
   
+
   componentWillUnmount() {
+    // destroy peer if exists - this will let peer server know you are offline
     if (this.state.peer) this.state.peer.destroy();
+    // clear discovery interval on unmount to avoid memory leak
     clearInterval(this.discoveryInterval);
+    // unsubscribe from redux store changes
     this.unsubscribe();
+    // close dexie
     this.db.close();
   }
 
+
+  /**
+   * Retrieve available peers from peer server
+   */
   getRemotePeers() {
-    
     let headers = new Headers();
     headers.append('Content-Type', 'application/json');
     headers.append('Authorization', `Bearer ${this.state.token}`);
     refreshFetch('/peers', 'GET', headers, null)
     .then((result: any) => {
-      // if token set then just update token
+      // if token set then just update token, otherwise dispatch available peers
       if (exists(result.token)) this.store.dispatch(updateToken(result.token));
       else this.store.dispatch(updateOnline(result));
     })
     .catch((err) => {
       console.log(err);
     })
-
   }
 
+
+  /**
+   * Initialize peerjs peer and setup event listeners
+   * @param token 
+   * @returns peer: Peer
+   */
   setUpPeer(token: string) : Peer {
 
     let peer = new Peer({
@@ -157,18 +191,23 @@ class App extends Component<any, AppState> {
       conn.on('data', (data) => {
         if (exists(data.message)) {
           // handle message
+          // update message and add to indexedDB
           data.message.groupkey = `${data.message.to}-${data.message.from}`;
+          // if sender is selected then update seen state here before saving
           if (this.state.selectedUser && this.state.selectedUser.username === data.message.from) data.message.seen = true;
           this.db.table('messages').add(data.message)
           .then((id) => { console.log(`Message added to IndexedDB`); })
           .catch((err) => { console.error(`Could not add message to IndexedDB: ${err}`); })
           .finally(() => {
+            // dispatch message to redux store
             this.store.dispatch(updateMessages(data.message.from, data.message));
+            // if connection not available from memory dispatch to redux store
             if (!exists(this.state.connections[data.message.from])) this.store.dispatch(UpdateConnections({username: data.message.from, peerID: conn.peer}));
           });
         }
         else if (exists(data.user_profile)) {
           // handle user profile
+          // add user profile data to indexedDB
           this.db.table('user_profiles').put(data.user_profile)
           .then((id) => { console.log(`Updated user profile for ${data.user_profile.username} in IndexedDB`) })
           .catch((err) => { console.log(`Could not store user profile ${err}`); })
@@ -176,24 +215,23 @@ class App extends Component<any, AppState> {
 
           // send any unsent messages back to this user
           if (this.state.user) {
-            
+            // retrieve messages that are 'unsent' to this user
             this.db.table('messages').where('from').equals(`${this.state.user.username}`).sortBy('timestamp')
             .then(messages => {
               messages.forEach((message) => {
                 if (message.sent) return;
                 if (message.to !== data.user_profile.username) return;
+                // send on this connection
                 conn.send({message: message});
                 this.db.table('messages').update(message.id, {sent: true}).then((updated) => {
                   if (!updated) console.log(`Could not update sent state of ${message.id}`);
                 })
               });
             })
-            .catch((err) => { console.error(err); });
-            
+            .catch((err) => { console.error(err); });   
           }
-          
+
         }
-       
       })
 
       // connection receiver
@@ -211,19 +249,26 @@ class App extends Component<any, AppState> {
 
 
     peer.on('error', (err) => {
-      console.log(err);
       console.log(`ERROR: ${err.message}`);
     });
 
     return peer;
   }
 
+
+  /**
+   * Update this users peerid on server
+   * This is used to associate the variable peerid with the static username
+   * @param peerid 
+   * @param token 
+   */
   updateUserPeerID(peerid: string, token: string) {
     let headers = new Headers();
     headers.append('Content-Type', 'application/json');
     headers.append('Authorization', `Bearer ${token}`);
     refreshFetch('/updatepeerid', 'POST', headers, JSON.stringify({peerid:peerid}))
     .then((result: any) => {
+      //update token if necessary
       if (exists(result.token)) this.setState({token:result.token});
     })
     .catch((err) => {
@@ -231,6 +276,10 @@ class App extends Component<any, AppState> {
     });
   }
 
+
+  /**
+   * try to refresh token to ensure user is logged in and retrieve various user data from indexedDB
+   */
   init() {
     // try to refresh token
     fetch('/refreshtoken', {
@@ -241,6 +290,7 @@ class App extends Component<any, AppState> {
     .then((result) => {
       if (exists(result.username)) {
 
+        // initialize peer and dispatch user data to redux store
         this.setState({ peer: this.setUpPeer(result.token)}, () => {
           this.store.dispatch(UpdateSystemUser(
             {username: result.username, peerID: ''}, 
@@ -250,30 +300,37 @@ class App extends Component<any, AppState> {
           ));
         });
 
+        // retrieve past connections from indexedDB
         this.db.table('user_connections').where('username').equals(result.username)
         .first((user_connections) => {
+          // dispatch connections to redux store
           if (typeof user_connections !== 'undefined') 
             this.store.dispatch(UpdateBulkConnections(JSON.parse(user_connections.connections)));
         }).catch((err) => { console.log(err); });
 
+        // retrieve all user profiles from indexedDB
         this.db.table('user_profiles').toArray()
         .then((user_profiles: Array<UserProfile>) => {
+          // dispatch user profiles to redux store
           if (user_profiles.length) 
             user_profiles.forEach((user_profile: UserProfile) => {
               this.store.dispatch(UpdateUserProfiles(user_profile));
             });
           else {
-            // create empty profile
+            // create empty profile for this user if none exist
             this.db.table('user_profiles').put({username: result.username})
             .then((id) => {
+              // dispatch new profile to redux
               this.store.dispatch(UpdateUserProfiles({username: result.username}));
             })
             .catch((err) => { console.log(`Could create empty profile: ${err}`); });
           }
         }).catch((err) => { console.log(err); });
 
+        // fail safe ensure this user has a profile more explicitly
         this.db.table('user_profiles').where('username').equals(result.username)
         .first((user_profile) => {
+          // dispatch profile to redux or create new one and dispatch if it doesn't exist
           if (typeof user_profile !== 'undefined') this.store.dispatch(UpdateUserProfiles(user_profile));
           else this.db.table('user_profiles').put({username: result.username})
             .then((id) => {
@@ -284,8 +341,10 @@ class App extends Component<any, AppState> {
         })
         .catch((err) => { console.log(err); })
 
+        // retrieve user settings from indexedDB
         this.db.table('user_settings').where('username').equals(result.username)
         .first((user_settings) => {
+          // dispatch user settings or initialize and dispatch
           if (typeof user_settings !== 'undefined') this.store.dispatch(UpdateUserSettings(user_settings));
           else {
             this.db.table('user_settings').put({username: result.username})
@@ -382,6 +441,8 @@ class App extends Component<any, AppState> {
                           messages={exists(messages[selectedUser.username]) ? messages[selectedUser.username] : []}
                           localUsername={user.username}
                           remoteUsername={selectedUser.username}
+                          localProfile={(exists(userProfiles[user.username]) ? userProfiles[user.username] : false)}
+                          remoteProfile={(exists(userProfiles[selectedUser.username]) ? userProfiles[selectedUser.username] : false)}
                         />
                       </Box>
                       <Box className='chat-area-footer chat-area-width'>

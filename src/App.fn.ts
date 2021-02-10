@@ -1,3 +1,18 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-09 23:11:03 
+ * @Last Modified by:   joe.iannone 
+ * @Last Modified time: 2021-02-09 23:11:03 
+ */
+
+
+/**
+ * A wrapper around fetch that automatically refreshes token and refetches request
+ * @param url 
+ * @param method 
+ * @param headers 
+ * @param body 
+ */
 const refreshFetch = (url: string, method: string, headers: Headers, body: string|Blob|ArrayBufferView|ArrayBuffer|FormData|URLSearchParams|null|undefined) => {
   return new Promise((resolve, reject) => {
     // attempt to make request
@@ -20,12 +35,20 @@ const refreshFetch = (url: string, method: string, headers: Headers, body: strin
 }
 
 
+/**
+ * A more convenient way to check for undefined
+ * @param v 
+ */
 const exists = (v: any) => {
   if (typeof v !== 'undefined') return true;
   else return false;
 }
 
 
+/**
+ * 
+ * @param dataURI 
+ */
 const dataURItoBlob = (dataURI: string) => {
   // convert base64/URLEncoded data component to raw binary data held in a string
   var byteString;

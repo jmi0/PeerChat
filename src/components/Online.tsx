@@ -36,7 +36,7 @@ const OnlineList: React.FC<OnlineListProps> = (props: OnlineListProps) => {
         }
       </ListItem>
       {Object.keys(props.online).map((username: string) => {
-        if (props.online[username].username === props.user.username) return;
+        if (props.online[username].username === props.user.username) return <></>;
         return (
           <ListItem key={JSON.stringify(props.online[username])} button selected={'' === props.online[username].username} onClick={(event) => handleSelectedPeerChange(event, props.online[username])}>
             <ListItemText primary={props.online[username].username} />

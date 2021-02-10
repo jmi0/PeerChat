@@ -44,20 +44,15 @@ html {
   overflow: hidden;
 }
 
-.conversation-area {
-  width: 340px;
-  flex-shrink: 0;
-
-  .lastMessagePreview {
-    font-size: .9em;
-    overflow: hidden;
-    white-space: nowrap;
-    padding-left: 15px;
-    padding-right: 15px;
-    max-width: 50%;
-    opacity: .4;
-    font-style: italic;
-  }
+.lastMessagePreview {
+  font-size: .9em;
+  overflow: hidden;
+  white-space: nowrap;
+  padding-left: 15px;
+  padding-right: 15px;
+  max-width: 50%;
+  opacity: .4;
+  font-style: italic;
 }
 
 .chat-area {
@@ -66,6 +61,8 @@ html {
 
 
 .conversation-area {
+  width: 340px;
+  flex-shrink: 0;
   border-right: 1px solid var(--border-color);
   overflow-y: auto;
   overflow-x: hidden;

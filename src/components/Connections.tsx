@@ -83,7 +83,7 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
     if (!exists(props.userProfiles[username])) return avatar;
     if (typeof props.userProfiles[username].profilepic !== 'string') return avatar;
     if (props.userProfiles[username].profilepic === '') return avatar;
-    return (<Avatar><img width={'100%'} src={props.userProfiles[username].profilepic}></img></Avatar>);
+    return (<Avatar><img alt={`${username}-avatar`} width={'100%'} src={props.userProfiles[username].profilepic}></img></Avatar>);
   }
   
   
@@ -92,7 +92,7 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
       
       {Object.keys(props.connections).map((username: string, index: number) => {
 
-        if (props.connections[username].username === props.user.username) return;
+        if (props.connections[username].username === props.user.username) return <></>;
         
         var unreadCount: number = 0;
         var lastMessageDisplay: string = '';
@@ -105,10 +105,6 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
             else if (lastMessage.attachment) lastMessageDisplay = 'attachment';
             if (lastMessageDisplay.length === 15) lastMessageDisplay += ' ...';
           }
-        }
-        
-        if (exists(props.messages[username] && props.messages[username].length)) {
-          let lastMessage = props.messages[username]
         }
         
         return (

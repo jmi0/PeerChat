@@ -1,3 +1,12 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-09 23:11:25 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-09 23:13:19
+ */
+
+
+
 import Peer from 'peerjs' // used for ChatState type
 
 
@@ -7,9 +16,13 @@ const APP_CONFIG = {
 
 };
 
+
 export default APP_CONFIG;
 
 
+/**
+ * General interfaces
+ */
 export interface Connections {
     [key: string]: User
 }
@@ -56,7 +69,9 @@ export interface UserProfiles {
 }
 
 
-
+/**
+ * interfaces for redux store
+ */
 export interface SystemState {
     user: User|false,
     isLoggedIn: boolean,
@@ -73,6 +88,9 @@ export interface ChatStoreState {
     userProfiles: UserProfiles
 }
   
+/**
+ * redux action types
+ */
 export const ADD_CONNECTION = 'UPDATE_CONNECTIONS'
 export const UPDATE_CONNECTIONS = 'UPDATE_CONNECTIONS'
 export const UPDATE_ONLINE = 'UPDATE_ONLINE'

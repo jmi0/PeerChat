@@ -29,7 +29,7 @@ const ChatHeader: React.FC<ChatHeaderProps> = (props: ChatHeaderProps) => {
   const getAvatar = () => {
     let profilepic : string = '';
     if (props.selectedUserProfile && typeof props.selectedUserProfile.profilepic === 'string') profilepic = props.selectedUserProfile.profilepic;
-    if (profilepic.length) return (<Avatar><img width={'100%'} src={profilepic}></img></Avatar>);
+    if (profilepic.length) return (<Avatar><img alt={`avatar`} width={'100%'} src={profilepic}></img></Avatar>);
     else return (<Avatar>{props.selectedUser.username.charAt(0)}</Avatar>);
   }
 

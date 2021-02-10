@@ -2,7 +2,7 @@
  * @Author: joe.iannone 
  * @Date: 2021-01-06 13:04:28 
  * @Last Modified by: joe.iannone
- * @Last Modified time: 2021-01-18 13:31:21
+ * @Last Modified time: 2021-02-09 23:25:07
  */
 
 
@@ -31,23 +31,6 @@ const JWT_SECRET = 'WWB42bAX6qnyVytguzxSj';
 const users = new Datastore({ filename: './.app_data/users.db', autoload: true });
 // create unique index on username
 users.ensureIndex({ fieldName: 'username', unique: true, sparse: true });
-/*
-users.insert({username: 'gideon', passwordHash: crypto.SHA256('agent').toString(crypto.enc.Base64), peerID: '', refreshToken: crypto.SHA256(`gideonagent${JWT_SECRET}${moment().format('YYYY-MM-DD HH:mm:ss')}`).toString(crypto.enc.Base64), lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
-  if (err) console.log(err);
-});
-users.insert({username: 'joe', passwordHash: crypto.SHA256('iannone').toString(crypto.enc.Base64), peerID: '', refreshToken: crypto.SHA256(`joeiannone${JWT_SECRET}${moment().format('YYYY-MM-DD HH:mm:ss')}`).toString(crypto.enc.Base64), lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
-  if (err) console.log(err);
-});
-users.insert({username: 'rossi', passwordHash: crypto.SHA256('agent').toString(crypto.enc.Base64), peerID: '', refreshToken: crypto.SHA256(`rossiagent${JWT_SECRET}${moment().format('YYYY-MM-DD HH:mm:ss')}`).toString(crypto.enc.Base64), lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
-  if (err) console.log(err);
-});
-users.insert({username: 'test', passwordHash: crypto.SHA256('test').toString(crypto.enc.Base64), peerID: '', refreshToken: crypto.SHA256(`testtest${JWT_SECRET}${moment().format('YYYY-MM-DD HH:mm:ss')}`).toString(crypto.enc.Base64), lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
-  if (err) console.log(err);
-});
-users.insert({username: 'test2', passwordHash: crypto.SHA256('test').toString(crypto.enc.Base64), peerID: '', refreshToken: crypto.SHA256(`test2test${JWT_SECRET}${moment().format('YYYY-MM-DD HH:mm:ss')}`).toString(crypto.enc.Base64), lastUpdate: moment().format('YYYY-MM-DD HH:mm:ss') }, (err) => {
-  if (err) console.log(err);
-});
-*/
 
 
 
