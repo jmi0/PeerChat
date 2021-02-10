@@ -2,13 +2,12 @@
  * @Author: joe.iannone 
  * @Date: 2021-02-09 23:11:25 
  * @Last Modified by: joe.iannone
- * @Last Modified time: 2021-02-09 23:13:19
+ * @Last Modified time: 2021-02-10 11:49:03
  */
 
 
-
-import Peer from 'peerjs' // used for ChatState type
-
+import Peer, { DataConnection } from 'peerjs'
+import Dexie from 'dexie'
 
 const APP_CONFIG = {
 
@@ -53,9 +52,9 @@ export interface Message {
     timestamp: string,
     from: string,
     to: string,
-    text: string|false,
-    image: string|false
-    attachment: string|false
+    text: string | false,
+    image: string | false
+    attachment: string | false
     id?: number,
     groupkey?: string
 }
@@ -68,26 +67,108 @@ export interface UserProfiles {
     [key: string]: UserProfile
 }
 
+export type PeerBarProps = {
+    token: string,
+    peer: Peer,
+    user: User,
+    userSettings: UserSettings | false,
+    userProfiles: UserProfiles,
+    selectedUser: User | false,
+    connections: Connections,
+    online: Connections,
+    messages: Messages,
+    db: Dexie,
+    dispatch: any
+}
+
+export type ChatHeaderProps = {
+    selectedUser: User,
+    selectedUserProfile: UserProfile | false
+    isOnline: boolean,
+    dispatch: any
+}
+
+export type ConnectionsProps = {
+    user: User,
+    selectedUser: User | false,
+    userProfiles: UserProfiles,
+    connections: Connections,
+    online: Connections,
+    messages: Messages,
+    token: string,
+    db: Dexie,
+    dispatch: any
+}
+
+export type MessagesProps = {
+    messages: Message[],
+    localUsername: string,
+    remoteUsername: string,
+    localProfile: UserProfile | false,
+    remoteProfile: UserProfile | false,
+    db: Dexie,
+    dispatch: any
+}
+
+export type MessengerProps = {
+    peer: Peer,
+    remotePeerID: string | false,
+    selectedUser: User,
+    systemUser: User,
+    userProfile: UserProfile | false,
+    db: Dexie,
+    dispatch: any
+}
+
+export type MessengerState = {
+    connection: DataConnection | false,
+    text: string,
+    image: string | false,
+    attachment: string | false,
+    emojiPickerOpen: boolean
+}
+
+export type OnlineListProps = {
+    user: User,
+    online: Connections,
+    db: Dexie,
+    dispatch: any
+}
+
+export type ProfileFormProps = {
+    user: User,
+    profile: UserProfile,
+    db: Dexie,
+    dispatch: any
+}
+
+export type SettingsFormProps = {
+    user: User,
+    userSettings: UserSettings | false,
+    db: Dexie,
+    dispatch: any
+}
+
 
 /**
  * interfaces for redux store
  */
 export interface SystemState {
-    user: User|false,
+    user: User | false,
     isLoggedIn: boolean,
-    token: string|false
+    token: string | false
     offline: boolean,
-    userSettings: UserSettings|false
+    userSettings: UserSettings | false
 }
-  
+
 export interface ChatStoreState {
     online: Connections,
     connections: Connections,
     messages: Messages,
-    selectedUser: User|false,
+    selectedUser: User | false,
     userProfiles: UserProfiles
 }
-  
+
 /**
  * redux action types
  */
@@ -155,10 +236,10 @@ interface UpdateOfflineAction {
 
 interface UpdateSystemUser {
     type: typeof UPDATE_SYSTEM_USER
-    user: User|false
+    user: User | false
     isLoggedIn: boolean,
     offline: boolean,
-    token: string|false
+    token: string | false
 }
 
 interface UpdateSystemPeer {
@@ -168,7 +249,7 @@ interface UpdateSystemPeer {
 
 interface UpdateSelectedUserAction {
     type: typeof UPDATE_SELECTED_USER,
-    user: User|false
+    user: User | false
 }
 
 interface UpdateBulkMessagesAction {
@@ -203,14 +284,14 @@ interface UpdateUserSettingsAction {
 }
 
 
-export type ActionTypes = 
-    AddConnectionAction | UpdateOnlineAction | 
-    UpdateMessagesAction | UpdateTokenAction | 
-    UpdateLoginAction | UpdateOfflineAction | 
-    UpdateSystemUser | UpdateSystemPeer | 
+export type ActionTypes =
+    AddConnectionAction | UpdateOnlineAction |
+    UpdateMessagesAction | UpdateTokenAction |
+    UpdateLoginAction | UpdateOfflineAction |
+    UpdateSystemUser | UpdateSystemPeer |
     UpdateSelectedUserAction | UpdateBulkMessagesAction |
-    UserLogoutAction | UpdateConnectionsAction | 
-    UpdateBulkConnectionsAction | UpdateMessageSeenAction | 
+    UserLogoutAction | UpdateConnectionsAction |
+    UpdateBulkConnectionsAction | UpdateMessageSeenAction |
     UpdateUserProfilesAction | UpdateBulkUserProfilesAction | UpdateUserSettingsAction
 
 

@@ -1,24 +1,29 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-10 11:20:53 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-10 11:26:15
+ */
+
 import React, { useState } from 'react'
-import Dexie from 'dexie'
 import { connect } from 'react-redux';
 
 import { exists } from '../App.fn'
 import { UpdateUserProfiles } from '../actions';
-import { User, UserProfile } from '../App.config'
+import { ProfileFormProps, UserProfile } from '../App.config'
 
 import { Avatar, Box, TextField, Button, Typography, IconButton, FormControlLabel, FormHelperText } from '@material-ui/core';
 import Alert from '@material-ui/lab/Alert';
 import AccountCircleIcon from '@material-ui/icons/AccountCircle';
 
 
-type ProfileFormProps = {
-  user: User,
-  profile: UserProfile,
-  db: Dexie,
-  dispatch: any
-}
-
+/**
+ * Form to create/edit/save/dispatch user profile data
+ * 
+ * @param props : ProfileFormProps
+ */
 const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
+
   const [ firstname, setFirstName ] = useState<string>(typeof props.profile.firstname === 'string' ? props.profile.firstname : '');
   const [ lastname, setLastName ] = useState<string>(typeof props.profile.lastname === 'string' ? props.profile.lastname : '');
   const [ headline, setHeadline ] = useState<string>(typeof props.profile.headline === 'string' ? props.profile.headline : '');
@@ -26,12 +31,19 @@ const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
   const [ image, setImage ] = useState<string>(typeof props.profile.profilepic === 'string' ? props.profile.profilepic : '');
   const [ formSubmitted, setFormSubmitted ] = useState<boolean>(false);
   const [ submissionError, setSubmissionError ] = useState<string|false>(false);
-
+  
   const imageInputRef: React.RefObject<HTMLInputElement> = React.createRef();
 
+  /**
+   * submit profile changes
+   * 
+   * @param e : React.SyntheticEvent
+   */
   const submitProfileForm = (e: React.SyntheticEvent) => {
     e.preventDefault();
-    let user_profile = {username: props.user.username, firstname: firstname, lastname: lastname, headline: headline, bio: bio, profilepic: image}
+    // create valid user profile from state
+    let user_profile: UserProfile = {username: props.user.username, firstname: firstname, lastname: lastname, headline: headline, bio: bio, profilepic: image}
+    // put user profile in db
     props.db.table('user_profiles').put(user_profile)
     .then((id) => { console.log(`Updated user profile for ${user_profile.username} in IndexedDB`) })
     .catch((err) => { 
@@ -39,11 +51,17 @@ const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
       console.log(`Could not store user profile ${err}`); 
     })
     .finally(() => {
+      // form submission state and dispatch change
       setFormSubmitted(true);
       props.dispatch(UpdateUserProfiles(user_profile));
     });
   };
 
+  /**
+   * handle text input changes
+   * 
+   * @param event : React.ChangeEvent<HTMLInputElement>
+   */
   const handleFormFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormSubmitted(false);
     if (event.target.name === 'first') setFirstName(event.target.value);
@@ -52,11 +70,17 @@ const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
     else if (event.target.name === 'bio') setBio(event.target.value);
   }
 
+  /**
+   * Handle profile picture file change
+   * 
+   * @param event : any
+   */
   const handleProfilePic = (event: any) => {
     
     const reader = new FileReader();
     const file = event.target.files[0];
 
+    // don't allow file larger than 400000 bytes
     if (exists(file.size) && file.size > 400000) return;
     
     reader.onloadend = () => {
@@ -66,6 +90,7 @@ const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
     reader.readAsDataURL(file);
     
   };
+  
   
   return (
     <Box>

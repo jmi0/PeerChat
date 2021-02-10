@@ -1,55 +1,72 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-10 11:07:59 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-10 11:38:40
+ */
+
 import React, { Component } from 'react'
 import moment from 'moment'
-import Dexie from 'dexie';
 import { connect } from 'react-redux';
 
-import { Message, UserProfile } from '../App.config';
+import { Message, MessagesProps } from '../App.config';
 import { dataURItoBlob, exists } from '../App.fn'
 
 import { ListItem, Avatar, Box } from '@material-ui/core';
 
 
-type MessagesProps = {
-  messages: Message[],
-  localUsername: string,
-  remoteUsername: string,
-  localProfile: UserProfile|false,
-  remoteProfile: UserProfile|false,
-  db: Dexie,
-  dispatch: any
-}
-
-/************************************************************************
+/**
+ * Displays messages in a chat session
  * 
+ * @param props: MessagesProps
  */
 class MessagesDisplay extends Component<MessagesProps> {
 
+  // ref to refernce bottom of messages for auto scrolling
   private chatWindowRef : React.RefObject<HTMLDivElement>|null  = React.createRef();
 
+
   componentDidMount() {
+    // auto scroll to bottom of messages on mount
     this.scrollToBottom('auto');
   }
   
   componentDidUpdate() {
+    // auto scroll to bottom of messages on update
     this.scrollToBottom('smooth');
   }
 
+  /**
+   * optimize component updates
+   * 
+   * @param nextProps : MessagesProps
+   */
   shouldComponentUpdate(nextProps: MessagesProps) {
+    // only update messages if user or messages props change
     if (this.props.remoteUsername !== nextProps.remoteUsername) return true;
     if (this.props.messages.length !== nextProps.messages.length) return true;
     else return false;
   }
 
+  /**
+   * Scroll to chat window ref
+   * 
+   * @param behavior : 'auto'|'smooth'
+   */
   scrollToBottom = (behavior: 'auto'|'smooth') => {
     if (this.chatWindowRef !== null && this.chatWindowRef.current !== null) {
       this.chatWindowRef.current.scrollIntoView({ behavior: behavior });
     }
   };
 
+  /**
+   * Get/create avatar from username
+   * 
+   * @param username : string
+   */
   getAvatar(username: string) {
     var profile = this.props.localProfile;
     if (username === this.props.remoteUsername) profile = this.props.remoteProfile;
-    console.log(profile);
     if (profile && exists(profile.profilepic)) return (<Avatar><img alt={`${username}-avatar`} width='100%' src={profile.profilepic}></img></Avatar>);
     else return (<Avatar color={username === this.props.localUsername ? 'disabled':'secondary'}>{username.charAt(0)}</Avatar>);
   }

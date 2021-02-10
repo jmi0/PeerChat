@@ -1,3 +1,10 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-10 09:59:38 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-10 11:41:14
+ */
+
 import { 
   ChatStoreState, 
   ActionTypes, 
@@ -23,6 +30,12 @@ const initialState: ChatStoreState = {
   userProfiles: {},
 }
 
+/**
+ * Chat state reducer
+ * 
+ * @param state 
+ * @param action 
+ */
 export function chat (
   state = initialState,
   action: ActionTypes

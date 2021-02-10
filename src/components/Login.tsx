@@ -1,23 +1,50 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-10 11:08:04 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-10 11:37:59
+ */
+
 import React, { useState } from 'react'
 import { connect } from 'react-redux';
 import { Container, Box, TextField, Button } from '@material-ui/core';
 
-
+/**
+ * Login form display and handling
+ * 
+ * @param props : any
+ */
 const LoginForm: React.FC = (props: any) => {
   
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
 
+  /**
+   * Handler for text input changes
+   * 
+   * @param event : React.ChangeEvent<HTMLInputElement>
+   */
   const handleFormFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (event.target.name === 'username') setUsername(event.target.value);
     else if (event.target.name === 'password') setPassword(event.target.value);
   }
   
+  /**
+   * event handler to trigger login
+   * 
+   * @param e : React.SyntheticEvent
+   */
   const submitLogin = (e: React.SyntheticEvent) => {
     login(username, password);
     e.preventDefault();
   };
 
+  /**
+   * fetch login post to server
+   * 
+   * @param username : string
+   * @param password : string
+   */
   const login = (username: string, password: string) => {
     
     fetch('/login', { 
@@ -31,22 +58,22 @@ const LoginForm: React.FC = (props: any) => {
     .then(response => response.json())
     .then(result => {
       if (typeof result.success !== 'undefined') {
+        // redirect to main page on login success
         window.location.href = '/';
       } else {
-        //TODO
+        // TODO :
         // form handling (bad login)
         console.log(result);
       }
     })
     .catch(error => {
-      //TODO
-      // form handling (bad login)
+      // TODO:
+      // form handling (request error)
       console.error('Error:', error);
     });
 
   }
 
-  
   return (
     <Container>
       <h2>Login</h2>

@@ -1,31 +1,39 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-10 11:08:23 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-10 11:36:45
+ */
+
 import React from 'react';
 import { connect } from 'react-redux';
 
-import { User, UserProfile } from '../App.config'
+import { ChatHeaderProps } from '../App.config'
 
 import { Avatar, Badge, Box, Typography } from '@material-ui/core';
 import { makeStyles } from "@material-ui/core/styles";
 
 
+// Styles for online badge
+// TODO: pull all materialUI makeStyles to separate file
 const useStyles = makeStyles({
-  onlineBadge: {
-    backgroundColor: "green",
-    margin: 0,
-  }
+  onlineBadge: { backgroundColor: "green", margin: 0,}
 });
 
-type ChatHeaderProps = {
-  selectedUser: User,
-  selectedUserProfile: UserProfile|false
-  isOnline: boolean,
-  dispatch: any
-}
 
-
+/**
+ * Displays current selected user avatar and information, online/offline state
+ * 
+ * @param props : ChatHeaderProps
+ */
 const ChatHeader: React.FC<ChatHeaderProps> = (props: ChatHeaderProps) => {
 
   const classes = useStyles();
 
+  /**
+   * gets/creates the correct avatar based on whats available - profile pic, online/offline state
+   * TODO: will probably add additional profile information here - headline, name, etc...
+   */
   const getAvatar = () => {
     let profilepic : string = '';
     if (props.selectedUserProfile && typeof props.selectedUserProfile.profilepic === 'string') profilepic = props.selectedUserProfile.profilepic;

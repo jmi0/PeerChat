@@ -1,25 +1,37 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-10 11:20:29 
+ * @Last Modified by:   joe.iannone 
+ * @Last Modified time: 2021-02-10 11:20:29 
+ */
+
 import React from 'react'
 import { connect } from 'react-redux';
-import Dexie from 'dexie';
 
-import { Connections, User } from '../App.config';
+import { OnlineListProps, User } from '../App.config';
 import { UpdateBulkMessages, UpdateConnections, UpdateSelectedUser } from '../actions';
 
 import { List, ListItem, ListItemText } from '@material-ui/core';
 
 
-type OnlineListProps = {
-  user: User,
-  online: Connections,
-  db: Dexie,
-  dispatch: any
-}
-
+/**
+ * Display unfiltered list of all peers online
+ * 
+ * @param props : OnlineListProps
+ */
 const OnlineList: React.FC<OnlineListProps> = (props: OnlineListProps) => {
   
+  /**
+   * Handle peer selection change
+   * 
+   * @param event 
+   * @param peer 
+   */
   const handleSelectedPeerChange = (event: React.MouseEvent, peer: User) => {
+    // retrieve any messages between both peers from db
     props.db.table('messages').where('groupkey').equals(`${props.user.username}-${peer.username}`).sortBy('timestamp')
     .then(messages => {
+      // dispatch selection change and chat data to redux store
       props.dispatch(UpdateBulkMessages(peer.username, messages));
       props.dispatch(UpdateSelectedUser(peer));
       props.dispatch(UpdateConnections(peer));

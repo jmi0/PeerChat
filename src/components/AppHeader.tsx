@@ -1,13 +1,18 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-10 10:00:14 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-10 11:36:24
+ */
+
 import React, { useState } from 'react';
 import { connect } from 'react-redux';
-import Peer from 'peerjs';
-import Dexie from 'dexie'
 
 import ConnectionsList from './Connections';
 import OnlineList from './Online';
 import ProfileForm from './ProfileForm'
 import SettingsForm from './SettingsForm'
-import { User, Connections, Messages, UserProfiles, UserSettings } from '../App.config'
+import { PeerBarProps } from '../App.config'
 import { exists } from '../App.fn'
 import { UserLogout } from '../actions';
 
@@ -19,39 +24,23 @@ import MenuIcon from '@material-ui/icons/Menu';
 import CloseIcon from '@material-ui/icons/Close';
 
 
-
+// drawer styles
+// TODO: pull all materialUI makeStyles to separate file
 const useStyles = makeStyles((theme) => ({
-  grow: {
-    flexGrow: 1,
-  },
+  grow: { flexGrow: 1 },
   menuButton: {},
   title: {},
-  drawerBox: {
-    width: '340px'
-  },
-  drawerPadding: {
-    padding: '0px 10px 0px 10px'
-  },
-  right: {
-    float: 'right'
-  }
+  drawerBox: { width: '340px' },
+  drawerPadding: { padding: '0px 10px 0px 10px' },
+  right: { float: 'right' }
 }));
 
-type PeerBarProps = {
-  token: string,
-  peer: Peer,
-  user: User,
-  userSettings: UserSettings|false,
-  userProfiles: UserProfiles,
-  selectedUser: User|false,
-  connections: Connections,
-  online: Connections,
-  messages: Messages,
-  db: Dexie,
-  dispatch: any
-}
 
-
+/**
+ * Handles drawers and components/actions contained in AppBar
+ * 
+ * @param props : PeerBarProps
+ */
 const AppHeader: React.FC<PeerBarProps> = (props: PeerBarProps) => {
 
   const classes = useStyles();
@@ -63,34 +52,55 @@ const AppHeader: React.FC<PeerBarProps> = (props: PeerBarProps) => {
   const settingsDrawerOpen = Boolean(settingsAnchorEl);
   const connectionsDrawerOpen = Boolean(connectionsAnchorEl);
 
+
+  /**
+   * logout function
+   */
   const logout = () => {
     fetch('/logout', { method: 'POST', headers: {'Content-Type': 'application/json'}})
     .then(response => response.json())
-    .then(result => {
-      console.log(result);
-    })
-    .catch(err => {
-      console.error(err);
-    }).finally(() => {
+    .then(result => { console.log(result); })
+    .catch(err => { console.error(err); })
+    .finally(() => {
+      // dispatch UserLogout action
       props.dispatch(UserLogout());
+      // if user selected setting to delete conversation after logout
       if (props.userSettings && exists(props.userSettings.deleteMessagesOnLogout) && props.userSettings.deleteMessagesOnLogout) {
+        // clear messages table
         props.db.table('messages').clear();
       }
     });
   }
 
+  /**
+   * Handler to set connections drawer state
+   * @param event 
+   */
   const openConnectionsDrawer = (event: React.MouseEvent<HTMLElement>) => {
     setConnectionsAnchorEl(event.currentTarget);
   };
 
+  /**
+   * Handler for profile drawer state
+   * @param event 
+   */
   const openProfileDrawer = (event: React.MouseEvent<HTMLElement>) => {
     setProfileAnchorEl(event.currentTarget);
   };
 
+  /**
+   * Handler for settings drawer state
+   * @param event 
+   */
   const openSettingsDrawer = (event: React.MouseEvent<HTMLElement>) => {
     setSettingsAnchorEl(event.currentTarget);
   };
 
+  /**
+   * Handler to close all drawers
+   * This is ok because there should never be more than one drawer open at a time
+   * @param event 
+   */
   const closeDrawers = (event: React.KeyboardEvent | React.MouseEvent) => {
     
     if (

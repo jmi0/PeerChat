@@ -1,3 +1,10 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-10 09:59:21 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-10 11:41:45
+ */
+
 import { 
   SystemState, 
   ActionTypes, 
@@ -18,6 +25,12 @@ const initialState: SystemState = {
   userSettings: false
 }
 
+/**
+ * System state reducer
+ * 
+ * @param state 
+ * @param action 
+ */
 export function system (
   state = initialState,
   action: ActionTypes

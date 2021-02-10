@@ -1,8 +1,14 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-10 11:08:14 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-10 11:37:26
+ */
+
 import React, { useEffect } from 'react'
 import { connect } from 'react-redux';
-import Dexie from 'dexie'
 
-import { Connections, User, Messages, Message, UserProfiles } from '../App.config';
+import { User, Message, ConnectionsProps } from '../App.config';
 import { exists } from '../App.fn';
 import { UpdateBulkMessages, UpdateSelectedUser } from '../actions';
 
@@ -11,32 +17,29 @@ import CommentIcon from '@material-ui/icons/Comment';
 import { makeStyles } from "@material-ui/core/styles";
 
 
+// Styles for online badge
+// TODO: pull all materialUI makeStyles to separate file
 const useStyles = makeStyles({
-  onlineBadge: {
-    backgroundColor: "green",
-    margin: 0,
-  }
+  onlineBadge: { backgroundColor: "green", margin: 0 }
 });
 
 
-type ConnectionsProps = {
-  user: User,
-  selectedUser: User|false,
-  userProfiles: UserProfiles,
-  connections: Connections,
-  online: Connections,
-  messages: Messages,
-  token: string,
-  db: Dexie,
-  dispatch: any
-}
-
+/**
+ * Displays peers that user is/has been connected to
+ * Handles selecting user action by dispatching to redux store
+ * 
+ * @param props : ConnectionsProps
+ */
 const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) => {
   
   const classes = useStyles();
 
+  /**
+   * On mount and props.connections update 
+   */
   useEffect(() => {
 
+    // if connections is not empty
     if (Object.keys(props.connections).length) {
       // update connections in db
       props.db.table('user_connections').update(props.user.username, {connections: JSON.stringify(props.connections)})
@@ -57,15 +60,21 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
 
     }
 
-    return () => {
-      
-      
+    return () => { 
+      //unmount
     }
 
   }, [props.connections]);
 
 
+  /**
+   * Handler for select peer/user change
+   * 
+   * @param event : React.MouseEvent
+   * @param peer : User
+   */
   const handleSelectedPeerChange = (event: React.MouseEvent, peer: User) => {
+    // dispatch messages with updates for selected user to redux store
     props.dispatch(UpdateBulkMessages(peer.username, props.messages[peer.username].map((message: Message) => {
       // update seen state in db and redux store  
       if (!message.seen && message.to === props.user.username) {
@@ -73,11 +82,17 @@ const ConnectionsList: React.FC<ConnectionsProps> = (props: ConnectionsProps) =>
           if (!updated) console.log(`Could not update ${message.id}`);
         });
       }
-      return {...message, seen:true};
+      return {...message, seen: true};
     })));
+    // dispatch selected user change to redux store
     props.dispatch(UpdateSelectedUser(peer));
   }
 
+  /**
+   * Get/create avatar for a given username
+   * 
+   * @param username : string
+   */
   const getAvatar = (username: string) => {
     let avatar = <Avatar>{username.charAt(0)}</Avatar>;
     if (!exists(props.userProfiles[username])) return avatar;

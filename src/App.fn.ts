@@ -1,17 +1,18 @@
 /*
  * @Author: joe.iannone 
  * @Date: 2021-02-09 23:11:03 
- * @Last Modified by:   joe.iannone 
- * @Last Modified time: 2021-02-09 23:11:03 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-10 11:40:13
  */
 
 
 /**
  * A wrapper around fetch that automatically refreshes token and refetches request
- * @param url 
- * @param method 
- * @param headers 
- * @param body 
+ * 
+ * @param url :string
+ * @param method  :string
+ * @param headers : Headers
+ * @param body : string|Blob|ArrayBufferView|ArrayBuffer|FormData|URLSearchParams|null|undefined
  */
 const refreshFetch = (url: string, method: string, headers: Headers, body: string|Blob|ArrayBufferView|ArrayBuffer|FormData|URLSearchParams|null|undefined) => {
   return new Promise((resolve, reject) => {
@@ -37,7 +38,8 @@ const refreshFetch = (url: string, method: string, headers: Headers, body: strin
 
 /**
  * A more convenient way to check for undefined
- * @param v 
+ * 
+ * @param v : any
  */
 const exists = (v: any) => {
   if (typeof v !== 'undefined') return true;
@@ -47,7 +49,7 @@ const exists = (v: any) => {
 
 /**
  * 
- * @param dataURI 
+ * @param dataURI : string
  */
 const dataURItoBlob = (dataURI: string) => {
   // convert base64/URLEncoded data component to raw binary data held in a string

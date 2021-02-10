@@ -1,12 +1,19 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-10 11:07:36 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-10 11:39:34
+ */
+
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
-import Peer, { DataConnection } from 'peerjs';
+import { DataConnection } from 'peerjs';
 import { Picker } from 'emoji-mart'
 import moment from 'moment';
-import Dexie from 'dexie'
+
 
 import { updateMessages } from '../actions';
-import { Message, User, UserProfile } from '../App.config';
+import { Message, MessengerProps, MessengerState } from '../App.config';
 import { exists } from '../App.fn'
 
 import SendSharpIcon from '@material-ui/icons/SendSharp';
@@ -18,24 +25,11 @@ import { Box, IconButton } from '@material-ui/core';
 import 'emoji-mart/css/emoji-mart.css'
 
 
-type MessengerProps = {
-  peer: Peer,
-  remotePeerID: string|false,
-  selectedUser: User,
-  systemUser: User,
-  userProfile: UserProfile|false,
-  db: Dexie,
-  dispatch: any
-}
-
-type MessengerState = {
-  connection: DataConnection|false,
-  text: string,
-  image: string|false,
-  attachment: string|false,
-  emojiPickerOpen: boolean
-}
-
+/**
+ * Handles sending/displaying messages, attachments, images, emojis
+ * 
+ * @param props : MessengerProps
+ */
 class Messenger extends Component<MessengerProps, MessengerState> {
 
   private emojiPickerRef: React.RefObject<HTMLDivElement> = React.createRef();
@@ -57,11 +51,14 @@ class Messenger extends Component<MessengerProps, MessengerState> {
   }
 
   componentDidMount() {
+    // create connection
     this.setUpConnection();
+    // create listener to know when user blurs emoji picker
     document.addEventListener("click", this.handleEmojiPickerBlur, false);
   }
 
   componentDidUpdate(prevProps: MessengerProps) {
+    // send profile to selected user if profile changes
     if (JSON.stringify(prevProps.userProfile) !== JSON.stringify(this.props.userProfile)) {
       if (this.state.connection) this.state.connection.send({user_profile: this.props.userProfile});
     }
@@ -69,47 +66,75 @@ class Messenger extends Component<MessengerProps, MessengerState> {
   }
 
   componentWillUnmount() {
+    // remove emoji blur listener
     document.removeEventListener('click', this.handleEmojiPickerBlur, false);
+    // close connection if exists/open
     if (this.state.connection) this.state.connection.close();
   }
 
+  /**
+   * Creates connection and associated event listeners
+   */
   setUpConnection() {
     
+    // return if there is no remote peer id
     if (!this.props.remotePeerID) return;
     
+    // create connection
     let conn: DataConnection = this.props.peer.connect(this.props.remotePeerID, {serialization: 'json'});
     
+    /**
+     * connetion opened
+     */
     conn.on('open', () => {
       console.log(`Connected to ${this.props.selectedUser.username}`);
       // atttempt to send user profile on connection to give recipient additonal information on user
       if (this.props.userProfile) conn.send({user_profile: this.props.userProfile});
-      
+      // update state connection whenever it opens
       this.setState({connection: conn});
     });
 
+    /**
+     * incoming data
+     */
     conn.on('data', (data) => {
+      // create group key for indexedDB - this is used to refernce messages between to specific users
       data.message.groupkey = `${data.message.to}-${data.message.from}`;
+      // update seen state
       if (this.props.selectedUser.username === data.message.from) data.message.seen = true;
+      // put message into messages table
       this.props.db.table('messages').put(data.message).then((id) => {
+        // dispatch new message to redux store
         this.props.dispatch(updateMessages(data.message.from, data.message));
-      }).catch((err) => {
-        console.log(err);
-      });
+      }).catch((err) => { console.log(err); });
     });
     
+    // on connection error
     conn.on('error', function(err) {
       console.log(err);
     });
       
+    // on disconnect
     conn.on('disconnected', () => {
       console.log(`Disconnected from ${this.props.selectedUser.username}`);
     });
       
+    // on close
     conn.on('close', () => {
       console.log(`Connection closed from ${this.props.selectedUser.username}`);
     });
   }
 
+
+  /**
+   * Create a valid message of Message type
+   * 
+   * @param text 
+   * @param image 
+   * @param attachment 
+   * @param sent 
+   * @param seen 
+   */
   createMessage = (text='', image:string|false=false, attachment:string|false=false, sent=false, seen=false) : Message => {
     return {
       sent: sent,
@@ -123,12 +148,21 @@ class Messenger extends Component<MessengerProps, MessengerState> {
     };
   }
 
-  
+  /**
+   * event handler for send button
+   * 
+   * @param event : React.MouseEvent
+   */
   handleSendButton = (event: React.MouseEvent) => {
     this.sendMessage(this.createMessage(this.state.text, this.state.image, this.state.attachment));
   }
 
 
+  /**
+   * Key event handler for sending with 'Enter' key
+   * 
+   * @param event : React.KeyboardEvent
+   */
   handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.keyCode === 13) {
       (event.target as HTMLInputElement).blur();
@@ -137,21 +171,36 @@ class Messenger extends Component<MessengerProps, MessengerState> {
     }
   }
 
+  /**
+   * Send a '👍'
+   * 
+   * @param event : React.MouseEvent
+   */
   sendThumbsUp = (event: React.MouseEvent) => {
     this.sendMessage(this.createMessage('👍'));                                                                   
   }
 
-
+  /**
+   * handle text area input message change
+   * 
+   * @param event : React.ChangeEvent
+   */
   handleMessageChange = (event: React.ChangeEvent) => {
     this.setState({ text: (event.target as HTMLInputElement).value });
   }
 
+  /**
+   * Handle file/attachment/image change
+   * 
+   * @param event : any
+   */
   handleFile = (event: any) => {
     
     const reader = new FileReader();
     const name = event.target.name;
     const file = event.target.files[0];
 
+    // dont allow files larger than 400000 bytes
     if (exists(file.size) && file.size > 400000) return;
     
     reader.onloadend = () => {
@@ -164,37 +213,63 @@ class Messenger extends Component<MessengerProps, MessengerState> {
     
   };
 
+  /**
+   * Handle emoji picker blur to close emoji picker
+   * 
+   * @param event : any
+   */
   handleEmojiPickerBlur = (event: any) => {
     if (this.emojiPickerRef.current && !this.emojiPickerRef.current?.contains(event.target)) this.setState({ emojiPickerOpen: false });
   }
 
 
+  /**
+   * toggle emoji picker state
+   * 
+   * @param event : React.MouseEvent
+   */
   toggleEmojiPicker = (event: React.MouseEvent) => {
     if (this.state.emojiPickerOpen) this.setState({emojiPickerOpen: false}); 
     else this.setState({emojiPickerOpen: true});
   };
 
+  /**
+   * append emoji to text state
+   * 
+   * @param event : any
+   */
   handleEmojiPicker = (event: any) => {
     let emojiText = this.state.text;
     this.setState({ text: emojiText += event.native});
   };
 
 
+  /**
+   * Send and update message in db and redux store
+   * 
+   * @param message : Message
+   */
   sendMessage = (message: Message) => {
 
+    // abort if nothing to send
     if (!message.text && !message.image && !message.attachment) return;
 
+    // only actually send and update sent state if connection state is open
     if (this.state.connection && this.state.connection?.open) {
       message.sent = true;
       this.state.connection.send({message: message});
     }
+    // create key and put in databse
     message.groupkey = `${this.props.systemUser.username}-${this.props.selectedUser.username}`;
     this.props.db.table('messages').put(message).then((id) => {
+      // dispatch new message to redux store
       this.props.dispatch(updateMessages(this.props.selectedUser.username, message));
     });
+    // reset message state
     this.setState({text:'', image: false, attachment: false});
   }
 
+  
   render() {
     const { image, text, emojiPickerOpen } = this.state;
     return (

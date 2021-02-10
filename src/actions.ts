@@ -1,3 +1,10 @@
+/*
+ * @Author: joe.iannone 
+ * @Date: 2021-02-10 09:58:16 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-10 11:43:29
+ */
+
 import { 
   User, 
   UserProfile, 
@@ -25,6 +32,11 @@ import {
 } from './App.config'
 
 
+/**
+ * 
+ * @param key 
+ * @param connection 
+ */
 export function addConnection(key: string, connection: any): ActionTypes {
   return {
     type: ADD_CONNECTION,
@@ -33,6 +45,10 @@ export function addConnection(key: string, connection: any): ActionTypes {
   }
 }
 
+/**
+ * 
+ * @param newOnline 
+ */
 export function updateOnline(newOnline: {[key: string]: User}): ActionTypes {
   return {
     type: UPDATE_ONLINE,
@@ -40,6 +56,11 @@ export function updateOnline(newOnline: {[key: string]: User}): ActionTypes {
   }
 }
 
+/**
+ * 
+ * @param key 
+ * @param message 
+ */
 export function updateMessages(key: string, message: Message): ActionTypes {
   return {
     type: UPDATE_MESSAGES,
@@ -48,6 +69,10 @@ export function updateMessages(key: string, message: Message): ActionTypes {
   }
 }
 
+/**
+ * 
+ * @param isLoggedIn 
+ */
 export function updateLoginState(isLoggedIn: boolean): ActionTypes {
   return {
     type: UPDATE_LOGIN_STATE,
@@ -55,6 +80,10 @@ export function updateLoginState(isLoggedIn: boolean): ActionTypes {
   }
 }
 
+/**
+ * 
+ * @param token 
+ */
 export function updateToken(token: string): ActionTypes {
   return {
     type: UPDATE_TOKEN,
@@ -62,6 +91,11 @@ export function updateToken(token: string): ActionTypes {
   }
 }
 
+
+/**
+ * 
+ * @param offline 
+ */
 export function updateOfflineState(offline: boolean): ActionTypes {
   return {
     type: UPDATE_OFFLINE_STATE,
@@ -69,7 +103,13 @@ export function updateOfflineState(offline: boolean): ActionTypes {
   }
 }
 
-
+/**
+ * 
+ * @param user 
+ * @param isLoggedIn 
+ * @param offline 
+ * @param token 
+ */
 export function UpdateSystemUser(user: User|false, isLoggedIn: boolean, offline: boolean, token: string|false): ActionTypes {
   return {
     type: UPDATE_SYSTEM_USER,
@@ -80,6 +120,10 @@ export function UpdateSystemUser(user: User|false, isLoggedIn: boolean, offline:
   }
 }
 
+/**
+ * 
+ * @param user 
+ */
 export function UpdateSelectedUser(user: User): ActionTypes {
   return {
     type: UPDATE_SELECTED_USER,
@@ -87,7 +131,11 @@ export function UpdateSelectedUser(user: User): ActionTypes {
   }
 }
 
-
+/**
+ * 
+ * @param key 
+ * @param messages 
+ */
 export function UpdateBulkMessages(key: string, messages: Message[]): ActionTypes {
   return {
     type: UPDATE_BULK_MESSAGES,
@@ -96,12 +144,19 @@ export function UpdateBulkMessages(key: string, messages: Message[]): ActionType
   }
 }
 
+/**
+ * will reset to initial states in reducer
+ */
 export function UserLogout(): ActionTypes {
   return {
     type: USER_LOGOUT
   }
 }
 
+/**
+ * 
+ * @param user 
+ */
 export function UpdateConnections(user: User): ActionTypes {
   return {
     type: UPDATE_CONNECTIONS,
@@ -109,6 +164,10 @@ export function UpdateConnections(user: User): ActionTypes {
   }
 }
 
+/**
+ * 
+ * @param connections 
+ */
 export function UpdateBulkConnections(connections: Connections): ActionTypes {
   return {
     type: UPDATE_BULK_CONNECTIONS,
@@ -116,6 +175,11 @@ export function UpdateBulkConnections(connections: Connections): ActionTypes {
   }
 }
 
+/**
+ * 
+ * @param key 
+ * @param timestamp 
+ */
 export function UpdateMessageSeen(key: string, timestamp: string): ActionTypes {
   return {
     type: UPDATE_MESSAGE_SEEN,
@@ -124,6 +188,10 @@ export function UpdateMessageSeen(key: string, timestamp: string): ActionTypes {
   }
 }
 
+/**
+ * 
+ * @param user_profile 
+ */
 export function UpdateUserProfiles(user_profile: UserProfile): ActionTypes {
   return {
     type: UPDATE_USER_PROFILES,
@@ -131,6 +199,10 @@ export function UpdateUserProfiles(user_profile: UserProfile): ActionTypes {
   }
 }
 
+/**
+ * 
+ * @param user_profiles 
+ */
 export function UpdateBulkUserProfiles(user_profiles: UserProfiles): ActionTypes {
   return {
     type: UPDATE_BULK_USER_PROFILES,
@@ -138,6 +210,10 @@ export function UpdateBulkUserProfiles(user_profiles: UserProfiles): ActionTypes
   }
 }
 
+/**
+ * 
+ * @param user_settings 
+ */
 export function UpdateUserSettings(user_settings: UserSettings): ActionTypes {
   return {
     type: UPDATE_USER_SETTINGS,
