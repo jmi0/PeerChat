@@ -3,6 +3,7 @@
 ## P2P chat PWA with client side data persistence.
 
 ### Features:
+- Real time peer discovery and connection state observation
 - Persistent conversations and connections (client side) 
 - Multimedia messaging: images, attachments, emojis
 - Offline messaging (messages are transmitted as soon as recipient peer is back online)
