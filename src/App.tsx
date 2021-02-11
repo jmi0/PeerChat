@@ -2,7 +2,7 @@
  * @Author: joe.iannone 
  * @Date: 2021-02-09 23:10:24 
  * @Last Modified by: joe.iannone
- * @Last Modified time: 2021-02-09 23:10:56
+ * @Last Modified time: 2021-02-11 18:19:21
  */
 
 import React, { Component } from 'react';
@@ -11,8 +11,9 @@ import { configureStore } from '@reduxjs/toolkit';
 import Peer from 'peerjs';
 import Dexie from 'dexie';
 import { BrowserRouter as Router, Switch, Route, Redirect } from "react-router-dom";
+import CryptoJS from 'crypto-js';
 
-import { User, Connections, Messages, UserProfiles, UserProfile, UserSettings } from './App.config';
+import APP_CONFIG, { User, Connections, Messages, UserProfiles, UserProfile, UserSettings } from './App.config';
 import { exists, refreshFetch } from './App.fn';
 import reducer from './reducers';
 import { updateOnline, UpdateSystemUser, updateMessages, UpdateBulkConnections, UpdateConnections, UpdateUserProfiles, updateToken, UpdateUserSettings } from './actions';
@@ -45,7 +46,11 @@ type AppState = {
   userSettings: UserSettings|false
 }
 
-
+/**
+ * Handles user authentication, peer dicovery, redux store subscription, 
+ * peer creation, user data initialization
+ * 
+ */
 class App extends Component<any, AppState> {
 
   // interval class var to handle peer discovery 
@@ -167,9 +172,10 @@ class App extends Component<any, AppState> {
   /**
    * Initialize peerjs peer and setup event listeners
    * @param token 
+   * @param username : string
    * @returns peer: Peer
    */
-  setUpPeer(token: string) : Peer {
+  setUpPeer(token: string, username: string) : Peer {
 
     let peer = new Peer({
       host: window.location.hostname,
@@ -189,6 +195,8 @@ class App extends Component<any, AppState> {
 
       // message receiver
       conn.on('data', (data) => {
+        // decrypt
+        data = JSON.parse(CryptoJS.AES.decrypt(data, `${username}-${APP_CONFIG.CLIENT_KEY}`).toString(CryptoJS.enc.Utf8));
         if (exists(data.message)) {
           // handle message
           // update message and add to indexedDB
@@ -291,7 +299,7 @@ class App extends Component<any, AppState> {
       if (exists(result.username)) {
 
         // initialize peer and dispatch user data to redux store
-        this.setState({ peer: this.setUpPeer(result.token)}, () => {
+        this.setState({ peer: this.setUpPeer(result.token, result.username)}, () => {
           this.store.dispatch(UpdateSystemUser(
             {username: result.username, peerID: ''}, 
             true, 

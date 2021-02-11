@@ -2,7 +2,7 @@
  * @Author: joe.iannone 
  * @Date: 2021-02-10 11:07:36 
  * @Last Modified by: joe.iannone
- * @Last Modified time: 2021-02-10 11:39:34
+ * @Last Modified time: 2021-02-11 18:04:41
  */
 
 import React, { Component } from 'react';
@@ -10,10 +10,11 @@ import { connect } from 'react-redux';
 import { DataConnection } from 'peerjs';
 import { Picker } from 'emoji-mart'
 import moment from 'moment';
+import CryptoJS from 'crypto-js';
 
 
 import { updateMessages } from '../actions';
-import { Message, MessengerProps, MessengerState } from '../App.config';
+import APP_CONFIG, { Message, MessengerProps, MessengerState } from '../App.config';
 import { exists } from '../App.fn'
 
 import SendSharpIcon from '@material-ui/icons/SendSharp';
@@ -84,12 +85,13 @@ class Messenger extends Component<MessengerProps, MessengerState> {
     let conn: DataConnection = this.props.peer.connect(this.props.remotePeerID, {serialization: 'json'});
     
     /**
-     * connetion opened
+     * connection opened
      */
     conn.on('open', () => {
       console.log(`Connected to ${this.props.selectedUser.username}`);
+      let encrypted_profile = CryptoJS.AES.encrypt(JSON.stringify({user_profile: this.props.userProfile}), `${this.props.selectedUser.username}-${APP_CONFIG.CLIENT_KEY}`).toString();
       // atttempt to send user profile on connection to give recipient additonal information on user
-      if (this.props.userProfile) conn.send({user_profile: this.props.userProfile});
+      if (this.props.userProfile) conn.send(encrypted_profile);
       // update state connection whenever it opens
       this.setState({connection: conn});
     });
@@ -98,17 +100,10 @@ class Messenger extends Component<MessengerProps, MessengerState> {
      * incoming data
      */
     conn.on('data', (data) => {
-      // create group key for indexedDB - this is used to refernce messages between to specific users
-      data.message.groupkey = `${data.message.to}-${data.message.from}`;
-      // update seen state
-      if (this.props.selectedUser.username === data.message.from) data.message.seen = true;
-      // put message into messages table
-      this.props.db.table('messages').put(data.message).then((id) => {
-        // dispatch new message to redux store
-        this.props.dispatch(updateMessages(data.message.from, data.message));
-      }).catch((err) => { console.log(err); });
+      console.log(`We are not processing incoming data here, only sending`, data);
     });
     
+
     // on connection error
     conn.on('error', function(err) {
       console.log(err);
@@ -257,7 +252,10 @@ class Messenger extends Component<MessengerProps, MessengerState> {
     // only actually send and update sent state if connection state is open
     if (this.state.connection && this.state.connection?.open) {
       message.sent = true;
-      this.state.connection.send({message: message});
+      // encrypt
+      let encrypted_message = CryptoJS.AES.encrypt(JSON.stringify({message: message}), `${message.to}-${APP_CONFIG.CLIENT_KEY}`).toString();
+      //this.state.connection.send({message: message});
+      this.state.connection.send(encrypted_message);
     }
     // create key and put in databse
     message.groupkey = `${this.props.systemUser.username}-${this.props.selectedUser.username}`;

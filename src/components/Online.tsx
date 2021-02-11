@@ -1,8 +1,8 @@
 /*
  * @Author: joe.iannone 
  * @Date: 2021-02-10 11:20:29 
- * @Last Modified by:   joe.iannone 
- * @Last Modified time: 2021-02-10 11:20:29 
+ * @Last Modified by: joe.iannone
+ * @Last Modified time: 2021-02-11 18:09:18
  */
 
 import React from 'react'
@@ -41,14 +41,14 @@ const OnlineList: React.FC<OnlineListProps> = (props: OnlineListProps) => {
 
   return (
     <List key={JSON.stringify(Object.keys(props.online))} disablePadding dense>
-      <ListItem disabled>
+      <ListItem key={`onlinepeersheading`} disabled>
         {!(Object.keys(props.online).length-1) ? 
         <ListItemText primary={'No Peers Available'} /> :
         <ListItemText primary={'Available Peers'} /> 
         }
       </ListItem>
       {Object.keys(props.online).map((username: string) => {
-        if (props.online[username].username === props.user.username) return <></>;
+        if (props.online[username].username === props.user.username) return;
         return (
           <ListItem key={JSON.stringify(props.online[username])} button selected={'' === props.online[username].username} onClick={(event) => handleSelectedPeerChange(event, props.online[username])}>
             <ListItemText primary={props.online[username].username} />
