@@ -19,9 +19,10 @@
 <img src="./demo/img/PeerChat2.png" width="100%" /> 
 
 ### Mobile UI:
-<img src="./demo/img/PeerChat3.png" width="30%" />
-<img src="./demo/img/PeerChat4.png" width="30%" /> 
-
+<p float="left">
+  <img src="./demo/img/PeerChat3.png" width="30%" />
+  <img src="./demo/img/PeerChat4.png" width="30%" /> 
+</p>
 
 ---
 
