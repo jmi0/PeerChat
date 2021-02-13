@@ -41,6 +41,7 @@ const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
    */
   const submitProfileForm = (e: React.SyntheticEvent) => {
     e.preventDefault();
+    setSubmissionError(false);
     // create valid user profile from state
     let user_profile: UserProfile = {username: props.user.username, firstname: firstname, lastname: lastname, headline: headline, bio: bio, profilepic: image}
     // put user profile in db
@@ -64,6 +65,7 @@ const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
    */
   const handleFormFieldChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setFormSubmitted(false);
+    setSubmissionError(false);
     if (event.target.name === 'first') setFirstName(event.target.value);
     else if (event.target.name === 'last') setLastName(event.target.value);
     else if (event.target.name === 'headline') setHeadline(event.target.value);
@@ -76,13 +78,17 @@ const ProfileForm: React.FC<ProfileFormProps> = (props: ProfileFormProps) => {
    * @param event : any
    */
   const handleProfilePic = (event: any) => {
-    
+    setSubmissionError(false);
     const reader = new FileReader();
     const file = event.target.files[0];
 
-    // don't allow file larger than 400000 bytes
-    if (exists(file.size) && file.size > 400000) return;
-    
+    // don't allow file larger than 150000 bytes
+    if (exists(file.size) && file.size > 150000) {
+      console.log(`file too large`);
+      setSubmissionError(`Profile picture must be 150KB or less. Please try again.`);
+      return;
+    }
+
     reader.onloadend = () => {
       if (typeof reader.result === 'string') 
         setImage(reader.result);

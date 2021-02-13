@@ -2,7 +2,7 @@
  * @Author: joe.iannone 
  * @Date: 2021-02-10 11:07:36 
  * @Last Modified by: joe.iannone
- * @Last Modified time: 2021-02-11 18:04:41
+ * @Last Modified time: 2021-02-13 11:48:21
  */
 
 import React, { Component } from 'react';
@@ -13,7 +13,7 @@ import moment from 'moment';
 import CryptoJS from 'crypto-js';
 
 
-import { updateMessages } from '../actions';
+import { updateMessages, UpdateConnections } from '../actions';
 import APP_CONFIG, { Message, MessengerProps, MessengerState } from '../App.config';
 import { exists } from '../App.fn'
 
@@ -61,7 +61,10 @@ class Messenger extends Component<MessengerProps, MessengerState> {
   componentDidUpdate(prevProps: MessengerProps) {
     // send profile to selected user if profile changes
     if (JSON.stringify(prevProps.userProfile) !== JSON.stringify(this.props.userProfile)) {
-      if (this.state.connection) this.state.connection.send({user_profile: this.props.userProfile});
+      if (this.state.connection) {
+        let encrypted_profile = CryptoJS.AES.encrypt(JSON.stringify({user_profile: this.props.userProfile}), `${this.props.selectedUser.username}-${APP_CONFIG.CLIENT_KEY}`).toString();
+        this.state.connection.send(encrypted_profile);
+      }
     }
       
   }
@@ -98,9 +101,27 @@ class Messenger extends Component<MessengerProps, MessengerState> {
 
     /**
      * incoming data
+     * For cases where reply comes back through sender connection
      */
     conn.on('data', (data) => {
-      console.log(`We are not processing incoming data here, only sending`, data);
+       // decrypt
+       data = JSON.parse(CryptoJS.AES.decrypt(data, `${this.props.systemUser.username}-${APP_CONFIG.CLIENT_KEY}`).toString(CryptoJS.enc.Utf8));
+       if (exists(data.message)) {
+         // handle message
+         // update message and add to indexedDB
+         data.message.groupkey = `${data.message.to}-${data.message.from}`;
+         // if sender is selected then update seen state here before saving
+         if (this.props.selectedUser && this.props.selectedUser.username === data.message.from) data.message.seen = true;
+         this.props.db.table('messages').add(data.message)
+         .then((id) => { console.log(`Message added to IndexedDB`); })
+         .catch((err) => { console.error(`Could not add message to IndexedDB: ${err}`); })
+         .finally(() => {
+           // dispatch message to redux store
+           this.props.dispatch(updateMessages(data.message.from, data.message));
+           // if connection not available from memory dispatch to redux store
+           if (conn) this.props.dispatch(UpdateConnections({username: data.message.from, peerID: conn.peer}));
+         });
+       }
     });
     
 

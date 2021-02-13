@@ -80,8 +80,8 @@ class MessagesDisplay extends Component<MessagesProps> {
         if (attachment) attachment = dataURItoBlob(attachment);
         
         return (
-          <ListItem dense key={`${JSON.stringify(message)}-${index}`}>
-            <Box display="flex" flexDirection="row">
+          <ListItem key={`${JSON.stringify(message)}-${index}`} className={message.from === this.props.localUsername ? 'messageDisabled' : ''}>
+            <Box display="flex" flexDirection="row" pt={1} pb={1}>
               <Box pr={2}>{this.getAvatar(message.from)}</Box>
               <Box className={'messageDisplaycontainer'}>
                 <div>
