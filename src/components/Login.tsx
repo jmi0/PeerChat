@@ -2,12 +2,13 @@
  * @Author: joe.iannone 
  * @Date: 2021-02-10 11:08:04 
  * @Last Modified by: joe.iannone
- * @Last Modified time: 2021-02-10 11:37:59
+ * @Last Modified time: 2021-02-13 11:11:47
  */
 
 import React, { useState } from 'react'
 import { connect } from 'react-redux';
 import { Container, Box, TextField, Button } from '@material-ui/core';
+import { Alert } from '@material-ui/lab';
 
 /**
  * Login form display and handling
@@ -18,6 +19,7 @@ const LoginForm: React.FC = (props: any) => {
   
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [loginError, setLoginError] = useState<string|false>(false);
 
   /**
    * Handler for text input changes
@@ -35,8 +37,9 @@ const LoginForm: React.FC = (props: any) => {
    * @param e : React.SyntheticEvent
    */
   const submitLogin = (e: React.SyntheticEvent) => {
-    login(username, password);
     e.preventDefault();
+    setLoginError(false);
+    login(username, password);
   };
 
   /**
@@ -61,14 +64,12 @@ const LoginForm: React.FC = (props: any) => {
         // redirect to main page on login success
         window.location.href = '/';
       } else {
-        // TODO :
-        // form handling (bad login)
+        setLoginError(`Invalid login credentials. Try again.`);
         console.log(result);
       }
     })
     .catch(error => {
-      // TODO:
-      // form handling (request error)
+      setLoginError(`Error: ${error.message}`);
       console.error('Error:', error);
     });
 
@@ -78,6 +79,7 @@ const LoginForm: React.FC = (props: any) => {
     <Container>
       <h2>Login</h2>
       <hr />
+      {loginError ? <Alert severity="error">{loginError}</Alert> : <></>}
       <Box m={2}>
         <form onSubmit={submitLogin}>
           <Box pt={2} >

@@ -2,12 +2,14 @@
  * @Author: joe.iannone 
  * @Date: 2021-02-10 11:26:21 
  * @Last Modified by: joe.iannone
- * @Last Modified time: 2021-02-10 11:30:59
+ * @Last Modified time: 2021-02-13 11:11:37
  */
 
 import React, { useState } from 'react'
 import { connect } from 'react-redux';
 import { Container, Box, TextField, Button } from '@material-ui/core';
+import { Alert } from '@material-ui/lab';
+import { exists } from '../App.fn';
 
 /**
  * Handle registration and signup fetch
@@ -19,6 +21,7 @@ const RegisterForm: React.FC = (props: any) => {
   const [username, setUsername] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [repeatPassword, setRepeatPassword] = useState<string>('');
+  const [signUpError, setSignUpError] = useState<string|false>(false);
 
   /**
    * Handle input text change
@@ -37,11 +40,15 @@ const RegisterForm: React.FC = (props: any) => {
    * @param e : React.SyntheticEvent
    */
   const submitSignUp = (e: React.SyntheticEvent) => {
+    e.preventDefault();
+    setSignUpError(false);
     // make sure password fields match
-    if (password !== repeatPassword) console.log('dont submit');
+    if (password !== repeatPassword) {
+      setSignUpError(`Passwords do not match. Try again.`);
+      return;
+    }
     // signup fetch
     signup(username, password);
-    e.preventDefault();
   };
 
   /**
@@ -67,12 +74,13 @@ const RegisterForm: React.FC = (props: any) => {
         window.location.href = '/';
         
       } else {
-        // TODO: form handling (bad signup)
+        if (exists(result.error.errorType) && result.error.errorType === 'uniqueViolated') setSignUpError(`Username ${username} is taken. Try again.`);
+        else setSignUpError(`Could not signup ${username}.`);
         console.log(result);
       }
     })
     .catch(error => {
-      // TODO: form handling (signup error)
+      setSignUpError(`Error: ${error.message}`);
       console.error('Error:', error);
     });
 
@@ -83,6 +91,7 @@ const RegisterForm: React.FC = (props: any) => {
     <Container>
       <h2>Register</h2>
       <hr />
+      {signUpError ? <Alert severity="error">{signUpError}</Alert> : <></>}
       <Box m={2}>
         <form onSubmit={submitSignUp}>
           <Box pt={2} >

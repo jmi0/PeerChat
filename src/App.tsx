@@ -58,7 +58,7 @@ class App extends Component<any, AppState> {
   // setup redux store
   store = configureStore({reducer: reducer});
   // set up dexie
-  db: Dexie = new Dexie('p2pchat');
+  db: Dexie = new Dexie('PeerChat');
   // class var to assign redux subscribe
   unsubscribe: any;
 
