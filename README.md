@@ -2,7 +2,6 @@
 
 ## P2P chat PWA with client side data persistence.
 
-
 ### Features:
 - Real time peer discovery and connection state observation
 - Persistent conversations and connections (client side) 
@@ -13,6 +12,16 @@
 - Microsoft Teams-like UI
 - Mobile and offline first design
 - JWT authentication
+
+
+<br><br>
+### Docker:
+```
+docker pull jiannone/peerchat:latest
+docker run -p 9000:9000 -d jiannone/peerchat
+```
+Docker Repo: [https://hub.docker.com/layers/jiannone/peerchat/latest/images/sha256-72fa71fe0f17761a7072adf180d9180f09954214aeb875c800d649d91207527b?context=repo](https://hub.docker.com/layers/jiannone/peerchat/latest/images/sha256-72fa71fe0f17761a7072adf180d9180f09954214aeb875c800d649d91207527b?context=repo)
+<br><br>
 
 ### Desktop UI:
 <img src="./demo/img/PeerChat1.png" width="100%" />
